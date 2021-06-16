@@ -146,6 +146,10 @@ _G.packer_plugins = {
     needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/lspsaga.nvim"
   },
+  ["lush.nvim"] = {
+    loaded = true,
+    path = "/home/rielj/.local/share/nvim/site/pack/packer/start/lush.nvim"
+  },
   ["markdown-preview.nvim"] = {
     loaded = false,
     needs_bufread = false,
@@ -168,7 +172,7 @@ _G.packer_plugins = {
   },
   ["nvim-bqf"] = {
     loaded = false,
-    needs_bufread = true,
+    needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-bqf"
   },
   ["nvim-colorizer.lua"] = {
@@ -182,7 +186,6 @@ _G.packer_plugins = {
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-comment"
   },
   ["nvim-compe"] = {
-    after_files = { "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-compe/after/plugin/compe.vim" },
     loaded = false,
     needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-compe"
@@ -237,7 +240,7 @@ _G.packer_plugins = {
   },
   playground = {
     loaded = false,
-    needs_bufread = true,
+    needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/playground"
   },
   ["plenary.nvim"] = {
@@ -275,9 +278,8 @@ _G.packer_plugins = {
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/trouble.nvim"
   },
   ["vim-matchup"] = {
-    after_files = { "/home/rielj/.local/share/nvim/site/pack/packer/opt/vim-matchup/after/plugin/matchit.vim" },
     loaded = false,
-    needs_bufread = true,
+    needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/vim-matchup"
   },
   ["vim-vsnip"] = {

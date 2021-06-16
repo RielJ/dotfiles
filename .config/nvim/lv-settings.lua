@@ -16,6 +16,8 @@ O.wrap_lines = false
 O.timeoutlen = 100
 O.document_highlight = true
 O.extras = true
+O.scrolloff = 14
+
 
 -- dashboard
 -- O.dashboard.custom_header = {""}
