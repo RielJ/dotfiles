@@ -33,6 +33,7 @@ return require("packer").startup(function(use)
     use "wbthomason/packer.nvim"
     use "rktjmp/lush.nvim"
     use {"npxbr/gruvbox.nvim", requires={"rktjmp/lush.nvim"}}
+    
 
     -- TODO refactor all of this (for now it works, but yes I know it could be wrapped in a simpler function)
     use {"neovim/nvim-lspconfig", opt = true}
@@ -45,7 +46,7 @@ return require("packer").startup(function(use)
     use {"nvim-lua/plenary.nvim", opt = true}
     use {"nvim-telescope/telescope.nvim", opt = true}
     use {"nvim-telescope/telescope-fzy-native.nvim", opt = true}
-    -- use {"nvim-telescope/telescope-project.nvim", opt = true}
+    use {"nvim-telescope/telescope-project.nvim", opt = true}
 
     -- Debugging
     use {"mfussenegger/nvim-dap", opt = true}

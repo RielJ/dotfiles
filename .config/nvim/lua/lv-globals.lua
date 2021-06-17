@@ -5,7 +5,7 @@ CACHE_PATH = vim.fn.stdpath('cache')
 O = {
     auto_close_tree = 0,
     auto_complete = true,
-    colorscheme = 'gruvbox',
+    colorscheme = 'lunar',
     hidden_files = true,
     wrap_lines = false,
     number = true,
@@ -14,7 +14,6 @@ O = {
 	timeoutlen = 100,
     nvim_tree_disable_netrw = 0,
     extras = false,
-    scrolloff = 14,
 
     -- @usage pass a table with your desired languages
     treesitter = {

@@ -18,7 +18,7 @@ require('telescope').setup {
         layout_strategy = "horizontal",
         layout_defaults = {horizontal = {mirror = false}, vertical = {mirror = false}},
         file_sorter = require'telescope.sorters'.get_fzy_sorter,
-        file_ignore_patterns = {"node_modules"},
+        file_ignore_patterns = {"node-modules"},
         generic_sorter = require'telescope.sorters'.get_generic_fuzzy_sorter,
         shorten_path = true,
         winblend = 0,
@@ -70,4 +70,4 @@ require('telescope').setup {
     extensions = {fzy_native = {override_generic_sorter = false, override_file_sorter = true}}
 }
 
--- require'telescope'.load_extension('project')
+require'telescope'.load_extension('project')

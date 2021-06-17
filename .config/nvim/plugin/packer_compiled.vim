@@ -127,10 +127,6 @@ _G.packer_plugins = {
     needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/gitsigns.nvim"
   },
-  ["gruvbox.nvim"] = {
-    loaded = true,
-    path = "/home/rielj/.local/share/nvim/site/pack/packer/start/gruvbox.nvim"
-  },
   ["hop.nvim"] = {
     loaded = false,
     needs_bufread = false,
@@ -145,10 +141,6 @@ _G.packer_plugins = {
     loaded = false,
     needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/lspsaga.nvim"
-  },
-  ["lush.nvim"] = {
-    loaded = true,
-    path = "/home/rielj/.local/share/nvim/site/pack/packer/start/lush.nvim"
   },
   ["markdown-preview.nvim"] = {
     loaded = false,
@@ -172,7 +164,7 @@ _G.packer_plugins = {
   },
   ["nvim-bqf"] = {
     loaded = false,
-    needs_bufread = false,
+    needs_bufread = true,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-bqf"
   },
   ["nvim-colorizer.lua"] = {
@@ -186,6 +178,7 @@ _G.packer_plugins = {
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-comment"
   },
   ["nvim-compe"] = {
+    after_files = { "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-compe/after/plugin/compe.vim" },
     loaded = false,
     needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/nvim-compe"
@@ -240,7 +233,7 @@ _G.packer_plugins = {
   },
   playground = {
     loaded = false,
-    needs_bufread = false,
+    needs_bufread = true,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/playground"
   },
   ["plenary.nvim"] = {
@@ -267,6 +260,11 @@ _G.packer_plugins = {
     needs_bufread = false,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/telescope-fzy-native.nvim"
   },
+  ["telescope-project.nvim"] = {
+    loaded = false,
+    needs_bufread = false,
+    path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/telescope-project.nvim"
+  },
   ["telescope.nvim"] = {
     loaded = false,
     needs_bufread = false,
@@ -278,8 +276,9 @@ _G.packer_plugins = {
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/trouble.nvim"
   },
   ["vim-matchup"] = {
+    after_files = { "/home/rielj/.local/share/nvim/site/pack/packer/opt/vim-matchup/after/plugin/matchit.vim" },
     loaded = false,
-    needs_bufread = false,
+    needs_bufread = true,
     path = "/home/rielj/.local/share/nvim/site/pack/packer/opt/vim-matchup"
   },
   ["vim-vsnip"] = {

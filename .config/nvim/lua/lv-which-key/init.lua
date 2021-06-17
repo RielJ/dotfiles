@@ -67,8 +67,8 @@ vim.api.nvim_set_keymap("v", "<leader>/", ":CommentToggle<CR>", {noremap = true,
 vim.api.nvim_set_keymap("n", "<leader>c", ":BufferClose<CR>", {noremap = true, silent = true})
 
 -- open projects
--- vim.api.nvim_set_keymap('n', '<leader>p', ":lua require'telescope'.extensions.project.project{}<CR>",
---                         {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', '<leader>p', ":lua require'telescope'.extensions.project.project{}<CR>",
+                        {noremap = true, silent = true})
 -- TODO create entire treesitter section
 
 local mappings = {
