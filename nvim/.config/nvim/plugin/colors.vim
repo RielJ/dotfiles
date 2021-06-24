@@ -1,4 +1,4 @@
-let g:theprimeagen_colorscheme = "gruvbox"
+
 fun! ColorMyPencils()
     let g:gruvbox_contrast_dark = 'hard'
     if exists('+termguicolors')
@@ -9,7 +9,7 @@ fun! ColorMyPencils()
 
     set background=dark
     if has('nvim')
-        call luaeval('vim.cmd("colorscheme " .. _A[1])', [g:theprimeagen_colorscheme])
+        call luaeval('vim.cmd("colorscheme " .. "gruvbox")' )
     else
         " TODO: What the way to use g:theprimeagen_colorscheme
         colorscheme gruvbox
@@ -26,6 +26,7 @@ fun! ColorMyPencils()
     highlight qfFileName guifg=#aed75f
     hi TelescopeBorder guifg=#5eacd
 endfun
+
 call ColorMyPencils()
 
 nnoremap <leader>cwm :call ColorMyPencils()<CR>

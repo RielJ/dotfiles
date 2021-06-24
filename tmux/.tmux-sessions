@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+INTERSEED="~/work/interseed"
+TIMESHEET_CLIENT="~/work/timesheet_quasar"
+TIMESHEET_SERVER="~/work/claimclock_api"
+DOTFILES="~/.dotfiles"
+
+createWindow() {
+    session=$1
+    window=$2
+    shift
+    shift
+    hasWindow=$(tmux list-windows -t $session | grep "$window")
+    if [ -z "$hasWindow" ]; then
+        cmd="tmux neww -t $session: -n $window -d"
+        if [ $# -gt 0 ]; then
+            cmd="$cmd $@"
+        fi
+        echo "Creating Window(\"$hasWindow\"): $cmd"
+        eval $cmd
+    fi
+}
+
+createSession() {
+    session=$1
+    window=$2
+    shift
+    shift
+    cmd="tmux new -s $session -d -n $window $@ > /dev/null 2>&1"
+
+    echo "Creating Session: $cmd"
+    eval $cmd
+}
+
+while [ "$#" -gt 0 ]; do
+    curr=$1
+    shift
+
+    case "$curr" in
+    "--interseed")
+        createSession interseed terminals -c $INTERSEED/client
+        tmux split-window -t interseed:terminals -p 50 -h -c $INTERSEED/server
+        createWindow interseed server -c $INTERSEED/server
+        createWindow interseed client -c $INTERSEED/client
+        ;;
+
+    "--timesheet")
+        createSession timesheet terminals -c $TIMESHEET_CLIENT
+        tmux split-window -t timesheet:terminals -p 50 -v -c $TIMESHEET_SERVER
+        createWindow timesheet server -c $TIMESHEET_SERVER
+        createWindow timesheet client -c $TIMESHEET_CLIENT
+        ;;
+
+    "--dotfiles")
+        createSession dotfiles zsh -c $DOTFILES/zsh/.config/zsh
+        createWindow dotfiles i3 -c $DOTFILES/i3/.config/i3
+        createWindow dotfiles nvim -c $DOTFILES/nvim/.config/nvim
+        ;;
+
+    *) echo "Unavailable command... $curr"
+    esac
+done

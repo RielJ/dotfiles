@@ -1,11 +1,14 @@
 # Network Manager Applet
-nm-applet --indicator &
-
-xrandr --auto --output eDP-1-1 --right-of HDMI-1-1 --auto
-
-feh --bg-fill --randomize ~/personal/wallpapers/* &
-
-
+# nm-applet --indicator &
+# xrandr --auto --output eDP-1 --right-of HDMI-1 --auto &
+# xss-lock --transfer-sleep-lock -- i3lock --nofork &
+# picom --config $HOME/.config/picom/picom.conf &
+# dunst &
+# discord --start-minimized &
+# flameshot &
+# xbanish &
+# blueman-applet &
+# pasystray &
 # Don't Randomly Turn off
 xset s off
 xset -dpms
@@ -17,7 +20,7 @@ xset r rate 210 40
 # Environment variables set everywhere
 export EDITOR="nvim"
 export TERMINAL="alacritty"
-export BROWSER="google-chrome"
+export BROWSER="google-chrome-stable"
 
 # For QT Themes
 export QT_QPA_PLATFORMTHEME=qt5ct
@@ -27,23 +30,11 @@ export XDG_CONFIG_HOME=$HOME/.config
 export XDG_CACHE_HOME=$HOME/.cache
 export XDG_DATA_HOME=$HOME/.local/share
 
-# Hide mouse when typing
-xbanish &
-
 # zsh config dir
 export ZDOTDIR=$HOME/.config/zsh
 
-# Screenshots
-flameshot &
-
-# Bluetooth systray icon
-blueman-applet &
-
-# helps with puls audio
-pasystray &
-
 # remap caps to escape
-setxkbmap -option caps:escape
+ setxkbmap -option caps:escape
 # swap escape and caps
 # setxkbmap -option caps:swapescape
 

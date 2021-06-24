@@ -13,6 +13,8 @@ alias zsh-update-plugins="find "$ZDOTDIR/plugins" -type d -exec test -e '{}/.git
 alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
+alias hotspot_lock='rm /tmp/create_ap.all.lock'
+alias hotspot='sudo create_ap --daemon wlp3s0 enp2s0 PLDTHOMEFIBR21a25 RielJ213'
 
 # confirm before overwriting something
 alias cp="cp -i"
@@ -28,6 +30,8 @@ alias psmem='ps auxf | sort -nr -k 4 | head -5'
 
 # get top process eating cpu ##
 alias pscpu='ps auxf | sort -nr -k 3 | head -5'
+
+alias tms='bash ~/.tmux-sessions'
 
 # gpg encryption
 # verify signature for isos
@@ -59,3 +63,6 @@ case "$(uname -s)" in
      # echo 'Other OS' 
      ;;
 esac
+
+alias ll="exa -l -g --icons"
+alias lla="ll -a"

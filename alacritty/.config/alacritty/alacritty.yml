@@ -39,25 +39,25 @@ font:
   # The normal (roman) font face to use.
   normal:
     #family: "MesloLGS NF"
-    family: "monospace"
+    family: "MesloLGS NF"
     # Style can be specified to pick a specific face.
     style: Regular
 
   # The bold font face
   bold:
     family: "MesloLGS NF"
-    family: "monospace"
+    # family: "monospace"
     # Style can be specified to pick a specific face.
     style: Bold
 
   # The italic font face
   italic:
     family: "MesloLGS NF"
-    family: "monospace"
+    # family: "monospace"
     # Style can be specified to pick a specific face.
     style: Italic
 
-  size: 12.0
+  size: 11.0
 
   ligatures: true
 
