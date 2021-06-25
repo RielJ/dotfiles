@@ -170,12 +170,12 @@ mode "$mode_system" {
 
 bindsym $mod+0 mode "$mode_system"
 bindsym --release XF86PowerOff mode "$mode_system"
-bindsym $mod+Shift+d exec --no-startup-id feh --randomize --bg-fill $HOME/personal/anime/*
-bindsym $mod+Shift+f exec --no-startup-id feh --randomize --bg-fill $HOME/personal/wallpapers/*
+bindsym $mod+Shift+d exec --no-startup-id feh --randomize --bg-fill $HOME/personal/dotfiles/anime/*
+bindsym $mod+Shift+f exec --no-startup-id feh --randomize --bg-fill $HOME/personal/dotfiles/wallpapers/*
 
 exec_always --no-startup-id $HOME/.config/polybar/launch.sh
 
-exec--no-startup-id feh --randomize --bg-fill $HOME/personal/anime/*
+exec--no-startup-id feh --randomize --bg-fill $HOME/personal/dotfiles/anime/*
 exec --no-startup-id nm-applet --indicator 
 exec --no-startup-id xrandr --auto --output eDP-1 --right-of HDMI-1 --auto 
 exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork 
