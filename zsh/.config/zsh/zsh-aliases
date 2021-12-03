@@ -13,8 +13,10 @@ alias zsh-update-plugins="find "$ZDOTDIR/plugins" -type d -exec test -e '{}/.git
 alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
-alias hotspot_lock='rm /tmp/create_ap.all.lock'
+alias hotspot_lock='sudo rm /tmp/create_ap.all.lock'
 alias hotspot='sudo create_ap --daemon wlp3s0 enp2s0 PLDTHOMEFIBR21a25 RielJ213'
+alias unbt='sudo rfkill unblock bluetooth && bluetoothctl'
+alias useconda='export PATH=$HOME/.miniconda/bin:$PATH'
 
 # confirm before overwriting something
 alias cp="cp -i"
@@ -31,7 +33,8 @@ alias psmem='ps auxf | sort -nr -k 4 | head -5'
 # get top process eating cpu ##
 alias pscpu='ps auxf | sort -nr -k 3 | head -5'
 
-alias tms='bash ~/.tmux-sessions'
+# alias tms='bash ~/.tmux-sessions'
+alias work='bash ~/.tmux-work-sessions'
 
 # gpg encryption
 # verify signature for isos

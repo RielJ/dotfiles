@@ -1,100 +1,192 @@
-local execute = vim.api.nvim_command
-local fn = vim.fn
+return {
+  -- Packer can manage itself as an optional plugin
+  { "wbthomason/packer.nvim" },
+  { "neovim/nvim-lspconfig" },
+  { "tamago324/nlsp-settings.nvim" },
+  { "jose-elias-alvarez/null-ls.nvim" },
+  {
+    "kabouzeid/nvim-lspinstall",
+    event = "VimEnter",
+    config = function()
+      local lspinstall = require "core.lspinstall"
+      lspinstall.setup()
+    end,
+  },
 
-local install_path = fn.stdpath("data") .. "/site/pack/packer/start/packer.nvim"
+  { "nvim-lua/popup.nvim" },
+  { "nvim-lua/plenary.nvim" },
+  -- Telescope
+  {
+    "nvim-telescope/telescope.nvim",
+    config = function()
+      require("core.telescope").setup()
+    end,
+    disable = not lvim.builtin.telescope.active,
+  },
 
-if fn.empty(fn.glob(install_path)) > 0 then
-    execute("!git clone https://github.com/wbthomason/packer.nvim " .. install_path)
-    execute "packadd packer.nvim"
-end
+  -- Completion & Snippets
+  {
+    "hrsh7th/nvim-compe",
+    event = "InsertEnter",
+    config = function()
+      require("core.compe").setup()
+    end,
+    disable = not lvim.builtin.compe.active,
+    -- wants = "vim-vsnip",
+    -- requires = {
+    -- {
+    --   "hrsh7th/vim-vsnip",
+    --   wants = "friendly-snippets",
+    --   event = "InsertCharPre",
+    -- },
+    -- {
+    --   "rafamadriz/friendly-snippets",
+    --   event = "InsertCharPre",
+    -- },
+    -- },
+  },
+  {
+    "hrsh7th/vim-vsnip",
+    -- wants = "friendly-snippets",
+    event = "InsertEnter",
+    disable = not lvim.builtin.compe.active,
+  },
+  {
+    "rafamadriz/friendly-snippets",
+    event = "InsertCharPre",
+    disable = not lvim.builtin.compe.active,
+  },
 
---- Check if a file or directory exists in this path
-local function require_plugin(plugin)
-    local plugin_prefix = fn.stdpath("data") .. "/site/pack/packer/opt/"
+  -- Autopairs
+  {
+    "windwp/nvim-autopairs",
+    -- event = "InsertEnter",
+    after = "nvim-compe",
+    config = function()
+      require("core.autopairs").setup()
+    end,
+    disable = not lvim.builtin.autopairs.active or not lvim.builtin.compe.active,
+  },
 
-    local plugin_path = plugin_prefix .. plugin .. "/"
-    -- print('test '..plugin_path)
-    local ok, err, code = os.rename(plugin_path, plugin_path)
-    if not ok then
-        if code == 13 then
-            -- Permission denied, but it exists
-            return true
-        end
-    end
-    -- print(ok, err, code)
-    if ok then vim.cmd("packadd " .. plugin) end
-    return ok, err, code
-end
+  -- Treesitter
+  {
+    "nvim-treesitter/nvim-treesitter",
+    branch = "0.5-compat",
+    -- run = ":TSUpdate",
+    config = function()
+      require("core.treesitter").setup()
+    end,
+  },
 
-vim.cmd "autocmd BufWritePost plugins.lua PackerCompile" -- Auto compile when there are changes in plugins.lua
+  -- NvimTree
+  {
+    "kyazdani42/nvim-tree.lua",
+    -- event = "BufWinOpen",
+    -- cmd = "NvimTreeToggle",
+    -- commit = "fd7f60e242205ea9efc9649101c81a07d5f458bb",
+    config = function()
+      require("core.nvimtree").setup()
+    end,
+    disable = not lvim.builtin.nvimtree.active,
+  },
 
+  {
+    "lewis6991/gitsigns.nvim",
 
-return require("packer").startup(function(use)
-    -- Packer can manage itself as an optional plugin
-    use "wbthomason/packer.nvim"
+    config = function()
+      require("core.gitsigns").setup()
+    end,
+    event = "BufRead",
+    disable = not lvim.builtin.gitsigns.active,
+  },
 
-    -- Gruvbox Theme
-    use "rktjmp/lush.nvim"
-    use {"npxbr/gruvbox.nvim", requires = {"rktjmp/lush.nvim"}}
+  -- Whichkey
+  {
+    "folke/which-key.nvim",
+    config = function()
+      require("core.which-key").setup()
+    end,
+    event = "BufWinEnter",
+    disable = not lvim.builtin.which_key.active,
+  },
 
-    -- LSP 
-    use {"neovim/nvim-lspconfig", opt = true}
-    use {"glepnir/lspsaga.nvim", opt = true}
-    use {"kabouzeid/nvim-lspinstall", opt = true}
-    use {"folke/trouble.nvim", opt = true} 
+  -- Comments
+  {
+    "terrortylor/nvim-comment",
+    event = "BufRead",
+    config = function()
+      require("nvim_comment").setup()
+    end,
+    disable = not lvim.builtin.comment.active,
+  },
 
-    -- Auto Complete
-    use {"hrsh7th/nvim-compe", opt = true}
-    use {"hrsh7th/vim-vsnip", opt = true}
-    use {"rafamadriz/friendly-snippets", opt = true}
+  -- project.nvim
+  {
+    "ahmedkhalf/project.nvim",
+    config = function()
+      require("core.project").setup()
+    end,
+    disable = not lvim.builtin.project.active,
+  },
 
-    -- Treesitter
-    use {"nvim-treesitter/nvim-treesitter", run = ":TSUpdate"}
-    use {"windwp/nvim-ts-autotag", opt = true}
-    use {'andymass/vim-matchup', opt = true}
+  -- Icons
+  { "kyazdani42/nvim-web-devicons" },
 
-    -- Explorer
-    use {"kyazdani42/nvim-tree.lua", opt = true}
-    use {"ahmedkhalf/lsp-rooter.nvim", opt = true}
-    use "kevinhwang91/rnvimr"
+  -- Status Line and Bufferline
+  {
+    -- "hoob3rt/lualine.nvim",
+    "shadmansaleh/lualine.nvim",
+    -- "Lunarvim/lualine.nvim",
+    config = function()
+      require("core.lualine").setup()
+    end,
+    disable = not lvim.builtin.lualine.active,
+  },
 
-    -- Auto Pairs
-    use {"terrortylor/nvim-comment", opt = true}
-    use {"windwp/nvim-autopairs", opt = true}
-    use {"blackCauldron7/surround.nvim", opt = true}
+  {
+    "romgrk/barbar.nvim",
+    config = function()
+      require("core.bufferline").setup()
+    end,
+    event = "BufWinEnter",
+    disable = not lvim.builtin.bufferline.active,
+  },
 
-    -- Telescope
-    use {"nvim-lua/popup.nvim", opt = true}
-    use {"nvim-lua/plenary.nvim", opt = true}
-    use {"nvim-telescope/telescope.nvim", opt = true}
-    use {"nvim-telescope/telescope-fzy-native.nvim", opt = true}
+  -- Debugging
+  {
+    "mfussenegger/nvim-dap",
+    -- event = "BufWinEnter",
+    config = function()
+      require("core.dap").setup()
+    end,
+    disable = not lvim.builtin.dap.active,
+  },
 
-    use {"kyazdani42/nvim-web-devicons", opt = true}
-    use {"romgrk/barbar.nvim", opt = true}
+  -- Debugger management
+  {
+    "Pocco81/DAPInstall.nvim",
+    -- event = "BufWinEnter",
+    -- event = "BufRead",
+    disable = not lvim.builtin.dap.active,
+  },
 
-    require_plugin('nvim-lspconfig')
-    require_plugin('lspsaga.nvim')
-    require_plugin('nvim-lspinstall')
-    require_plugin('trouble.nvim')
-    require_plugin('lsp-rooter.nvim')
+  -- Dashboard
+  {
+    "ChristianChiarulli/dashboard-nvim",
+    event = "BufWinEnter",
+    config = function()
+      require("core.dashboard").setup()
+    end,
+    disable = not lvim.builtin.dashboard.active,
+  },
 
-    require_plugin('popup.nvim')
-    require_plugin('plenary.nvim')
-    require_plugin('telescope.nvim')
-
-    require_plugin("nvim-compe")
-    require_plugin("vim-vsnip")
-    require_plugin("friendly-snippets")
-    require_plugin("surround.nvim")
-
-    require_plugin("nvim-treesitter")
-    require_plugin("nvim-tree.lua")
-    require_plugin("nvim-ts-autotag")
-    require_plugin('vim-matchup')
-
-    require_plugin('nvim-web-devicons')
-    require_plugin('barbar.nvim')
-
-    require_plugin("nvim-comment")
-    require_plugin("nvim-autopairs")
-end)
+  -- Terminal
+  {
+    "akinsho/nvim-toggleterm.lua",
+    event = "BufWinEnter",
+    config = function()
+      require("core.terminal").setup()
+    end,
+    disable = not lvim.builtin.terminal.active,
+  },
+}

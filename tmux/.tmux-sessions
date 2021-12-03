@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
+WORK="/home/rielj/work"
 INTERSEED="~/work/interseed"
 TIMESHEET_CLIENT="~/work/timesheet_quasar"
 TIMESHEET_SERVER="~/work/claimclock_api"
-DOTFILES="~/.dotfiles"
+DOTFILES="~/personal/dotfiles"
 
 createWindow() {
     session=$1
@@ -32,6 +33,11 @@ createSession() {
     eval $cmd
 }
 
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied"
+fi
+
 while [ "$#" -gt 0 ]; do
     curr=$1
     shift
@@ -39,14 +45,14 @@ while [ "$#" -gt 0 ]; do
     case "$curr" in
     "--interseed")
         createSession interseed terminals -c $INTERSEED/client
-        tmux split-window -t interseed:terminals -p 50 -h -c $INTERSEED/server
+        tmux split-window -c ~/work/interseed/server -t interseed:terminals -p 50 -h
         createWindow interseed server -c $INTERSEED/server
         createWindow interseed client -c $INTERSEED/client
         ;;
 
     "--timesheet")
         createSession timesheet terminals -c $TIMESHEET_CLIENT
-        tmux split-window -t timesheet:terminals -p 50 -v -c $TIMESHEET_SERVER
+        tmux split-window -c ~/work/claimclock_api/ -t timesheet:terminals -p 50 -h
         createWindow timesheet server -c $TIMESHEET_SERVER
         createWindow timesheet client -c $TIMESHEET_CLIENT
         ;;
@@ -57,6 +63,24 @@ while [ "$#" -gt 0 ]; do
         createWindow dotfiles nvim -c $DOTFILES/nvim/.config/nvim
         ;;
 
-    *) echo "Unavailable command... $curr"
+    "--otterate")
+        createSession otterate servers -c $WORK/otterate
+        tmux split-window -c $WORK/otterate -t otterate:servers -p 50 -h
+        createWindow otterate backend -c $WORK/otterate
+        createWindow otterate frontend -c $WORK/otterate
+        ;;
+
+    *)  
+        if [ -d "$WORK/$curr" -a ! -h "$WORK/$curr" ];
+        then
+          createSession $curr servers -c $WORK/$curr
+          tmux split-window -c $WORK/$curr -t work:servers -p 50 -h
+          createWindow $curr window1 -c $WORK/$curr
+          createWindow $curr window2 -c $WORK/$curr
+          tmux a -t $curr
+        else
+          echo "Folder $WORK/$curr does not exist."
+        fi
+        ;;
     esac
 done

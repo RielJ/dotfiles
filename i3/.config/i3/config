@@ -1,13 +1,13 @@
 set $mod Mod4
 
-font pango:Google Sans Display 0
+font pango:monospace 0
 
 bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +5% && $refresh_i3status
 bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -5% && $refresh_i3status
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
 
-bindsym XF86MonBrightnessUp exec brightnessctl set +10 && $refresh_i3status # increase screen brightness
-bindsym XF86MonBrightnessDown exec brightnessctl set +10 && $refresh_i3status # decrease screen brightness
+bindsym XF86MonBrightnessUp exec brightnessctl set +10% && $refresh_i3status # increase screen brightness
+bindsym XF86MonBrightnessDown exec brightnessctl set 10%- && $refresh_i3status # decrease screen brightness
 
 bindsym XF86AudioPlay exec playerctl play-pause && $refresh_i3status
 bindsym XF86AudioPause exec playerctl play-pause && $refresh_i3status
@@ -152,13 +152,14 @@ client.placeholder      $bg     $bg     $fg     $bg
 bindsym Print        exec flameshot full -c
 bindsym $mod+Shift+s exec flameshot gui
 
-set $Locker ~/.config/i3/matrixlock.py 1 & sleep 1
+set $Locker exec dm-tool lock & sleep 1
 
 set $mode_system System (l) lock, (e) logout, (s) suspend, (h) hibernate, (r) reboot, (Shift+s) shutdown
 mode "$mode_system" {
     bindsym l exec --no-startup-id $Locker, mode "default"
     bindsym e exec --no-startup-id i3-msg exit, mode "default"
     bindsym s exec --no-startup-id $Locker && systemctl suspend, mode "default"
+    bindsym p exec --no-startup-id shutdown -P +0
     bindsym h exec --no-startup-id $Locker && systemctl hibernate, mode "default"
     bindsym r exec --no-startup-id systemctl reboot, mode "default"
     bindsym Shift+s exec --no-startup-id systemctl poweroff -i, mode "default"  
@@ -170,16 +171,16 @@ mode "$mode_system" {
 
 bindsym $mod+0 mode "$mode_system"
 bindsym --release XF86PowerOff mode "$mode_system"
-bindsym $mod+Shift+d exec --no-startup-id feh --randomize --bg-fill $HOME/personal/dotfiles/anime/*
-bindsym $mod+Shift+f exec --no-startup-id feh --randomize --bg-fill $HOME/personal/dotfiles/wallpapers/*
+bindsym $mod+Shift+d exec --no-startup-id feh --randomize --bg-fill $HOME/personal/images/anime/*
+bindsym $mod+Shift+f exec --no-startup-id feh --randomize --bg-fill $HOME/personal/images/wallpapers/*
 
 exec_always --no-startup-id $HOME/.config/polybar/launch.sh
 
-exec--no-startup-id feh --randomize --bg-fill $HOME/personal/dotfiles/anime/*
+exec--no-startup-id feh --bg-fill $HOME/personal/images/anime/gruv_waifu.png
 exec --no-startup-id nm-applet --indicator 
 exec --no-startup-id xrandr --auto --output eDP-1 --right-of HDMI-1 --auto 
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork 
-exec --no-startup-id picom --config $HOME/.config/picom/picom.conf 
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork -i $HOME/personal/images/anime/189996-the-best-wallpaper-background.jpg
+exec --no-startup-id picom --experimental-backends --config $HOME/.config/picom/picom.conf 
 exec --no-startup-id dunst 
 exec --no-startup-id discord --start-minimized 
 exec --no-startup-id flameshot 

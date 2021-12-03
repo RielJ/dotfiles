@@ -10,7 +10,8 @@
 # blueman-applet &
 # pasystray &
 # Don't Randomly Turn off
-xset s off
+# xset s 180
+# xset s 1200 1800
 xset -dpms
 xset s noblank
 
@@ -20,7 +21,7 @@ xset r rate 210 40
 # Environment variables set everywhere
 export EDITOR="nvim"
 export TERMINAL="alacritty"
-export BROWSER="google-chrome-stable"
+export BROWSER="/usr/bin/google-chrome-stable"
 
 # For QT Themes
 export QT_QPA_PLATFORMTHEME=qt5ct
@@ -40,3 +41,7 @@ export ZDOTDIR=$HOME/.config/zsh
 
 # load Xresources
 # xrdb ~/.Xresources
+# xautolock -detectsleep \
+#           -notify  600 -notifier "xset dpms force off" \
+#           -time     10 -locker   "i3lock -nc 000000" \
+#           -killtime 40 -killer   "systemctl hibernate-suspend" &
