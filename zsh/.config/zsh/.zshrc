@@ -75,15 +75,13 @@ autoload edit-command-line; zle -N edit-command-line
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 
+export XDG_CONFIG_HOME="$HOME/.config/"
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm
 [ -s "$NVM_DIR/install-nvm-exec" ] && \. "$NVM_DIR/install-nvm-exec" # This loads nvm
 
-# [ -z "$NVM_DIR" ] && export NVM_DIR="$HOME/.nvm"
-# source /usr/share/nvm/nvm.sh
-# source /usr/share/nvm/bash_completion
-# source /usr/share/nvm/install-nvm-exec
+pfetch
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!

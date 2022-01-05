@@ -34,7 +34,7 @@ alias psmem='ps auxf | sort -nr -k 4 | head -5'
 alias pscpu='ps auxf | sort -nr -k 3 | head -5'
 
 # alias tms='bash ~/.tmux-sessions'
-alias work='bash ~/.tmux-work-sessions'
+alias work='bash ~/.tmux-sessions'
 
 # gpg encryption
 # verify signature for isos

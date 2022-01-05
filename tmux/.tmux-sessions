@@ -7,80 +7,86 @@ TIMESHEET_SERVER="~/work/claimclock_api"
 DOTFILES="~/personal/dotfiles"
 
 createWindow() {
-    session=$1
-    window=$2
-    shift
-    shift
-    hasWindow=$(tmux list-windows -t $session | grep "$window")
-    if [ -z "$hasWindow" ]; then
-        cmd="tmux neww -t $session: -n $window -d"
-        if [ $# -gt 0 ]; then
-            cmd="$cmd $@"
-        fi
-        echo "Creating Window(\"$hasWindow\"): $cmd"
-        eval $cmd
-    fi
+	session=$1
+	window=$2
+	shift
+	shift
+	hasWindow=$(tmux list-windows -t $session | grep "$window")
+	if [ -z "$hasWindow" ]; then
+		cmd="tmux neww -t $session: -n $window -d"
+		if [ $# -gt 0 ]; then
+			cmd="$cmd $@"
+		fi
+		echo "Creating Window(\"$hasWindow\"): $cmd"
+		eval $cmd
+	fi
 }
 
 createSession() {
-    session=$1
-    window=$2
-    shift
-    shift
-    cmd="tmux new -s $session -d -n $window $@ > /dev/null 2>&1"
+	session=$1
+	window=$2
+	shift
+	shift
+	cmd="tmux new -s $session -d -n $window $@ > /dev/null 2>&1"
 
-    echo "Creating Session: $cmd"
-    eval $cmd
+	echo "Creating Session: $cmd"
+	eval $cmd
 }
 
-if [ $# -eq 0 ]
-  then
-    echo "No arguments supplied"
+if [ $# -eq 0 ]; then
+	echo "No arguments supplied"
 fi
 
-while [ "$#" -gt 0 ]; do
-    curr=$1
-    shift
+curr=$1
 
-    case "$curr" in
-    "--interseed")
-        createSession interseed terminals -c $INTERSEED/client
-        tmux split-window -c ~/work/interseed/server -t interseed:terminals -p 50 -h
-        createWindow interseed server -c $INTERSEED/server
-        createWindow interseed client -c $INTERSEED/client
-        ;;
+case "$curr" in "--interseed")
+	createSession interseed terminals -c $INTERSEED/client
+	tmux split-window -c $INTERSEED/server -t interseed:terminals -p 50 -h
+	createWindow interseed server -c $INTERSEED/server
+	createWindow interseed client -c $INTERSEED/client
+	;;
 
-    "--timesheet")
-        createSession timesheet terminals -c $TIMESHEET_CLIENT
-        tmux split-window -c ~/work/claimclock_api/ -t timesheet:terminals -p 50 -h
-        createWindow timesheet server -c $TIMESHEET_SERVER
-        createWindow timesheet client -c $TIMESHEET_CLIENT
-        ;;
+"--timesheet")
+	createSession timesheet terminals -c $TIMESHEET_CLIENT
+	tmux split-window -c $TIMESHEET_SERVER -t timesheet:terminals -p 50 -h
+	createWindow timesheet server -c $TIMESHEET_SERVER
+	createWindow timesheet client -c $TIMESHEET_CLIENT
+	;;
 
-    "--dotfiles")
-        createSession dotfiles zsh -c $DOTFILES/zsh/.config/zsh
-        createWindow dotfiles i3 -c $DOTFILES/i3/.config/i3
-        createWindow dotfiles nvim -c $DOTFILES/nvim/.config/nvim
-        ;;
+"--dotfiles")
+	createSession dotfiles zsh -c $DOTFILES/zsh/.config/zsh
+	createWindow dotfiles i3 -c $DOTFILES/sway/.config/sway
+	createWindow dotfiles nvim -c $DOTFILES/nvim/.config/nvim
+	tmux a -t dotfiles
+	;;
 
-    "--otterate")
-        createSession otterate servers -c $WORK/otterate
-        tmux split-window -c $WORK/otterate -t otterate:servers -p 50 -h
-        createWindow otterate backend -c $WORK/otterate
-        createWindow otterate frontend -c $WORK/otterate
-        ;;
+"--otterate")
+	createSession otterate servers -c $WORK/otterate
+	tmux split-window -c $WORK/otterate -t otterate:servers -p 50 -h
+	createWindow otterate backend -c $WORK/otterate
+	createWindow otterate frontend -c $WORK/otterate
+	;;
 
-    *)  
-        if [ -d "$WORK/$curr" -a ! -h "$WORK/$curr" ];
-        then
-          createSession $curr servers -c $WORK/$curr
-          tmux split-window -c $WORK/$curr -t work:servers -p 50 -h
-          createWindow $curr window1 -c $WORK/$curr
-          createWindow $curr window2 -c $WORK/$curr
-          tmux a -t $curr
-        else
-          echo "Folder $WORK/$curr does not exist."
-        fi
-        ;;
-    esac
-done
+*)
+	if [ -d "$WORK/$curr" -a ! -h "$WORK/$curr" ]; then
+		if [ $# -eq 1 ]; then
+			createSession $curr terminals -c $WORK/$curr
+			tmux split-window -c $WORK/$curr -t $curr:terminals -p 50 -h
+			createWindow $curr server -c $WORK/$curr
+			createWindow $curr client -c $WORK/$curr
+			tmux a -t $curr
+		elif [ $# -eq 2 ]; then
+			next=$2
+			createSession $curr terminals -c $WORK/$curr
+			tmux split-window -c $WORK/$next -t $curr:terminals -p 50 -h
+			createWindow $curr server -c $WORK/$curr
+			createWindow $curr client -c $WORK/$next
+			tmux a -t $curr
+		else
+			echo "Arguments Exceeded."
+		fi
+	else
+		echo "Folder $WORK/$curr does not exist."
+	fi
+	;;
+esac
