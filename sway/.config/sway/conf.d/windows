@@ -1,0 +1,91 @@
+# Apply gtk theming
+# exec_always ~/.config/sway/scripts/import-gsettings
+
+for_window [class="^.*"] border pixel 0
+default_border pixel 1
+default_floating_border pixel 0
+
+
+# Set inner/outer gaps
+# gaps inner 10
+# gaps outer 0
+
+set $default_gaps_inner 12
+set $default_gaps_outer 12
+gaps inner $default_gaps_inner
+gaps outer $default_gaps_outer
+gaps top 0
+# gaps bottom 10
+smart_gaps on
+
+# Hide titlebar on windows:
+default_border pixel 5
+
+# Default Font
+font pango:Noto Sans Regular 10
+
+# Thin borders:
+smart_borders on
+# smart_gaps on
+
+# Title format for windows
+for_window [shell="xdg_shell"] title_format "%title (%app_id)"
+for_window [shell="x_wayland"] title_format "%class - %title"
+
+# Wayland default floats
+for_window [app_id="gnome-(calendar|calculator|power-statistics|control-center)"] floating enable
+for_window [app_id="org.gnome.(Nautilus|Weather)"] floating enable
+for_window [app_id="(pavucontrol|psensor)"] floating enable
+for_window [app_id="evolution-alarm-notify"] floating enable
+for_window [app_id="nemo"] floating enable
+for_window [app_id="solaar"] floating enable
+for_window [app_id="evolution" title="Compose Message"] floating enable
+for_window [app_id="evolution" title="Re(.*)"] floating enable
+for_window [app_id="evolution" title="Fwd(.*)"] floating enable
+for_window [app_id="mpv"] floating enable
+for_window [app_id="mpv"] resize set 960 540
+for_window [app_id="mpv"] border pixel 0
+for_window [app_id="firefox" title="Pushbullet"] floating enable
+for_window [app_id="firefox" title="Firefox — Sharing Indicator"] floating enable
+for_window [app_id="firefox" title="Picture-in-Picture"] floating enable
+for_window [app_id="firefox" title="Pushbullet – Mozilla Firefox"] floating enable
+for_window [app_id="firefox" title="About Mozilla Firefox"] floating enable
+
+# Brave, chrome, chromium
+for_window [title="Picture-in-picture"] floating enable
+
+# Jetbrains popup float fixes
+for_window [class="jetbrains-(.*)" title="Go to Line/Column"] floating enable
+for_window [class="jetbrains-(.*)" title="Rename"] floating enable
+for_window [class="jetbrains-(.*)" title="Open Project"] floating enable
+for_window [class="(jetbrains|java-util)-(.*)" title="win0"] floating enable
+
+# Ensure authy has borders, otherwise it can be hard to see if the bottom app has a clear background
+for_window [title="Twilio Authy"] border pixel 2
+
+# XWayland default floats
+#for_window [class="[.]*"] floating enable
+
+
+## Window decoration
+# class                 border  backgr. text    indicator child_border
+#client.focused          #88c0d0 #434c5e #eceff4 #8fbcbb   #88c0d0
+#client.focused_inactive #88c0d0 #2e3440 #d8dee9 #4c566a   #4c566a
+#client.unfocused        #88c0d0 #2e3440 #d8dee9 #4c566a   #4c566a
+#client.urgent           #ebcb8b #ebcb8b #2e3440 #8fbcbb   #ebcb8b
+
+# Window borders
+client.focused          #5C8286 #5C8286 #ffffff #2e9ef4   #8fbcbb
+client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
+client.unfocused        #333333 #222222 #888888 #333845   #333845
+client.urgent           #2f343a #900000 #ffffff #900000   #900000
+client.placeholder      #000000 #0c0c0c #ffffff #000000   #333845
+client.background       #ffffff
+#
+# Status Bar:
+#
+# Read `man 5 sway-bar` for more information about this section.
+# bar {
+#    swaybar_command waybar
+# }
+

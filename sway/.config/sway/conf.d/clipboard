@@ -1,0 +1,4 @@
+exec_always ~/sway/scripts/clipboard-daemon
+
+bindsym $mod+Shift+f exec clipman pick --tool=wofi
+

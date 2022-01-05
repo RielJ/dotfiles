@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+pkill swaybg
+swaybg -o 'eDP-1' -i "/home/rielj/personal/dotfiles/wallpapers/apocalyptic-hipster.jpg" -m fill &

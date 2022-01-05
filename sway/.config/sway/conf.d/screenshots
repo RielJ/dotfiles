@@ -1,0 +1,26 @@
+# bindsym {
+#     $mod+Shift+s exec   'grim -g "$(slurp -d)" -    | wl-copy ; notify-send -t 5000 "Grim" "screenshot copied to clipboard"'
+#     Print exec         'grim -c -                  | wl-copy ; notify-send -t 5000 "Grim" "screenshot copied to clipboard"'
+#     $mod+s exec   'grim -g "$(slurp -d)" ; notify-send -t 5000 "Grim" "screenshot is saved"'
+#     Shift+Print exec   'grim -c; notify-send grim -t 5000 "Grim" "Screenshot is saved."'
+# }
+# 
+# Screenshot to clipboard (all displays)
+# bindsym Print exec screenshots.sh all-to-clipboard
+bindsym Print exec grimshot --notify copy
+
+# Screenshot to file (all displays)
+bindsym $mod+Print exec  grimshot --notify save
+
+# Current window to clipboard (doesn't work on floating windows tho)
+bindsym alt+Print exec  grimshot --notify copy active
+
+# Region-select-screenshot to clipboard
+bindsym $mod+Shift+s exec grimshot --notify copy area
+
+# Region-select-screenshot to file
+bindsym $mod+ctrl+s exec grimshot --notify save area
+
+# Current display to clipboard
+bindsym ctrl+alt+Print exec grimshot --notify copy output
+

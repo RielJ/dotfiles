@@ -1,0 +1,7 @@
+set $menu wofi -c ~/.config/wofi/config -I
+
+bindsym $mod+d exec $menu
+
+## Power menu
+bindsym $mod+P exec nwgbar
+
