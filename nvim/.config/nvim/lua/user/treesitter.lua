@@ -19,8 +19,16 @@ M.setup = function()
       disable = { "latex" },
     },
     context_commentstring = {
-      enable = false,
-      config = { css = "// %s" },
+      enable = true,
+      config = {
+        typescript = "// %s",
+        css = "/* %s */",
+        scss = "/* %s */",
+        html = "<!-- %s -->",
+        svelte = "<!-- %s -->",
+        vue = "<!-- %s -->",
+        json = "",
+     },
     },
     indent = { enable = true, disable = { "yaml", "html", "javascript", "python" } },
     autotag = { enable = false },
@@ -37,7 +45,7 @@ M.setup = function()
       keymaps = { ["."] = "textsubjects-smart", [";"] = "textsubjects-big" },
     },
     rainbow = {
-      enable = true,
+      enable = false,
       extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
       max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
     },

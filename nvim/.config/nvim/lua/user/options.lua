@@ -1,10 +1,10 @@
-vim.g.mapleader = " "
+vim.g.mapleader = ' '
 vim.o.termguicolors = true
 vim.opt.backup = false -- creates a backup file
 vim.opt.clipboard = "unnamedplus" -- allows neovim to access the system clipboard
 vim.opt.cmdheight = 2 -- more space in the neovim command line for displaying messages
 vim.opt.colorcolumn = "99999" -- fixes indentline for now
-vim.opt.completeopt = { "menu", "menuone", "noselect" }
+vim.opt.completeopt = { "menuone", "noselect" }
 vim.opt.conceallevel = 0 -- so that `` is visible in markdown files
 vim.opt.fileencoding = "utf-8" -- the encoding written to a file
 vim.opt.foldmethod = "manual" -- folding set to "expr" for treesitter based folding
@@ -23,7 +23,7 @@ vim.opt.splitbelow = true -- force all horizontal splits to go below current win
 vim.opt.splitright = true -- force all vertical splits to go to the right of current window
 vim.opt.swapfile = false -- creates a swapfile
 vim.opt.termguicolors = true -- set term gui colors (most terminals support this)
-vim.opt.timeoutlen = 100 -- time to wait for a mapped sequence to complete (in milliseconds)
+vim.opt.timeoutlen = 1000 -- time to wait for a mapped sequence to complete (in milliseconds)
 vim.opt.title = true -- set the title of window to the value of the titlestring
 vim.opt.undofile = true
 vim.opt.updatetime = 500
@@ -44,6 +44,10 @@ vim.opt.spelllang = "en"
 vim.opt.scrolloff = 8 -- is one of my fav
 vim.opt.sidescrolloff = 8
 
+vim.opt.shortmess:append "c"
+
+vim.cmd "set whichwrap+=<,>,[,],h,l"
+vim.cmd [[set iskeyword+=-]]
 -- Transparent Background
 vim.cmd "au ColorScheme * hi Normal ctermbg=none guibg=none"
 vim.cmd "au ColorScheme * hi SignColumn ctermbg=none guibg=none"

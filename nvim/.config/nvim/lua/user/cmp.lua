@@ -198,14 +198,14 @@ M.setup = function()
           Variable = " ",
         }
         local source_names = {
-          nvim_lsp = "(LSP)",
-          emoji = "(Emoji)",
-          path = "(Path)",
-          calc = "(Calc)",
-          cmp_tabnine = "(Tabnine)",
-          vsnip = "(Snippet)",
-          luasnip = "(Snippet)",
-          buffer = "(Buffer)",
+          nvim_lsp = "[LSP]",
+          emoji = "[Emoji]",
+          path = "[Path]",
+          calc = "[Calc]",
+          cmp_tabnine = "[Tabnine]",
+          vsnip = "[Snippet]",
+          luasnip = "[Snippet]",
+          buffer = "[Buffer]",
         }
         local duplicates = {
           buffer = 1,
@@ -231,8 +231,8 @@ M.setup = function()
     sources = {
       { name = "nvim_lsp" },
       { name = "path" },
-      { name = "luasnip" },
       { name = "cmp_tabnine" },
+      { name = "luasnip" },
       { name = "nvim_lua" },
       { name = "buffer" },
       { name = "calc" },
@@ -278,7 +278,10 @@ M.setup = function()
       }),
 
       ["<C-Space>"] = cmp.mapping.complete(),
-      ["<C-e>"] = cmp.mapping.abort(),
+      ["<C-e>"] = cmp.mapping {
+        i = cmp.mapping.abort(),
+        c = cmp.mapping.close(),
+      },
       ["<CR>"] = cmp.mapping(function(fallback)
         if
           cmp.visible()

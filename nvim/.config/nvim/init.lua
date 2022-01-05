@@ -1,7 +1,11 @@
-require "user.defaults"
+require "user.options"
 
-require("user.plugin-loader").setup()
 require "user.plugins"
 
-vim.o.background = "dark"
-vim.cmd [[colorscheme gruvbox]]
+require "user.keymappings"
+
+require "user.colorscheme"
+
+require "user.lsp"
+
+require "user.autocommands"
