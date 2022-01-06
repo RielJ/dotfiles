@@ -1,7 +1,10 @@
 require("user.plugin-loader").setup()
 return require("packer").startup(function(use)
 	use("wbthomason/packer.nvim")
+
+	-- Colorscheme
 	use({ "ellisonleao/gruvbox.nvim", requires = { "rktjmp/lush.nvim" } })
+	use("bluz71/vim-nightfly-guicolors")
 
 	-- LSP
 	use("neovim/nvim-lspconfig") -- enable LSP
