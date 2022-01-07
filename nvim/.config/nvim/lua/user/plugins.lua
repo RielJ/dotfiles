@@ -5,6 +5,9 @@ return require("packer").startup(function(use)
 	-- Colorscheme
 	use({ "ellisonleao/gruvbox.nvim", requires = { "rktjmp/lush.nvim" } })
 	use("bluz71/vim-nightfly-guicolors")
+	use("sainnhe/gruvbox-material")
+	use("folke/tokyonight.nvim")
+	use("glepnir/zephyr-nvim")
 
 	-- LSP
 	use("neovim/nvim-lspconfig") -- enable LSP
