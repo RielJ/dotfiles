@@ -47,15 +47,17 @@ author: "arcticicestudio"
 
 #window {
   animation-name: fadeIn;
-  animation-duration: 0.4s;
+  animation-duration: 0.1s;
   background-color: transparent;
   font-family: Hack;
+  opacity: 0.8;
   /* font-size:14; */
 }
 
 #input {
   border: none;
   background-color: @base10;
+  color: white;
   border-radius: 0px;
   margin: 4px 4px 8px 4px;
   padding: 8px;

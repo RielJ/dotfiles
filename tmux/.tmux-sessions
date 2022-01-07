@@ -55,7 +55,7 @@ case "$curr" in "--interseed")
 
 "--dotfiles")
 	createSession dotfiles zsh -c $DOTFILES/zsh/.config/zsh
-	createWindow dotfiles i3 -c $DOTFILES/sway/.config/sway
+	createWindow dotfiles sway -c $DOTFILES/sway/.config/sway
 	createWindow dotfiles nvim -c $DOTFILES/nvim/.config/nvim
 	tmux a -t dotfiles
 	;;

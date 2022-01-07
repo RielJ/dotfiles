@@ -4,4 +4,5 @@ exec blueman-applet
 exec nm-applet
 workspace 5
 exec discord
+workspace 1
 

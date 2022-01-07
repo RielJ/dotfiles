@@ -10,16 +10,16 @@ default_floating_border pixel 0
 # gaps inner 10
 # gaps outer 0
 
-set $default_gaps_inner 12
-set $default_gaps_outer 12
-gaps inner $default_gaps_inner
-gaps outer $default_gaps_outer
-gaps top 0
-# gaps bottom 10
-smart_gaps on
+# set $default_gaps_inner 12
+# set $default_gaps_outer 12
+# gaps inner $default_gaps_inner
+# gaps outer $default_gaps_outer
+# gaps top 0
+# # gaps bottom 10
+# smart_gaps on
 
 # Hide titlebar on windows:
-default_border pixel 5
+# default_border pixel 5
 
 # Default Font
 font pango:Noto Sans Regular 10
@@ -46,6 +46,7 @@ for_window [app_id="mpv"] floating enable
 for_window [app_id="mpv"] resize set 960 540
 for_window [app_id="mpv"] border pixel 0
 for_window [app_id="firefox" title="Pushbullet"] floating enable
+for_window [app_id="blueman"] floating enable
 for_window [app_id="firefox" title="Firefox — Sharing Indicator"] floating enable
 for_window [app_id="firefox" title="Picture-in-Picture"] floating enable
 for_window [app_id="firefox" title="Pushbullet – Mozilla Firefox"] floating enable
@@ -75,17 +76,67 @@ for_window [title="Twilio Authy"] border pixel 2
 #client.urgent           #ebcb8b #ebcb8b #2e3440 #8fbcbb   #ebcb8b
 
 # Window borders
-client.focused          #5C8286 #5C8286 #ffffff #2e9ef4   #8fbcbb
-client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
-client.unfocused        #333333 #222222 #888888 #333845   #333845
-client.urgent           #2f343a #900000 #ffffff #900000   #900000
-client.placeholder      #000000 #0c0c0c #ffffff #000000   #333845
-client.background       #ffffff
-#
-# Status Bar:
-#
-# Read `man 5 sway-bar` for more information about this section.
-# bar {
-#    swaybar_command waybar
-# }
+# client.focused          #5C8286 #5C8286 #ffffff #2e9ef4   #8fbcbb
+# client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
+# client.unfocused        #333333 #222222 #888888 #333845   #333845
+# client.urgent           #2f343a #900000 #ffffff #900000   #900000
+# client.placeholder      #000000 #0c0c0c #ffffff #000000   #333845
+# client.background       #ffffff
 
+#
+# Color definition
+#
+
+set $c1 #fd472f
+set $c2 #d79921
+set $c3 #99a2ea
+set $c4 #333142
+set $c5 #342f73
+
+
+set $white #f4f4f8
+set $dark #333333
+set $dim #666666
+
+
+set $focused_bgcolor $c2
+set $focused_textcolor $dark
+set $focused_indicator $c3
+
+set $inactive_bgcolor $c5
+set $inactive_textcolor $white
+set $inactive_indicator $c5
+
+set $unfocused_bgcolor $c4
+set $unfocused_textcolor $dim
+set $unfocused_indicator $c5
+
+set $urgent_bgcolor $c1
+set $urgent_textcolor $c4
+set $urgent_indicator $c3
+
+#
+# Appearance:
+#
+
+# Set inner/outer gaps
+default_border normal 0
+gaps inner 10
+gaps outer 5
+
+# Smart gaps (gaps used if only more than one container on the workspace)
+smart_gaps on
+
+# Smart borders (draw borders around container only if it is not the only container on this workspace) 
+smart_borders on
+
+# Hide Title Bars
+for_window [app_id="^.*"] border pixel 4, opacity 1
+default_border pixel 4
+default_floating_border pixel 10
+hide_edge_borders smart
+
+client.focused $focused_bgcolor $focused_bgcolor $focused_textcolor $focused_indicator $focused_bgcolor
+client.focused_inactive $inactive_bgcolor $inactive_bgcolor $inactive_textcolor $inactive_indicator $inactive_bgcolor
+client.unfocused $unfocused_bgcolor $unfocused_bgcolor $unfocused_textcolor $unfocused_indicator $unfocused_bgcolor
+client.urgent $urgent_bgcolor $urgent_bgcolor $urgent_textcolor $urgent_indicator $urgent_bgcolor
