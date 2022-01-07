@@ -18,6 +18,7 @@ keymap("n", "<C-l>", "<C-w>l", term_opts)
 
 -- LSP --
 keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.formatting_seq_sync()<CR>", opts)
+keymap("n", "<leader>lr", "<cmd>lua require('renamer').rename()<CR>", opts)
 
 -- Terminal --
 -- Better terminal navigation
@@ -25,6 +26,10 @@ keymap("t", "<C-h>", "<C-\\><C-N><C-w>h", term_opts)
 keymap("t", "<C-j>", "<C-\\><C-N><C-w>j", term_opts)
 keymap("t", "<C-k>", "<C-\\><C-N><C-w>k", term_opts)
 keymap("t", "<C-l>", "<C-\\><C-N><C-w>l", term_opts)
+keymap("n", "<leader>lg", "<cmd>lua require 'user.terminal'._lazygit_toggle()<CR>", opts)
+
+-- Cheatsheet
+keymap("n", "?", "<cmd>CheatWithoutComments<cr>", opts)
 
 -- Git --
 keymap("n", "<leader>gj", "<cmd>lua require 'gitsigns'.next_hunk()<CR>", opts)
