@@ -1,4 +1,5 @@
-vim.g.mapleader = ' '
+vim.g.mapleader = " "
+vim.g.python3_host_prog = "/usr/bin/python3"
 vim.o.termguicolors = true
 vim.opt.backup = false -- creates a backup file
 vim.opt.clipboard = "unnamedplus" -- allows neovim to access the system clipboard
@@ -44,15 +45,15 @@ vim.opt.spelllang = "en"
 vim.opt.scrolloff = 8 -- is one of my fav
 vim.opt.sidescrolloff = 8
 
-vim.opt.shortmess:append "c"
+vim.opt.shortmess:append("c")
 
-vim.cmd "set whichwrap+=<,>,[,],h,l"
-vim.cmd [[set iskeyword+=-]]
+vim.cmd("set whichwrap+=<,>,[,],h,l")
+vim.cmd([[set iskeyword+=-]])
 -- Transparent Background
-vim.cmd "au ColorScheme * hi Normal ctermbg=none guibg=none"
-vim.cmd "au ColorScheme * hi SignColumn ctermbg=none guibg=none"
-vim.cmd "au ColorScheme * hi NormalNC ctermbg=none guibg=none"
-vim.cmd "au ColorScheme * hi MsgArea ctermbg=none guibg=none"
-vim.cmd "au ColorScheme * hi TelescopeBorder ctermbg=none guibg=none"
-vim.cmd "au ColorScheme * hi NvimTreeNormal ctermbg=none guibg=none"
-vim.cmd "let &fcs='eob: '"
+vim.cmd("au ColorScheme * hi Normal ctermbg=none guibg=none")
+vim.cmd("au ColorScheme * hi SignColumn ctermbg=none guibg=none")
+vim.cmd("au ColorScheme * hi NormalNC ctermbg=none guibg=none")
+vim.cmd("au ColorScheme * hi MsgArea ctermbg=none guibg=none")
+vim.cmd("au ColorScheme * hi TelescopeBorder ctermbg=none guibg=none")
+vim.cmd("au ColorScheme * hi NvimTreeNormal ctermbg=none guibg=none")
+vim.cmd("let &fcs='eob: '")
