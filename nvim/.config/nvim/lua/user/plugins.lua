@@ -16,6 +16,79 @@ return require("packer").startup(function(use)
 	use("jose-elias-alvarez/null-ls.nvim")
 	use("jose-elias-alvarez/nvim-lsp-ts-utils")
 	use({ "windwp/nvim-ts-autotag", ft = { "typescript", "typescriptreact" } }) -- automatically close jsx tags
+	use({
+		"ray-x/lsp_signature.nvim",
+		config = function()
+			require("user.lsp-signature").config()
+		end,
+		event = { "BufRead", "BufNew" },
+	})
+	use({
+		"kosayoda/nvim-lightbulb",
+		config = function()
+			vim.fn.sign_define("LightBulbSign", { text = "", texthl = "DiagnosticInfo" })
+		end,
+		event = "BufRead",
+		ft = { "rust", "go", "typescript", "typescriptreact" },
+	})
+
+	-- Terminal
+	use({
+		"akinsho/toggleterm.nvim",
+		event = "BufWinEnter",
+		config = function()
+			require("user.terminal").config()
+		end,
+	})
+	use({
+		"SmiteshP/nvim-gps",
+		config = function()
+			require("user.gps").config()
+		end,
+	})
+
+	-- Renamer
+	use({
+		"filipdutescu/renamer.nvim",
+		config = function()
+			require("renamer").setup({
+				title = "Rename",
+			})
+		end,
+	})
+
+	-- Matchup
+	use({
+		"andymass/vim-matchup",
+		event = "BufReadPost",
+		config = function()
+			vim.g.matchup_enabled = 1
+			vim.g.matchup_surround_enabled = 1
+			vim.g.matchup_matchparen_deferred = 1
+			vim.g.matchup_matchparen_offscreen = { method = "popup" }
+		end,
+	})
+
+	-- Cheatsheet
+	use({
+		"RishabhRD/nvim-cheat.sh",
+		requires = "RishabhRD/popfix",
+		config = function()
+			vim.g.cheat_default_window_layout = "vertical_split"
+		end,
+		opt = true,
+		cmd = { "Cheat", "CheatWithoutComments", "CheatList", "CheatListWithoutComments" },
+		keys = "<leader>?",
+	})
+
+	-- Colorizer
+	use({
+		"norcalli/nvim-colorizer.lua",
+		config = function()
+			require("user.colorizer").config()
+		end,
+		event = "BufRead",
+	})
 
 	-- Comment
 	use({
@@ -27,6 +100,22 @@ return require("packer").startup(function(use)
 	use({
 		"JoosepAlviste/nvim-ts-context-commentstring",
 		event = "BufReadPost",
+	})
+	use({
+		"folke/todo-comments.nvim",
+		requires = "nvim-lua/plenary.nvim",
+		config = function()
+			require("user.todo-comments").config()
+		end,
+		event = "BufRead",
+	})
+
+	-- Dashboard
+	use({
+		"goolord/alpha-nvim",
+		config = function()
+			require("user.dashboard").config()
+		end,
 	})
 
 	-- NvimTree
@@ -99,7 +188,7 @@ return require("packer").startup(function(use)
 	-- TreeSitter
 	use({
 		"nvim-treesitter/nvim-treesitter",
-		branch = "0.5-compat",
+		run = ":TSUpdate",
 		config = function()
 			require("user.treesitter").setup()
 		end,
