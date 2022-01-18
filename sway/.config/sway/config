@@ -47,7 +47,7 @@ bindsym {
     $mod+Shift+q kill
 
 # Start output recording for screenshare
-    $mod+Shift+r exec sway-screenshare.sh
+    $mod+Shift+r exec ~/.config/sway/scripts/sway-screenshare.sh
 
 # Audio config
     $mod+Shift+a exec pavucontrol

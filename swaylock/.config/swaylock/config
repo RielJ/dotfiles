@@ -9,9 +9,9 @@ screenshots
 
 fade-in=0.3
 
-effect-blur=1x10
-effect-scale=0.2
-effect-vignette=0:2
+effect-blur=1x17
+effect-scale=0.3
+effect-vignette=0:3
 
 indicator
 indicator-radius=240
