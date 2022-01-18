@@ -19,6 +19,7 @@ keymap("n", "<C-l>", "<C-w>l", term_opts)
 -- LSP --
 keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.formatting_seq_sync()<CR>", opts)
 keymap("n", "<leader>lr", "<cmd>lua require('renamer').rename()<CR>", opts)
+keymap("n", "<leader>la", "<cmd>lua require('user.telescope').code_actions()<cr>", opts)
 
 -- Terminal --
 -- Better terminal navigation

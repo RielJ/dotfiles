@@ -3,6 +3,8 @@ if not status_ok then
 	return
 end
 
+local util = require("lspconfig/util")
+
 -- Register a handler that will be called for all installed servers.
 -- Alternatively, you may also register handlers on specific server instances instead (see example below).
 lsp_installer.on_server_ready(function(server)
@@ -35,6 +37,19 @@ lsp_installer.on_server_ready(function(server)
 		local graphql_opts = require("user.lsp.settings.graphql")
 		opts = vim.tbl_deep_extend("force", graphql_opts, opts)
 	end
+
+	if server.name == "tailwindcss" then
+		local tailwindcss_opts = require("user.lsp.settings.tailwindcss")
+		opts = vim.tbl_deep_extend("force", tailwindcss_opts, opts)
+	end
+
+	-- local filename = "~/.config/nvim/lua/user/lsp/settings/" .. server.name .. ".lua"
+	-- if util.path.exists(filename) then
+	-- 	local status, server_opts = pcall(require, "user.lsp.settings" .. server.name)
+	-- 	if status then
+	-- 		opts = vim.tbl_deep_extend("force", server_opts, opts)
+	-- 	end
+	-- end
 	-- This setup() function is exactly the same as lspconfig's setup function.
 	-- Refer to https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md
 	server:setup(opts)

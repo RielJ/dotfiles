@@ -1,11 +1,11 @@
-require "user.options"
+require("user.options")
 
-require "user.plugins"
+require("user.plugins")
 
-require "user.keymappings"
+require("user.keymappings")
 
-require "user.colorscheme"
+require("user.colorscheme")
 
-require "user.lsp"
+require("user.lsp")
 
-require "user.autocommands"
+require("user.autocommands")

@@ -6,7 +6,6 @@ return require("packer").startup(function(use)
 	use({ "ellisonleao/gruvbox.nvim", requires = { "rktjmp/lush.nvim" } })
 	use("bluz71/vim-nightfly-guicolors")
 	use("sainnhe/gruvbox-material")
-	use("folke/tokyonight.nvim")
 	use("glepnir/zephyr-nvim")
 
 	-- LSP
@@ -15,7 +14,15 @@ return require("packer").startup(function(use)
 	use("antoinemadec/FixCursorHold.nvim") -- Needed while issue https://github.com/neovim/neovim/issues/12587 is still open
 	use("jose-elias-alvarez/null-ls.nvim")
 	use("jose-elias-alvarez/nvim-lsp-ts-utils")
-	use({ "windwp/nvim-ts-autotag", ft = { "typescript", "typescriptreact" } }) -- automatically close jsx tags
+	use({
+		"windwp/nvim-ts-autotag",
+		config = function()
+			require("nvim-ts-autotag").setup({
+				filetypes = { "typescript", "typescriptreact", "vue" },
+			})
+		end,
+		ft = { "typescript", "typescriptreact", "vue" },
+	}) -- automatically close jsx tags
 	use({
 		"ray-x/lsp_signature.nvim",
 		config = function()

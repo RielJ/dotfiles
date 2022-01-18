@@ -22,6 +22,19 @@ M.setup = function()
 			-- formatter
 			formatting.prettier.with({
 				prefer_local = "node_modules/.bin",
+				filetypes = {
+					"javascript",
+					"javascriptreact",
+					"typescript",
+					"typescriptreact",
+					"vue",
+					"css",
+					"scss",
+					"less",
+					"html",
+					"markdown",
+					"graphql",
+				},
 				condition = function(utils)
 					return utils.root_has_file({ ".prettierrc" })
 				end,
@@ -40,15 +53,15 @@ M.setup = function()
 			-- }),
 
 			-- code actions
-			code_actions.eslint.with({
-				prefer_local = "node_modules/.bin",
-				extra_args = { "--no-ignore" },
-				condition = function(utils)
-					return utils.root_has_file({ ".eslintrc.json" })
-				end,
-			}),
-			code_actions.gitsigns,
-			code_actions.gitrebase,
+			-- code_actions.eslint.with({
+			-- 	prefer_local = "node_modules/.bin",
+			-- 	extra_args = { "--no-ignore" },
+			-- 	condition = function(utils)
+			-- 		return utils.root_has_file({ ".eslintrc.json" })
+			-- 	end,
+			-- }),
+			-- code_actions.gitsigns,
+			-- code_actions.gitrebase,
 			-- diagnostics.flake8
 
 			-- hover
