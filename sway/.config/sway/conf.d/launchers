@@ -1,6 +1,9 @@
 set $menu wofi -c ~/.config/wofi/config -I
+set $files thunar
 
 bindsym $mod+d exec $menu
+
+bindsym $mod+shift+x exec $files
 
 ## Power menu
 bindsym $mod+P exec nwgbar

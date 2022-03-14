@@ -16,6 +16,6 @@ bindsym {
 # Backlight
 #wob
 bindsym {
-   XF86MonBrightnessUp exec light -A 3 && light -G | cut -d'.' -f1 > $SWAYSOCK.wob
-   XF86MonBrightnessDown exec light -U 3 && light -G | cut -d'.' -f1 > $SWAYSOCK.wob
+   XF86MonBrightnessUp exec light -A 10 && light -G | cut -d'.' -f1 > $SWAYSOCK.wob
+   XF86MonBrightnessDown exec light -U 10 && light -G | cut -d'.' -f1 > $SWAYSOCK.wob
 }

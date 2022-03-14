@@ -1,11 +1,6 @@
 # Apply gtk theming
 # exec_always ~/.config/sway/scripts/import-gsettings
 
-for_window [class="^.*"] border pixel 0
-default_border pixel 1
-default_floating_border pixel 0
-
-
 # Set inner/outer gaps
 # gaps inner 10
 # gaps outer 0
@@ -36,8 +31,11 @@ for_window [shell="x_wayland"] title_format "%class - %title"
 for_window [app_id="gnome-(calendar|calculator|power-statistics|control-center)"] floating enable
 for_window [app_id="org.gnome.(Nautilus|Weather)"] floating enable
 for_window [app_id="(pavucontrol|psensor)"] floating enable
+for_window [app_id="thunar"] floating enable
 for_window [app_id="evolution-alarm-notify"] floating enable
 for_window [app_id="nemo"] floating enable
+for_window [app_id="variety" title="Variety Images"] floating enable, sticky enable, move down 380, move left 250
+for_window [app_id="variety" title="Variety Preferences"] floating enable
 for_window [app_id="zoom"] floating enable
 for_window [app_id="solaar"] floating enable
 for_window [app_id="evolution" title="Compose Message"] floating enable
@@ -51,7 +49,9 @@ for_window [app_id="blueman"] floating enable
 for_window [app_id="firefox" title="Firefox — Sharing Indicator"] floating enable
 for_window [app_id="firefox" title="Picture-in-Picture"] floating enable
 for_window [app_id="firefox" title="Pushbullet – Mozilla Firefox"] floating enable
-for_window [app_id="firefox" title="About Mozilla Firefox"] floating enable
+for_window [app_id="firefox" title="Messenger Call"] floating enable
+for_window [app_id="google-chrome-unstable" title="Messenger Call"] floating enable
+for_window [app_id="google-chrome-unstable" title="Sign in - Google Accounts"] floating enable
 
 # Brave, chrome, chromium
 for_window [title="Picture-in-picture"] floating enable
@@ -134,7 +134,7 @@ smart_borders on
 # Hide Title Bars
 for_window [app_id="^.*"] border pixel 4, opacity 1
 default_border pixel 4
-default_floating_border pixel 10
+default_floating_border pixel 5
 hide_edge_borders smart
 
 client.focused $focused_bgcolor $focused_bgcolor $focused_textcolor $focused_indicator $focused_bgcolor

@@ -1,1 +1,4 @@
-exec ~/.config/sway/scripts/.azotebg
+exec variety
+
+bindsym $mod+Shift+d exec variety --selector
+bindsym $mod+Shift+z exec variety --move-to-favorites
