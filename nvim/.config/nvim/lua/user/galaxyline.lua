@@ -5,10 +5,10 @@ M.setup = function()
 	if not status_ok then
 		return
 	end
-	local gps_ok, gps = pcall(require, "nvim-gps")
-	if not gps_ok then
-		return
-	end
+	-- local gps_ok, gps = pcall(require, "nvim-gps")
+	-- if not gps_ok then
+	-- 	return
+	-- end
 	local condition = require("galaxyline.condition")
 
 	local gls = gl.section
@@ -200,18 +200,18 @@ M.setup = function()
 			separator_highlight = { colors.section_bg, colors.bg },
 		},
 	}
-	gls.left[17] = {
-		NvimGPS = {
-			provider = function()
-				return gps.get_location()
-			end,
-			condition = function()
-				return gps.is_available()
-			end,
-			icon = "  ",
-			highlight = { colors.orange, colors.section_bg },
-		},
-	}
+	-- gls.left[17] = {
+	-- 	NvimGPS = {
+	-- 		provider = function()
+	-- 			return gps.get_location()
+	-- 		end,
+	-- 		condition = function()
+	-- 			return gps.is_available()
+	-- 		end,
+	-- 		icon = "  ",
+	-- 		highlight = { colors.orange, colors.section_bg },
+	-- 	},
+	-- }
 
 	-- Right side
 	gls.right[1] = {

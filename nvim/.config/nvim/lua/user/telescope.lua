@@ -26,6 +26,8 @@ function M.find_string()
 			"%.svg",
 			"%.otf",
 			"%.ttf",
+			"*lock.json",
+			"%.lock",
 		},
 	}
 	builtin.live_grep(opts)

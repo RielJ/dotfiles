@@ -10,6 +10,8 @@ function M.setup()
 		active = true,
 		on_config_done = nil,
 		setup = {
+			quit_on_open = 0,
+			disable_window_picker = 0,
 			disable_netrw = true,
 			hijack_netrw = true,
 			open_on_setup = false,
@@ -18,7 +20,7 @@ function M.setup()
 				"dashboard",
 				"alpha",
 			},
-			auto_close = true,
+			auto_close = false,
 			open_on_tab = false,
 			update_to_buf_dir = {
 				enable = true,
@@ -46,24 +48,30 @@ function M.setup()
 			},
 			git = {
 				enable = true,
-				ignore = true,
+				ignore = false,
 				timeout = 200,
 			},
 			view = {
 				width = 30,
 				height = 30,
+				hide_root_folder = false,
 				side = "left",
-				auto_resize = true,
-				number = false,
-				relativenumber = false,
+				auto_resize = false,
 				mappings = {
 					custom_only = false,
 					list = {},
 				},
+				number = false,
+				relativenumber = false,
+				signcolumn = "yes",
 			},
 			filters = {
 				dotfiles = false,
-				custom = { ".git", "node_modules", ".cache" },
+				custom = { "node_modules", ".cache" },
+			},
+			trash = {
+				cmd = "trash",
+				require_confirm = true,
 			},
 		},
 		show_icons = {
@@ -74,9 +82,7 @@ function M.setup()
 			tree_width = 30,
 		},
 		highlight_opened_files = 3,
-		quit_on_open = 0,
 		git_hl = 1,
-		disable_window_picker = 0,
 		root_folder_modifier = ":t",
 		icons = {
 			default = "",

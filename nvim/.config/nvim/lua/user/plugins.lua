@@ -38,6 +38,12 @@ return require("packer").startup(function(use)
 		event = "BufRead",
 		ft = { "rust", "go", "typescript", "typescriptreact" },
 	})
+	use({
+		"j-hui/fidget.nvim",
+		config = function()
+			require("fidget").setup({})
+		end,
+	})
 
 	-- Terminal
 	use({
@@ -47,21 +53,40 @@ return require("packer").startup(function(use)
 			require("user.terminal").config()
 		end,
 	})
-	use({
-		"SmiteshP/nvim-gps",
-		config = function()
-			require("user.gps").config()
-		end,
-	})
+	-- use({
+	-- 	"SmiteshP/nvim-gps",
+	-- 	config = function()
+	-- 		require("user.gps").config()
+	-- 	end,
+	-- })
 
 	-- Renamer
 	use({
 		"filipdutescu/renamer.nvim",
 		config = function()
-			require("renamer").setup({
-				title = "Rename",
-			})
+			require("user.renamer").config()
 		end,
+	})
+
+	-- log highlighter
+	use({ "mtdl9/vim-log-highlighting", ft = { "text", "log" } })
+
+	-- Spectre
+	use({
+		"windwp/nvim-spectre",
+		event = "BufRead",
+		config = function()
+			require("user.spectre").config()
+		end,
+	})
+
+	-- hlslens
+	use({
+		"kevinhwang91/nvim-hlslens",
+		config = function()
+			require("user.hlslens").config()
+		end,
+		event = "BufReadPost",
 	})
 
 	-- Matchup
@@ -103,6 +128,7 @@ return require("packer").startup(function(use)
 		config = function()
 			require("user.comment").setup()
 		end,
+		requires = { "JoosepAlviste/nvim-ts-context-commentstring" },
 	})
 	use({
 		"JoosepAlviste/nvim-ts-context-commentstring",
@@ -196,9 +222,14 @@ return require("packer").startup(function(use)
 	use({
 		"nvim-treesitter/nvim-treesitter",
 		run = ":TSUpdate",
+		commit = "b1ef4033222fa86cbe5c6a0abf70098f157546d4",
 		config = function()
 			require("user.treesitter").setup()
 		end,
+	})
+	use({
+		"nvim-treesitter/nvim-treesitter-textobjects",
+		after = "nvim-treesitter",
 	})
 
 	-- Git
@@ -252,6 +283,15 @@ return require("packer").startup(function(use)
 		"iamcco/markdown-preview.nvim",
 		run = "cd app && npm install",
 		ft = "markdown",
+	})
+
+	-- Dim
+	use({
+		"narutoxy/dim.lua",
+		requires = { "nvim-treesitter/nvim-treesitter", "neovim/nvim-lspconfig" },
+		config = function()
+			require("dim").setup({})
+		end,
 	})
 
 	-- tpope d best

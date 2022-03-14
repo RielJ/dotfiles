@@ -43,6 +43,11 @@ lsp_installer.on_server_ready(function(server)
 		opts = vim.tbl_deep_extend("force", tailwindcss_opts, opts)
 	end
 
+	if server.name == "vuels" then
+		local tailwindcss_opts = require("user.lsp.settings.vuels")
+		opts = vim.tbl_deep_extend("force", tailwindcss_opts, opts)
+	end
+
 	-- local filename = "~/.config/nvim/lua/user/lsp/settings/" .. server.name .. ".lua"
 	-- if util.path.exists(filename) then
 	-- 	local status, server_opts = pcall(require, "user.lsp.settings" .. server.name)

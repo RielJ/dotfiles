@@ -28,6 +28,7 @@ M.setup = function()
 				svelte = "<!-- %s -->",
 				vue = "<!-- %s -->",
 				json = "",
+				lua = "--",
 			},
 		},
 		indent = { enable = true, disable = { "yaml", "html", "javascript", "python" } },

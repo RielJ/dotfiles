@@ -20,6 +20,7 @@ keymap("n", "<C-l>", "<C-w>l", term_opts)
 keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.formatting_seq_sync()<CR>", opts)
 keymap("n", "<leader>lr", "<cmd>lua require('renamer').rename()<CR>", opts)
 keymap("n", "<leader>la", "<cmd>lua require('user.telescope').code_actions()<cr>", opts)
+keymap("n", "<leader>lA", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
 
 -- Terminal --
 -- Better terminal navigation
@@ -40,6 +41,11 @@ keymap("n", "<leader>gr", "<cmd>lua require 'gitsigns'.reset_hunk()<CR>", opts)
 keymap("n", "<leader>gs", "<cmd>Telescope git_status<CR>", opts)
 keymap("n", "<leader>gb", "<cmd>Telescope git_branches<CR>", opts)
 keymap("n", "<leader>gb", "<cmd>Telescope git_branches<CR>", opts)
+
+-- Spectre
+keymap("n", "<leader>rf", "<cmd>lua require 'spectre'.open_file_search()<CR>", opts)
+keymap("n", "<leader>rp", "<cmd>lua require 'spectre'.open()<CR>", opts)
+keymap("n", "<leader>rw", "<cmd>lua require 'spectre'.open_visual({select_word=true})<CR>", opts)
 
 -- Resize with arrows
 keymap("n", "<C-Up>", ":resize +2<CR>", opts)
@@ -79,6 +85,8 @@ keymap("v", "<", "<gv", opts)
 keymap("v", ">", ">gv", opts)
 
 -- Move text up and down
+keymap("n", "<A-j>", ":m .+1<CR>==", opts)
+keymap("n", "<A-k>", ":m .-2<CR>==", opts)
 keymap("v", "<A-j>", ":m .+1<CR>==", opts)
 keymap("v", "<A-k>", ":m .-2<CR>==", opts)
 keymap("v", "p", '"_dP', opts)
