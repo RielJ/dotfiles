@@ -61,7 +61,8 @@
         "return-type": "json",
         "interval": 4,
         "exec": "echo '{\"class\": \"recording\"}'",
-        "exec-if": "pgrep wf-recorder"
+        "exec-if": "pgrep wf-recorder",
+        "on-click": "killall -s SIGINT wf-recorder"
       },
       "battery": {
         "format": "<span font='Font Awesome 5 Free 11'>{icon}</span>  {capacity}%",
