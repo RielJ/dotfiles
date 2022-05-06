@@ -17,10 +17,28 @@ keymap("n", "<C-k>", "<C-w>k", term_opts)
 keymap("n", "<C-l>", "<C-w>l", term_opts)
 
 -- LSP --
-keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.formatting_seq_sync()<CR>", opts)
-keymap("n", "<leader>lr", "<cmd>lua require('renamer').rename()<CR>", opts)
-keymap("n", "<leader>la", "<cmd>lua require('user.telescope').code_actions()<cr>", opts)
+keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.format()<CR>", opts)
+keymap("n", "<leader>lr", "<ESC><CMD>lua vim.lsp.buf.rename()<CR>", opts)
+keymap("n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 keymap("n", "<leader>lA", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
+keymap("n", "<leader>ld", "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", opts)
+keymap("n", "<leader>lw", "<cmd>Telescope diagnostics<cr>", opts)
+keymap("n", "<leader>ll", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
+keymap("n", "<leader>lpd", "<cmd>lua require('user.lsp.peek').Peek('definition')<cr>", opts)
+keymap("n", "<leader>lpt", "<cmd>lua require('user.lsp.peek').Peek('typeDefinition')<cr>", opts)
+keymap("n", "<leader>lpi", "<cmd>lua require('user.lsp.peek').Peek('implementation')<cr>", opts)
+keymap("n", "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<cr>", opts)
+keymap("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", opts)
+keymap("n", "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", opts)
+
+-- Buffers --
+keymap("n", "<leader>bf", "<cmd>Telescope buffers<cr>", opts)
+
+-- Search --
+keymap("n", "<leader>sb", "<cmd>Telescope git_branches<cr>", opts)
+keymap("n", "<leader>sf", "<cmd>Telescope find_files<cr>", opts)
+keymap("n", "<leader>sr", "<cmd>Telescope oldfiles<cr>", opts)
+keymap("n", "<leader>sR", "<cmd>Telescope registers<cr>", opts)
 
 -- Terminal --
 -- Better terminal navigation
@@ -32,6 +50,9 @@ keymap("n", "<leader>lg", "<cmd>lua require 'user.terminal'._lazygit_toggle()<CR
 
 -- Cheatsheet
 keymap("n", "?", "<cmd>CheatWithoutComments<cr>", opts)
+
+-- Glow
+keymap("n", "<leader>sg", "<cmd>Glow<CR>", opts)
 
 -- Git --
 keymap("n", "<leader>gj", "<cmd>lua require 'gitsigns'.next_hunk()<CR>", opts)
