@@ -10,8 +10,26 @@ function M.setup()
 		active = true,
 		on_config_done = nil,
 		setup = {
-			quit_on_open = 0,
-			disable_window_picker = 0,
+      auto_reload_on_write = true,
+      hijack_unnamed_buffer_when_opening = false,
+      hijack_directories = {
+        enable = true,
+        auto_open = true,
+      },
+      actions = {
+        change_dir = {
+          global = false,
+        },
+        open_file = {
+          resize_window = true,
+          quit_on_open = false,
+        window_picker = {
+          enable = false,
+          chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+          exclude = {},
+        },
+        },
+      },
 			disable_netrw = true,
 			hijack_netrw = true,
 			open_on_setup = false,
@@ -20,12 +38,7 @@ function M.setup()
 				"dashboard",
 				"alpha",
 			},
-			auto_close = false,
 			open_on_tab = false,
-			update_to_buf_dir = {
-				enable = true,
-				auto_open = true,
-			},
 			hijack_cursor = false,
 			update_cwd = false,
 			diagnostics = {
@@ -56,7 +69,6 @@ function M.setup()
 				height = 30,
 				hide_root_folder = false,
 				side = "left",
-				auto_resize = false,
 				mappings = {
 					custom_only = false,
 					list = {},
@@ -67,7 +79,7 @@ function M.setup()
 			},
 			filters = {
 				dotfiles = false,
-				custom = { "node_modules", ".cache" },
+				custom = { ".cache" },
 			},
 			trash = {
 				cmd = "trash",
@@ -125,18 +137,18 @@ function M.setup()
 		open()
 	end
 
-	vim.cmd("au WinClosed * lua require('user.nvimtree').on_close()")
+	-- vim.cmd("au WinClosed * lua require('user.nvimtree').on_close()")
 
 	require("nvim-tree").setup(nvimtree_config.setup)
 end
 
-function M.on_close()
-	local buf = tonumber(vim.fn.expand("<abuf>"))
-	local ft = vim.api.nvim_buf_get_option(buf, "filetype")
-	if ft == "NvimTree" and package.loaded["bufferline.state"] then
-		require("bufferline.state").set_offset(0)
-	end
-end
+-- function M.on_close()
+-- 	local buf = tonumber(vim.fn.expand("<abuf>"))
+-- 	local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+-- 	if ft == "NvimTree" and package.loaded["bufferline.state"] then
+-- 		require("bufferline.state").set_offset(0)
+-- 	end
+-- end
 
 function M.change_tree_dir(dir)
 	local lib_status_ok, lib = pcall(require, "nvim-tree.lib")
