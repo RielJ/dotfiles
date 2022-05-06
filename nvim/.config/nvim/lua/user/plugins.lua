@@ -53,21 +53,6 @@ return require("packer").startup(function(use)
 			require("user.terminal").config()
 		end,
 	})
-	-- use({
-	-- 	"SmiteshP/nvim-gps",
-	-- 	config = function()
-	-- 		require("user.gps").config()
-	-- 	end,
-	-- })
-
-	-- Renamer
-	use({
-		"filipdutescu/renamer.nvim",
-		branch = "master",
-		config = function()
-			require("user.renamer").config()
-		end,
-	})
 
 	-- XML Attributes
 	use({ "whatyouhide/vim-textobj-xmlattr", requires = { "kana/vim-textobj-user" } })
