@@ -6,20 +6,18 @@ M.setup = function()
 		return
 	end
 
-	-- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/formatting
 	local formatting = null_ls.builtins.formatting
-	-- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/diagnostics
-	-- local diagnostics = null_ls.builtins.diagnostics
-	-- local code_actions = null_ls.builtins.code_actions
+	local diagnostics = null_ls.builtins.diagnostics
 	local hover = null_ls.builtins.hover
 
 	null_ls.setup({
-		debug = false,
+		debug = true,
 		on_attach = require("user.lsp.handlers").on_attach,
-		debounce = 500,
+		debounce = 750,
 		save_after_format = false,
 		sources = {
 			-- formatter
+
 			formatting.prettier.with({
 				prefer_local = "node_modules/.bin",
 				filetypes = {
@@ -27,6 +25,7 @@ M.setup = function()
 					"javascriptreact",
 					"typescript",
 					"typescriptreact",
+					"solidity",
 					"vue",
 					"css",
 					"scss",
@@ -34,6 +33,7 @@ M.setup = function()
 					"html",
 					"markdown",
 					"graphql",
+					"json",
 				},
 				condition = function(utils)
 					return utils.root_has_file({ ".prettierrc" })
@@ -43,28 +43,8 @@ M.setup = function()
 			formatting.stylua,
 			formatting.black.with({ extra_args = { "--fast" } }),
 
-			-- diagnostics
-			-- diagnostics.eslint.with({
-			-- 	prefer_local = "node_modules/.bin",
-			-- 	extra_args = { "--no-ignore" },
-			-- 	condition = function(utils)
-			-- 		return utils.root_has_file({ ".eslintrc.json" })
-			-- 	end,
-			-- }),
+			diagnostics.solhint,
 
-			-- code actions
-			-- code_actions.eslint.with({
-			-- 	prefer_local = "node_modules/.bin",
-			-- 	extra_args = { "--no-ignore" },
-			-- 	condition = function(utils)
-			-- 		return utils.root_has_file({ ".eslintrc.json" })
-			-- 	end,
-			-- }),
-			-- code_actions.gitsigns,
-			-- code_actions.gitrebase,
-			-- diagnostics.flake8
-
-			-- hover
 			hover.dictionary,
 		},
 	})

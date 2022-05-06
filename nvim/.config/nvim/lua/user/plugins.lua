@@ -63,10 +63,14 @@ return require("packer").startup(function(use)
 	-- Renamer
 	use({
 		"filipdutescu/renamer.nvim",
+		branch = "master",
 		config = function()
 			require("user.renamer").config()
 		end,
 	})
+
+	-- XML Attributes
+	use({ "whatyouhide/vim-textobj-xmlattr", requires = { "kana/vim-textobj-user" } })
 
 	-- log highlighter
 	use({ "mtdl9/vim-log-highlighting", ft = { "text", "log" } })
@@ -222,7 +226,6 @@ return require("packer").startup(function(use)
 	use({
 		"nvim-treesitter/nvim-treesitter",
 		run = ":TSUpdate",
-		commit = "b1ef4033222fa86cbe5c6a0abf70098f157546d4",
 		config = function()
 			require("user.treesitter").setup()
 		end,
@@ -242,6 +245,7 @@ return require("packer").startup(function(use)
 
 	-- Bufferline
 	use({
+
 		"akinsho/bufferline.nvim",
 		config = function()
 			require("user.bufferline").setup()
@@ -284,6 +288,7 @@ return require("packer").startup(function(use)
 		run = "cd app && npm install",
 		ft = "markdown",
 	})
+	use({ "ellisonleao/glow.nvim", branch = "main", ft = "markdown" })
 
 	-- Dim
 	use({

@@ -3,8 +3,6 @@ if not status_ok then
 	return
 end
 
-local util = require("lspconfig/util")
-
 -- Register a handler that will be called for all installed servers.
 -- Alternatively, you may also register handlers on specific server instances instead (see example below).
 lsp_installer.on_server_ready(function(server)
@@ -45,6 +43,16 @@ lsp_installer.on_server_ready(function(server)
 
 	if server.name == "vuels" then
 		local tailwindcss_opts = require("user.lsp.settings.vuels")
+		opts = vim.tbl_deep_extend("force", tailwindcss_opts, opts)
+	end
+
+	if server.name == "solc" then
+		local tailwindcss_opts = require("user.lsp.settings.solc")
+		opts = vim.tbl_deep_extend("force", tailwindcss_opts, opts)
+	end
+
+	if server.name == "solang" then
+		local tailwindcss_opts = require("user.lsp.settings.solang")
 		opts = vim.tbl_deep_extend("force", tailwindcss_opts, opts)
 	end
 
