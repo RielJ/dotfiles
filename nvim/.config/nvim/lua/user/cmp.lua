@@ -225,8 +225,10 @@ M.setup = function()
 				require("luasnip").lsp_expand(args.body)
 			end,
 		},
-		documentation = {
-			border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+		window = {
+			documentation = {
+				border = { "╭", "─", "╮", "│", "╯", "─", "╰", "│" },
+			},
 		},
 		sources = {
 			{ name = "nvim_lsp" },

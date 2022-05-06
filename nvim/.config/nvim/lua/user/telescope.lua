@@ -85,16 +85,6 @@ function M.file_browser()
 	builtin.file_browser(opts)
 end
 
--- show code actions in a fancy floating window
--- function M.code_actions()
---   local opts = {
---     winblend = 10,
---     border = true,
---     previewer = false,
---     shorten_path = false,
---   }
---   builtin.lsp_code_actions(themes.get_dropdown(opts))
--- end
 
 function M.code_actions()
 	local opts = {
