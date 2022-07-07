@@ -17,12 +17,19 @@ keymap("n", "<C-k>", "<C-w>k", term_opts)
 keymap("n", "<C-l>", "<C-w>l", term_opts)
 
 -- LSP --
-keymap("n", "<leader>lf", "<cmd>lua vim.lsp.buf.format()<CR>", opts)
-keymap("n", "<leader>lr", "<ESC><CMD>lua vim.lsp.buf.rename()<CR>", opts)
+keymap("n", "<leader>lf", "<cmd>lua require('user.lsp.handlers').format()<CR>", opts)
+keymap(
+	"n",
+	"<leader>lr",
+	"<ESC><CMD>lua vim.lsp.buf.rename(nil, {filter = require('user.lsp.handlers').rename_filter})<CR>",
+	opts
+)
 keymap("n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 keymap("n", "<leader>lA", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
 keymap("n", "<leader>ld", "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", opts)
 keymap("n", "<leader>lw", "<cmd>Telescope diagnostics<cr>", opts)
+keymap("n", "<leader>lj", "<cmd>lua vim.diagnostic.goto_next()<CR>", opts)
+keymap("n", "<leader>lk", "<cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
 keymap("n", "<leader>ll", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
 keymap("n", "<leader>lpd", "<cmd>lua require('user.lsp.peek').Peek('definition')<cr>", opts)
 keymap("n", "<leader>lpt", "<cmd>lua require('user.lsp.peek').Peek('typeDefinition')<cr>", opts)

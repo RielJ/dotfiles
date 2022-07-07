@@ -1,8 +1,8 @@
 local M = {}
 
 M.close_except_current = function()
-	vim.cmd("BufferLineCloseLeft")
-	vim.cmd("BufferLineCloseRight")
+	vim.cmd "BufferLineCloseLeft"
+	vim.cmd "BufferLineCloseRight"
 end
 
 M.setup = function()
@@ -38,7 +38,7 @@ M.setup = function()
 			return true
 		end
 		local tab_num = vim.fn.tabpagenr()
-		local last_tab = vim.fn.tabpagenr("$")
+		local last_tab = vim.fn.tabpagenr "$"
 		local is_log = is_ft(buf, "log")
 		if last_tab == 1 then
 			return true
@@ -56,201 +56,110 @@ M.setup = function()
 		return mod_a > mod_b
 	end
 
-	local groups = require("bufferline.groups")
-	local List = require("plenary.collections.py_list")
+	local groups = require "bufferline.groups"
+	local List = require "plenary.collections.py_list"
 
-	bufferline.setup({
+	bufferline.setup {
 		options = {
-			-- sort_by = sort_by_mtime,
-			sort_by = "id",
-			show_close_icon = false,
-			show_buffer_icons = true,
-			close_command = "Bdelete! %d", -- can be a string | function, see "Mouse actions"
-			right_mouse_command = "Bdelete! %d", -- can be a string | function, see "Mouse actions"
-			left_mouse_command = "buffer %d", -- can be a string | function, see "Mouse actions"
-
+			numbers = "none",
+			themable = true,
+			close_command = "bdelete! %d",
+			right_mouse_command = "sbuffer %d",
+			middle_mouse_command = "vertical sbuffer %d",
+			indicator_icon = "▎",
+			buffer_close_icon = "",
+			modified_icon = "",
+			close_icon = "",
+			left_trunc_marker = "",
+			right_trunc_marker = "",
+			max_name_length = 14,
+			max_prefix_length = 13,
+			tab_size = 20,
+			view = "multiwindow",
+			diagnostics = "nvim_diagnostic",
+			diagnostics_update_in_insert = true,
+			-- diagnostics_indicator = function(count, level, diagnostics_dict, context)
+			-- 	return "(" .. count .. ")"
+			-- end,
+			offsets = { { filetype = "NvimTree", text = "" } },
 			separator_style = "thin",
-			enforce_regular_tabs = false,
-			always_show_bufferline = false,
-			diagnostics = "nvim_lsp",
-			diagnostics_indicator = diagnostics_indicator,
-			diagnostics_update_in_insert = false,
-			custom_filter = custom_filter,
-			offsets = {
-				{
-					filetype = "undotree",
-					text = "Undotree",
-					highlight = "PanelHeading",
-					padding = 1,
-				},
-				{
-					filetype = "NvimTree",
-					text = "Explorer",
-					highlight = "PanelHeading",
-					padding = 1,
-				},
-				{
-					filetype = "DiffviewFiles",
-					text = "Diff View",
-					highlight = "PanelHeading",
-					padding = 1,
-				},
-				{
-					filetype = "flutterToolsOutline",
-					text = "Flutter Outline",
-					highlight = "PanelHeading",
-				},
-				{
-					filetype = "packer",
-					text = "Packer",
-					highlight = "PanelHeading",
-					padding = 1,
-				},
-			},
-			groups = {
-				options = {
-					toggle_hidden_on_enter = true,
-				},
-				items = {
-					groups.builtin.ungrouped,
-					{
-						highlight = { guisp = "#51AFEF" },
-						name = "tests",
-						icon = "",
-						matcher = function(buf)
-							return buf.filename:match("_spec") or buf.filename:match("test")
-						end,
-					},
-					{
-						name = "view models",
-						highlight = { guisp = "#03589C" },
-						matcher = function(buf)
-							return buf.filename:match("view_model%.dart")
-						end,
-					},
-					{
-						name = "screens",
-						icon = "冷",
-						matcher = function(buf)
-							return buf.path:match("screen")
-						end,
-					},
-					{
-						highlight = { guisp = "#C678DD" },
-						name = "docs",
-						icon = "",
-						matcher = function(buf)
-							local list = List({ "md", "txt", "org", "norg", "wiki" })
-							return list:contains(fn.fnamemodify(buf.path, ":e"))
-						end,
-					},
-					{
-						highlight = { guisp = "#F6A878" },
-						name = "config",
-						matcher = function(buf)
-							return buf.filename:match("go.mod")
-								or buf.filename:match("Cargo.toml")
-								or buf.filename:match("manage.py")
-								or buf.filename:match("Makefile")
-						end,
-					},
-				},
-			},
+			show_buffer_icons = true,
+			show_buffer_close_icons = true,
+			show_close_icon = true,
+			show_tab_indicators = true,
+			enforce_regular_tabs = true,
+			always_show_bufferline = true,
+			custom_filter = function(buf_number)
+				-- Func to filter out our managed/persistent split terms
+				local present_type, type = pcall(function()
+					return vim.api.nvim_buf_get_var(buf_number, "term_type")
+				end)
+
+				if present_type then
+					if type == "vert" then
+						return false
+					elseif type == "hori" then
+						return false
+					end
+					return true
+				end
+
+				return true
+			end,
+			-- -- sort_by = sort_by_mtime,
+			-- sort_by = "id",
+			-- show_close_icon = false,
+			-- show_buffer_icons = true,
+			-- close_command = "Bdelete! %d", -- can be a string | function, see "Mouse actions"
+			-- right_mouse_command = "Bdelete! %d", -- can be a string | function, see "Mouse actions"
+			-- left_mouse_command = "buffer %d", -- can be a string | function, see "Mouse actions"
+
+			-- separator_style = "thin",
+			-- enforce_regular_tabs = false,
+			-- always_show_bufferline = false,
+			-- diagnostics = "nvim_lsp",
+			-- diagnostics_indicator = diagnostics_indicator,
+			-- diagnostics_update_in_insert = false,
+			-- custom_filter = custom_filter,
+			-- offsets = {
+			-- 	{
+			-- 		filetype = "undotree",
+			-- 		text = "Undotree",
+			-- 		highlight = "PanelHeading",
+			-- 		padding = 1,
+			-- 	},
+			-- 	{
+			-- 		filetype = "NvimTree",
+			-- 		text = "Explorer",
+			-- 		highlight = "PanelHeading",
+			-- 		padding = 1,
+			-- 	},
+			-- 	{
+			-- 		filetype = "DiffviewFiles",
+			-- 		text = "Diff View",
+			-- 		highlight = "PanelHeading",
+			-- 		padding = 1,
+			-- 	},
+			-- 	{
+			-- 		filetype = "flutterToolsOutline",
+			-- 		text = "Flutter Outline",
+			-- 		highlight = "PanelHeading",
+			-- 	},
+			-- 	{
+			-- 		filetype = "packer",
+			-- 		text = "Packer",
+			-- 		highlight = "PanelHeading",
+			-- 		padding = 1,
+			-- 	},
+			-- },
 		},
 		highlights = {
-			-- 	fill = {
-			-- 		guifg = { attribute = "fg", highlight = "#ff0000" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-			-- 	background = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-
-			-- 	-- buffer_selected = {
-			-- 	--   guifg = {attribute='fg',highlight='#ff0000'},
-			-- 	--   guibg = {attribute='bg',highlight='#0000ff'},
-			-- 	--   gui = 'none'
-			-- 	--   },
-			-- 	buffer_visible = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-
-			-- 	close_button = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-			-- 	close_button_visible = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-			-- 	-- close_button_selected = {
-			-- 	--   guifg = {attribute='fg',highlight='TabLineSel'},
-			-- 	--   guibg ={attribute='bg',highlight='TabLineSel'}
-			-- 	--   },
-
-			-- 	tab_selected = {
-			-- 		guifg = { attribute = "fg", highlight = "Normal" },
-			-- 		guibg = { attribute = "bg", highlight = "Normal" },
-			-- 	},
-			-- 	tab = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-			-- 	tab_close = {
-			-- 		-- guifg = {attribute='fg',highlight='LspDiagnosticsDefaultError'},
-			-- 		guifg = { attribute = "fg", highlight = "TabLineSel" },
-			-- 		guibg = { attribute = "bg", highlight = "Normal" },
-			-- 	},
-
-			-- 	duplicate_selected = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLineSel" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLineSel" },
-			-- 		gui = "italic",
-			-- 	},
-			-- 	duplicate_visible = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 		gui = "italic",
-			-- 	},
-			-- 	duplicate = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 		gui = "italic",
-			-- 	},
-
-			-- 	modified = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-			-- 	modified_selected = {
-			-- 		guifg = { attribute = "fg", highlight = "Normal" },
-			-- 		guibg = { attribute = "bg", highlight = "Normal" },
-			-- 	},
-			-- 	modified_visible = {
-			-- 		guifg = { attribute = "fg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-
-			-- 	separator = {
-			-- 		guifg = { attribute = "bg", highlight = "TabLine" },
-			-- 		guibg = { attribute = "bg", highlight = "TabLine" },
-			-- 	},
-			-- 	separator_selected = {
-			-- 		guifg = { attribute = "bg", highlight = "Normal" },
-			-- 		guibg = { attribute = "bg", highlight = "Normal" },
-			-- 	},
-			-- 	-- separator_visible = {
-			-- 	--   guifg = {attribute='bg',highlight='TabLine'},
-			-- 	--   guibg = {attribute='bg',highlight='TabLine'}
-			-- 	--   },
 			indicator_selected = {
 				guifg = { attribute = "fg", highlight = "LspDiagnosticsDefaultHint" },
 				guibg = { attribute = "bg", highlight = "Normal" },
 			},
 		},
-	})
+	}
 end
 
 return M

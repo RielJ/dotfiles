@@ -1,6 +1,6 @@
-local builtin = require("telescope.builtin")
-local action_state = require("telescope.actions.state")
-local themes = require("telescope.themes")
+local builtin = require "telescope.builtin"
+local action_state = require "telescope.actions.state"
+local themes = require "telescope.themes"
 
 local M = {}
 
@@ -19,6 +19,7 @@ function M.find_string()
 		},
 		file_ignore_patterns = {
 			"vendor/*",
+			".git",
 			"node_modules",
 			"%.jpg",
 			"%.jpeg",
@@ -43,7 +44,18 @@ function M.file_browser()
 		layout_config = {
 			prompt_position = "top",
 		},
-		file_ignore_patterns = { "vendor/*" },
+		file_ignore_patterns = {
+			"vendor/*",
+			"node_modules",
+			"%.jpg",
+			"%.jpeg",
+			"%.png",
+			"%.svg",
+			"%.otf",
+			"%.ttf",
+			"*lock.json",
+			"%.lock",
+		},
 
 		attach_mappings = function(prompt_bufnr, map)
 			local current_picker = action_state.get_current_picker(prompt_bufnr)
@@ -58,7 +70,7 @@ function M.file_browser()
 			end)
 
 			map("i", "~", function()
-				modify_cwd(vim.fn.expand("~"))
+				modify_cwd(vim.fn.expand "~")
 			end)
 
 			local modify_depth = function(mod)
@@ -84,7 +96,6 @@ function M.file_browser()
 
 	builtin.file_browser(opts)
 end
-
 
 function M.code_actions()
 	local opts = {
@@ -136,15 +147,27 @@ function M.find_updir()
 	local up_dir = vim.fn.getcwd():gsub("(.*)/.*$", "%1")
 	local opts = {
 		cwd = up_dir,
+		file_ignore_patterns = {
+			"vendor/*",
+			"node_modules",
+			"%.jpg",
+			"%.jpeg",
+			"%.png",
+			"%.svg",
+			"%.otf",
+			"%.ttf",
+			"*lock.json",
+			"%.lock",
+		},
 	}
 
 	builtin.find_files(opts)
 end
 
 function M.setup()
-	local previewers = require("telescope.previewers")
-	local sorters = require("telescope.sorters")
-	local actions = require("telescope.actions")
+	local previewers = require "telescope.previewers"
+	local sorters = require "telescope.sorters"
+	local actions = require "telescope.actions"
 
 	local config = {
 		defaults = {
@@ -268,14 +291,14 @@ function M.setup()
 		},
 	}
 
-	local telescope = require("telescope")
+	local telescope = require "telescope"
 	telescope.setup(config)
 
 	-- if lvim.builtin.telescope.on_config_done then
 	--   lvim.builtin.telescope.on_config_done(telescope)
 	-- end
 
-	telescope.load_extension("fzf")
+	telescope.load_extension "fzf"
 end
 
 return M

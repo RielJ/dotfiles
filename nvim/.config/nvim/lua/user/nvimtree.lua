@@ -10,39 +10,30 @@ function M.setup()
 		active = true,
 		on_config_done = nil,
 		setup = {
-      auto_reload_on_write = true,
-      hijack_unnamed_buffer_when_opening = false,
-      hijack_directories = {
-        enable = true,
-        auto_open = true,
-      },
-      actions = {
-        change_dir = {
-          global = false,
-        },
-        open_file = {
-          resize_window = true,
-          quit_on_open = false,
-        window_picker = {
-          enable = false,
-          chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
-          exclude = {},
-        },
-        },
-      },
+			create_in_closed_folder = true,
 			disable_netrw = true,
 			hijack_netrw = true,
 			open_on_setup = false,
+			open_on_setup_file = false,
+			sort_by = "name",
+			ignore_buffer_on_setup = false,
 			ignore_ft_on_setup = {
 				"startify",
 				"dashboard",
 				"alpha",
+			},
+			auto_reload_on_write = true,
+			hijack_unnamed_buffer_when_opening = false,
+			hijack_directories = {
+				enable = true,
+				auto_open = true,
 			},
 			open_on_tab = false,
 			hijack_cursor = false,
 			update_cwd = false,
 			diagnostics = {
 				enable = true,
+				show_on_dirs = false,
 				icons = {
 					hint = "",
 					info = "",
@@ -69,6 +60,7 @@ function M.setup()
 				height = 30,
 				hide_root_folder = false,
 				side = "left",
+				preserve_window_proportions = false,
 				mappings = {
 					custom_only = false,
 					list = {},
@@ -77,43 +69,87 @@ function M.setup()
 				relativenumber = false,
 				signcolumn = "yes",
 			},
+			renderer = {
+				indent_markers = {
+					enable = false,
+					icons = {
+						corner = "└ ",
+						edge = "│ ",
+						none = "  ",
+					},
+				},
+				icons = {
+					webdev_colors = true,
+					show = {
+						git = true,
+						folder = true,
+						file = true,
+						folder_arrow = true,
+					},
+					glyphs = {
+						default = "",
+						symlink = "",
+						git = {
+							unstaged = "",
+							staged = "S",
+							unmerged = "",
+							renamed = "➜",
+							deleted = "",
+							untracked = "U",
+							ignored = "◌",
+						},
+						folder = {
+							default = "",
+							open = "",
+							empty = "",
+							empty_open = "",
+							symlink = "",
+						},
+					},
+				},
+				highlight_git = true,
+				root_folder_modifier = ":t",
+			},
 			filters = {
 				dotfiles = false,
-				custom = { ".cache" },
+				-- custom = { "node_modules", "\\.cache" },
+				exclude = {},
 			},
 			trash = {
 				cmd = "trash",
 				require_confirm = true,
 			},
-		},
-		show_icons = {
-			git = 1,
-			folders = 1,
-			files = 1,
-			folder_arrows = 1,
-			tree_width = 30,
-		},
-		highlight_opened_files = 3,
-		git_hl = 1,
-		root_folder_modifier = ":t",
-		icons = {
-			default = "",
-			symlink = "",
-			git = {
-				unstaged = "",
-				staged = "S",
-				unmerged = "",
-				renamed = "➜",
-				deleted = "",
-				untracked = "U",
-				ignored = "◌",
+			log = {
+				enable = false,
+				truncate = false,
+				types = {
+					all = false,
+					config = false,
+					copy_paste = false,
+					diagnostics = false,
+					git = false,
+					profile = false,
+				},
 			},
-			folder = {
-				default = "",
-				open = "",
-				empty = "",
-				empty_open = "",
-				symlink = "",
+			actions = {
+				use_system_clipboard = true,
+				change_dir = {
+					enable = true,
+					global = false,
+					restrict_above_cwd = false,
+				},
+				open_file = {
+					quit_on_open = false,
+					resize_window = false,
+					window_picker = {
+						enable = true,
+						chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+						exclude = {
+							filetype = { "notify", "packer", "qf", "diff", "fugitive", "fugitiveblame" },
+							buftype = { "nofile", "terminal", "help" },
+						},
+					},
+				},
 			},
 		},
 	}
@@ -122,13 +158,13 @@ function M.setup()
 		vim.g["nvim_tree_" .. opt] = val
 	end
 
-	local tree_view = require("nvim-tree.view")
+	local tree_view = require "nvim-tree.view"
 	local tree_cb = nvim_tree_config.nvim_tree_callback
 	nvimtree_config.setup.view.mappings.list = {
-		{ key = { "l", "<CR>", "o" }, cb = tree_cb("edit") },
-		{ key = "h", cb = tree_cb("close_node") },
-		{ key = "v", cb = tree_cb("vsplit") },
-		{ key = "C", cb = tree_cb("cd") },
+		{ key = { "l", "<CR>", "o" }, cb = tree_cb "edit" },
+		{ key = "h", cb = tree_cb "close_node" },
+		{ key = "v", cb = tree_cb "vsplit" },
+		{ key = "C", cb = tree_cb "cd" },
 	}
 
 	-- Add nvim_tree open callback
@@ -136,6 +172,21 @@ function M.setup()
 	tree_view.open = function()
 		open()
 	end
+
+	vim.api.nvim_create_autocmd("BufEnter", {
+		nested = true,
+		callback = function()
+			if #vim.api.nvim_list_wins() == 1 and vim.api.nvim_buf_get_name(0):match "NvimTree_" ~= nil then
+				vim.cmd "quit"
+			end
+		end,
+	})
+
+	local events = require "nvim-tree.events"
+
+	events.on_file_created(function(file)
+		vim.cmd("edit " .. file.fname)
+	end)
 
 	-- vim.cmd("au WinClosed * lua require('user.nvimtree').on_close()")
 

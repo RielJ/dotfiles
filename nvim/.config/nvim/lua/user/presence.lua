@@ -6,7 +6,7 @@ M.setup = function()
 		return
 	end
 	-- The setup config table shows all available config options with their default values:
-	require("presence"):setup({
+	require("presence"):setup {
 		-- General options
 		auto_update = true, -- Update activity based on autocmd events (if `false`, map or manually execute `:lua package.loaded.presence:update()`)
 		neovim_image_text = "Headache Editor", -- Text displayed when hovered over the Neovim image
@@ -26,7 +26,7 @@ M.setup = function()
 		reading_text = "Reading Shits", -- Format string rendered when a read-only or unmodifiable file is loaded in the buffer (either string or function(filename: string): string)
 		workspace_text = "Working on Shits", -- Format string rendered when in a git repository (either string or function(project_name: string|nil, filename: string): string)
 		line_number_text = "Line %s out of %s", -- Format string rendered when `enable_line_number` is set to true (either string or function(line_number: number, line_count: number): string)
-	})
+	}
 end
 
 return M

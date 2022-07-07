@@ -1,4 +1,4 @@
-vim.cmd([[
+vim.cmd [[
   augroup _general_settings
     autocmd!
     autocmd FileType qf,help,man,lspinfo nnoremap <silent> <buffer> q :close<CR> 
@@ -24,4 +24,9 @@ vim.cmd([[
     autocmd CursorHold *.rs,*.go,*.ts,*.tsx lua require('user.codelens').show_line_sign() 
   augroup end
 
-]])
+  augroup _lsp_format_on_save
+    autocmd! 
+    autocmd BufWritePre * lua require('user.lsp.handlers').format() 
+  augroup end
+
+]]
