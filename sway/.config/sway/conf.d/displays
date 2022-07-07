@@ -1,6 +1,6 @@
 # Default laptop display config (in case kanshi doesn't load correctly)
 # output eDP-1 scale 2 pos 0 0 res 3840x2160
-output DP-3 res 1920x1080 scale 1.55
+# output DP-3 res 1920x1080 pos 0 0 scale 1.55
 
 # Run kanshi to manage display config
 # exec_always bash -c "killall kanshi; kanshi 2>&1 | ts  > ~/logs/kanshi.log"
