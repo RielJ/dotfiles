@@ -52,8 +52,11 @@ for_window [app_id="firefox" title="Firefox — Sharing Indicator"] floating ena
 for_window [app_id="firefox" title="Picture-in-Picture"] floating enable
 for_window [app_id="firefox" title="Pushbullet – Mozilla Firefox"] floating enable
 for_window [app_id="firefox" title="Messenger Call"] floating enable
-for_window [app_id="google-chrome-unstable" title="Messenger Call"] floating enable
-for_window [app_id="google-chrome-unstable" title="Sign in - Google Accounts"] floating enable
+for_window [app_id="firefox" title="MetaMask Notification"] floating enable
+for_window [app_id="^chrome-.*-.*$" title="Messenger Call"] floating enable
+for_window [app_id="^chrome-.*-.*$" title="Sign in - Google Accounts"] floating enable
+for_window [app_id="^chrome-.*-.*$" title="MetaMask Notification"] floating enable 
+for_window [app_id="^chrome-.*-.*$"] shortcuts_inhibitor disable
 
 # Brave, chrome, chromium
 for_window [title="Picture-in-picture"] floating enable

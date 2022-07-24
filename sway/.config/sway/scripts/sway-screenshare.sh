@@ -15,8 +15,8 @@ geometry() {
 unset SDL_VIDEODRIVER
 
 geometry=$(geometry) || exit $?
-wf-recorder -c rawvideo --geometry="$geometry" -m sdl -f pipe:wayland-mirror
+# wf-recorder -c rawvideo --geometry="$geometry" -m sdl -f pipe:wayland-mirror
 
-# wf-recorder --geometry="$geometry" -f ~/Videos/screencast/$(date +'recording_%Y-%m-%d-%H%M%S.mp4') --audio="alsa_output.pci-0000_00_1f.3.analog-stereo.monitor"
+wf-recorder --geometry="$geometry" -f ~/Videos/screencast/$(date +'recording_%Y-%m-%d-%H%M%S.mp4') --audio="alsa_output.pci-0000_00_1f.3.analog-stereo.monitor"
 # Alternative method via ffplay
 # wf-recorder -c rawvideo --geometry="$geometry" -x yuv420p -m avi -f pipe:99 99>&1 >&2 | ffplay -f avi - &
