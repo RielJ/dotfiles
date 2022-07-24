@@ -38,6 +38,13 @@ keymap("n", "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<cr>", opts)
 keymap("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", opts)
 keymap("n", "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", opts)
 
+-- LSP TYPESCRIPT --
+keymap("n", "gs", "<cmd>lua require('typescript').actions.removeUnused()<cr>", opts)
+keymap("n", "gS", "<cmd>lua require('typescript').actions.organizeImports()<cr>", opts)
+keymap("n", "go", "<cmd>lua require('typescript').actions.addMissingImports()<cr>", opts)
+keymap("n", "gA", "<cmd>lua require('typescript').actions.fixAll()<cr>", opts)
+keymap("n", "gI", "<cmd>lua require('typescript').actions.renameFile(0, %)<cr>", opts)
+
 -- Buffers --
 keymap("n", "<leader>bf", "<cmd>Telescope buffers<cr>", opts)
 

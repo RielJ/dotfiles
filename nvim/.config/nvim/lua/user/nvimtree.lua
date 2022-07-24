@@ -6,6 +6,10 @@ function M.setup()
 		return
 	end
 
+	if _G._setup_called then
+		return
+	end
+
 	local nvimtree_config = {
 		active = true,
 		on_config_done = nil,
@@ -30,7 +34,7 @@ function M.setup()
 			},
 			open_on_tab = false,
 			hijack_cursor = false,
-			update_cwd = false,
+			update_cwd = true,
 			diagnostics = {
 				enable = true,
 				show_on_dirs = false,
@@ -70,6 +74,9 @@ function M.setup()
 				signcolumn = "yes",
 			},
 			renderer = {
+				add_trailing = false,
+				group_empty = false,
+				highlight_opened_files = "none",
 				indent_markers = {
 					enable = false,
 					icons = {
@@ -188,7 +195,7 @@ function M.setup()
 		vim.cmd("edit " .. file.fname)
 	end)
 
-	-- vim.cmd("au WinClosed * lua require('user.nvimtree').on_close()")
+	_G._setup_called = true
 
 	require("nvim-tree").setup(nvimtree_config.setup)
 end

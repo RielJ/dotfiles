@@ -157,10 +157,10 @@ M.config = function()
 		return
 	end
 
-	local ok, _ = pcall(require, "user.lsp")
-	if not ok then
-		return
-	end
+	-- local ok, _ = pcall(require, "user.lsp")
+	-- if not ok then
+	-- 	return
+	-- end
 
 	ts.setup {
 		disable_commands = false, -- prevent the plugin from creating Vim commands

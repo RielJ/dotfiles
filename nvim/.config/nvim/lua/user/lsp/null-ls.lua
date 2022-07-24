@@ -13,38 +13,23 @@ M.setup = function()
 	null_ls.setup {
 		debug = false,
 		on_attach = require("user.lsp.handlers").on_attach,
+		capabilities = require("user.lsp.handlers").common_capabilities,
 		debounce = 750,
 		save_after_format = false,
 		diagnostics_format = "[#{c}] #{m} (#{s})",
 
 		sources = {
-			-- formatter
-
-			formatting.prettier.with {
-				filetypes = {
-					"javascript",
-					"javascriptreact",
-					"typescript",
-					"typescriptreact",
-					"solidity",
-					"vue",
-					"css",
-					"scss",
-					"less",
-					"html",
-					"markdown",
-					"graphql",
-					"json",
-				},
-				dynamic_command = function(params)
-					return command_resolver.from_node_modules(params)
-							or command_resolver.from_yarn_pnp(params)
-							or vim.fn.executable(params.command) == 1 and params.command
+			formatting.eslint_d.with {
+				condition = function(utils)
+					return utils.root_has_file { ".eslintrc", ".eslintrc.js" }
 				end,
-				-- extra_args = { "--config", vim.fn.expand "~/.config/nvim/lua/user/lsp/settings/.prettierrc" },
-				-- condition = function(utils)
-				-- 	return utils.root_has_file { ".prettierrc", ".prettierrc*" }
-				-- end,
+				prefer_local = "node_modules/.bin",
+			},
+			formatting.prettier.with {
+				condition = function(utils)
+					return not utils.root_has_file { ".eslintrc", ".eslintrc.js" }
+				end,
+				prefer_local = "node_modules/.bin",
 			},
 			formatting.shfmt,
 			formatting.clang_format,

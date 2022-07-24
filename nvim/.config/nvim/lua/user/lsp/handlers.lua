@@ -42,6 +42,7 @@ M.setup = function()
 	vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
 		border = "rounded",
 	})
+	M.common_capabilities()
 end
 
 local function lsp_highlight_document(client)
@@ -167,11 +168,30 @@ function M.format(opts)
 	end
 end
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
+function M.common_capabilities()
+	local capabilities = vim.lsp.protocol.make_client_capabilities()
+	capabilities.textDocument.completion.completionItem.snippetSupport = true
+	capabilities.textDocument.completion.completionItem.resolveSupport = {
+		properties = {
+			"documentation",
+			"detail",
+			"additionalTextEdits",
+		},
+	}
 
-local status_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-if status_ok then
-	M.capabilities = cmp_nvim_lsp.update_capabilities(capabilities)
+	local status_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
+	if status_ok then
+		capabilities = cmp_nvim_lsp.update_capabilities(capabilities)
+	end
+
+	return capabilities
+end
+
+function M.get_common_opts()
+	return {
+		on_attach = M.common_on_attach,
+		capabilities = M.common_capabilities,
+	}
 end
 
 return M
