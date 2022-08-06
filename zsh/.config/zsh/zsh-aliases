@@ -85,12 +85,16 @@ alias ytv-best="yt-dlp --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4
 
 alias ram='rate-mirrors --allow-root arch | sudo tee /etc/pacman.d/mirrorlist'
 
+alias netres='sudo systemctl restart NetworkManager'
+
 alias display_ports='ss -lntu'
 alias kill_port="fuser -k"
 
 alias sk='wshowkeys -a right -a bottom -m 150'
 
 alias _dbeaver="env GDK_BACKEND=x11 dbeaver"
+
+alias scrcpyshow="sudo modprobe v4l2loopback && scrcpy --v4l2-sink=/dev/video0 -b 32M --rotation 1 -w"
 
 # alias vim="nvim"
 # alias realvim="vim"
