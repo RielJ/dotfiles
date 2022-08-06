@@ -53,6 +53,7 @@ for_window [app_id="firefox" title="Picture-in-Picture"] floating enable
 for_window [app_id="firefox" title="Pushbullet – Mozilla Firefox"] floating enable
 for_window [app_id="firefox" title="Messenger Call"] floating enable
 for_window [app_id="firefox" title="MetaMask Notification"] floating enable
+for_window [app_id="firefox" title="Sharing Indicator"] floating enable
 for_window [app_id="^chrome-.*-.*$" title="Messenger Call"] floating enable
 for_window [app_id="^chrome-.*-.*$" title="Sign in - Google Accounts"] floating enable
 for_window [app_id="^chrome-.*-.*$" title="MetaMask Notification"] floating enable 
