@@ -14,7 +14,7 @@ function M.setup()
 		active = true,
 		on_config_done = nil,
 		setup = {
-			create_in_closed_folder = true,
+			create_in_closed_folder = false,
 			disable_netrw = true,
 			hijack_netrw = true,
 			open_on_setup = false,

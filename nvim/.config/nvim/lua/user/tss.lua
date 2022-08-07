@@ -173,8 +173,10 @@ M.config = function()
 			flags = {
 				debounce_text_changes = 150,
 			},
-			preferences = {
-				importModuleSpecifierPreference = "project-relative",
+			init_options = {
+				preferences = {
+					importModuleSpecifierPreference = "project-relative",
+				},
 			},
 		},
 		preferences = {
