@@ -19,10 +19,10 @@ keymap("n", "<C-l>", "<C-w>l", term_opts)
 -- LSP --
 keymap("n", "<leader>lf", "<cmd>lua require('user.lsp.handlers').format()<CR>", opts)
 keymap(
-	"n",
-	"<leader>lr",
-	"<ESC><CMD>lua vim.lsp.buf.rename(nil, {filter = require('user.lsp.handlers').rename_filter})<CR>",
-	opts
+  "n",
+  "<leader>lr",
+  "<ESC><CMD>lua vim.lsp.buf.rename(nil, {filter = require('user.lsp.handlers').rename_filter})<CR>",
+  opts
 )
 keymap("n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 keymap("n", "<leader>lA", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
@@ -60,7 +60,7 @@ keymap("t", "<C-h>", "<C-\\><C-N><C-w>h", term_opts)
 keymap("t", "<C-j>", "<C-\\><C-N><C-w>j", term_opts)
 keymap("t", "<C-k>", "<C-\\><C-N><C-w>k", term_opts)
 keymap("t", "<C-l>", "<C-\\><C-N><C-w>l", term_opts)
-keymap("n", "<leader>lg", "<cmd>lua require 'user.terminal'._lazygit_toggle()<CR>", opts)
+keymap("n", "<leader>lg", "<cmd>lua require 'user.toggleterm'.toggle_lazygit()<CR>", opts)
 
 -- Cheatsheet
 keymap("n", "?", "<cmd>CheatWithoutComments<cr>", opts)
@@ -102,10 +102,10 @@ keymap("v", "<leader>/", "<ESC><CMD>lua require('Comment.api').toggle_linewise_o
 
 -- Telescope --
 keymap(
-	"n",
-	"<leader>f",
-	"<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ previewer = false }))<cr>",
-	opts
+  "n",
+  "<leader>f",
+  "<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ previewer = false }))<cr>",
+  opts
 )
 keymap("n", "<leader>st", "<cmd>Telescope live_grep<cr>", opts)
 

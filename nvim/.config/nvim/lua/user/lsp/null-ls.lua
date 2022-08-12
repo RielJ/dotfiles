@@ -14,20 +14,20 @@ M.setup = function()
 		debug = false,
 		on_attach = require("user.lsp.handlers").on_attach,
 		capabilities = require("user.lsp.handlers").common_capabilities,
-		debounce = 750,
-		save_after_format = false,
+		debounce = 1250,
+		save_after_format = true,
 		diagnostics_format = "[#{c}] #{m} (#{s})",
 
 		sources = {
-			formatting.eslint_d.with {
-				condition = function(utils)
-					return utils.root_has_file { ".eslintrc", ".eslintrc.js" }
-				end,
-				prefer_local = "node_modules/.bin",
-			},
+			-- formatting.eslint.with {
+			-- 	condition = function(utils)
+			-- 		return utils.root_has_file { ".eslintrc", ".eslintrc.js", ".eslintrc.json" }
+			-- 	end,
+			-- 	prefer_local = "node_modules/.bin",
+			-- },
 			formatting.prettier.with {
 				condition = function(utils)
-					return not utils.root_has_file { ".eslintrc", ".eslintrc.js" }
+					return not utils.root_has_file { ".eslintrc", ".eslintrc.js", ".eslintrc.json" }
 				end,
 				prefer_local = "node_modules/.bin",
 			},

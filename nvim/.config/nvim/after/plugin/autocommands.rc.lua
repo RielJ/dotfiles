@@ -19,11 +19,6 @@ vim.cmd [[
     autocmd VimResized * tabdo wincmd = 
   augroup end
     
-  augroup _custom_group
-    autocmd! 
-    autocmd CursorHold *.rs,*.go,*.ts,*.tsx lua require('user.codelens').show_line_sign() 
-  augroup end
-
   augroup _lsp_format_on_save
     autocmd! 
     autocmd BufWritePre * lua require('user.lsp.handlers').format() 
