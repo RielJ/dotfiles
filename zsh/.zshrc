@@ -1,5 +1,4 @@
 #!/bin/sh
-# some useful options (man zshoptions)
 
 if [[ -z $DISPLAY && $TTY = /dev/tty1 ]]; then
     export SDL_VIDEODRIVER=wayland
@@ -10,6 +9,7 @@ if [[ -z $DISPLAY && $TTY = /dev/tty1 ]]; then
     exec sway 
 fi
 
+# some useful options (man zshoptions)
 setopt autocd extendedglob nomatch menucomplete
 setopt interactive_comments
 stty stop undef		# Disable ctrl-s to freeze terminal.

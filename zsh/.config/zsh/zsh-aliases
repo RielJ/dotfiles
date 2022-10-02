@@ -82,6 +82,7 @@ alias yta-flac="_yta-flac --paths ~/Music/ "
 alias yta-flac-chill="yt-dlp --paths ~/Music/ --extract-audio --audio-format flac "
 alias yta-mp3="yt-dlp --paths ~/Videos/ --extract-audio --audio-format mp3 "
 alias ytv-best="yt-dlp --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 "
+alias ytv-playlist="yt-dlp -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 --write-subs --write-auto-subs "
 
 alias ram='rate-mirrors --allow-root arch | sudo tee /etc/pacman.d/mirrorlist'
 
@@ -92,5 +93,7 @@ alias sk='wshowkeys -a right -a bottom -m 150'
 
 alias _dbeaver="env GDK_BACKEND=x11 dbeaver"
 
+alias scrcpy_record="sudo modprobe v4l2loopback && scrcpy --rotation 1 --v4l2-sink=/dev/video0"
+alias nwmr="sudo systemctl restart NetworkManager"
 # alias vim="nvim"
 # alias realvim="vim"
