@@ -1,6 +1,6 @@
 anchor=top-right
 layer=overlay
-font=monospace 10
+font="MesloLGS NF" 10
 background-color=#3b4252
 height=800
 text-color=#eceff4
