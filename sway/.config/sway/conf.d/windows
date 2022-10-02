@@ -21,10 +21,6 @@
 
 font pango: MesloLGS NF 8
 
-# Thin borders:
-smart_borders on
-# smart_gaps on
-
 # Title format for windows
 for_window [shell="xdg_shell"] title_format "%title (%app_id)"
 for_window [shell="x_wayland"] title_format "%class - %title"
@@ -66,6 +62,7 @@ for_window [class="jetbrains-(.*)" title="Go to Line/Column"] floating enable
 for_window [class="jetbrains-(.*)" title="Rename"] floating enable
 for_window [class="jetbrains-(.*)" title="Open Project"] floating enable
 for_window [class="(jetbrains|java-util)-(.*)" title="win0"] floating enable
+for_window [class="flameshot"] floating enable, fullscreen disabled, move absolute position 0 0, border pixel 0
 
 # Ensure authy has borders, otherwise it can be hard to see if the bottom app has a clear background
 for_window [title="Twilio Authy"] border pixel 2
@@ -139,19 +136,22 @@ set $urgent_indicator $c3
 
 # Set inner/outer gaps
 default_border normal 0
-gaps inner 10
-gaps outer 5
+gaps inner 5
+gaps outer 2
 
 # Smart gaps (gaps used if only more than one container on the workspace)
 smart_gaps on
+# change gaps interactively
+bindsym $mod+equal gaps inner current plus 6
+bindsym $mod+Shift+equal gaps inner current minus 6
 
 # Smart borders (draw borders around container only if it is not the only container on this workspace) 
 smart_borders on
 
 # Hide Title Bars
-for_window [app_id="^.*"] border pixel 4, opacity 1
-default_border pixel 4
-default_floating_border pixel 5
+for_window [app_id="^.*"] border pixel 2, opacity 1
+default_border pixel 2
+default_floating_border pixel 2
 hide_edge_borders smart
 
 client.focused $focused_bgcolor $focused_bgcolor $focused_textcolor $focused_indicator $focused_bgcolor

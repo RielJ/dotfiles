@@ -28,8 +28,6 @@ set $term alacritty
 
 # exec --no-startup-id libinput-gestures
 
-font pango:Ubuntu 12
-
 ### Focus
 focus_follows_mouse yes
 
@@ -186,7 +184,7 @@ mode "resize" {
       $left resize shrink width 10px
       $down resize grow height 10px
       $up resize shrink height 10px
-      $right resize rgrow width 10px
+      $right resize grow width 10px
 
 # ditto, with arrow keys
       Left resize shrink width 10px

@@ -1,10 +1,9 @@
 set $menu wofi -c ~/.config/wofi/config -I
-set $files thunar
 
 bindsym $mod+d exec $menu
 
-bindsym $mod+shift+x exec $files
+bindsym $mod+shift+x exec alacritty -t "Ranger" -e ranger
 
 ## Power menu
-bindsym $mod+P exec nwgbar
+bindsym $mod+P exec nwg-bar
 

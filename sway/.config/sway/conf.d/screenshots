@@ -20,6 +20,7 @@ bindsym $mod+Shift+e exec ~/.config/sway/scripts/screenshot.sh
 
 # Region-select-screenshot to clipboard
 bindsym $mod+Shift+s exec grimshot --notify copy area
+# bindsym $mod+Shift+s exec flameshot gui
 
 # Region-select-screenshot to file
 bindsym $mod+ctrl+s exec grimshot --notify save area
