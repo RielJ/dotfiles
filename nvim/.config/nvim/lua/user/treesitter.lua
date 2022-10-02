@@ -20,6 +20,7 @@ M.setup = function()
 		},
 		context_commentstring = {
 			enable = true,
+			enable_autocmd = false,
 			config = {
 				typescript = "// %s",
 				css = "/* %s */",

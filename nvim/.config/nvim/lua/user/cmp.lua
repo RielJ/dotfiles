@@ -4,8 +4,8 @@ M.methods = {}
 ---checks if the character preceding the cursor is a space character
 ---@return boolean true if it is a space character, false otherwise
 local check_backspace = function()
-	local col = vim.fn.col(".") - 1
-	return col == 0 or vim.fn.getline("."):sub(col, col):match("%s")
+	local col = vim.fn.col "." - 1
+	return col == 0 or vim.fn.getline("."):sub(col, col):match "%s"
 end
 M.methods.check_backspace = check_backspace
 
@@ -20,6 +20,7 @@ end
 local function feedkeys(key, mode)
 	vim.fn.feedkeys(T(key), mode)
 end
+
 M.methods.feedkeys = feedkeys
 
 ---checks if emmet_ls is available and active in the buffer
@@ -42,7 +43,7 @@ M.methods.is_emmet_active = is_emmet_active
 local function jumpable(dir)
 	local luasnip_ok, luasnip = pcall(require, "luasnip")
 	if not luasnip_ok then
-		return
+		return false
 	end
 
 	local win_get_cursor = vim.api.nvim_win_get_cursor
@@ -99,7 +100,7 @@ local function jumpable(dir)
 			local n_next = node.next
 			local next_pos = n_next and n_next.mark:pos_begin()
 			local candidate = n_next ~= snippet and next_pos and (pos[1] < next_pos[1])
-				or (pos[1] == next_pos[1] and pos[2] < next_pos[2])
+					or (pos[1] == next_pos[1] and pos[2] < next_pos[2])
 
 			-- Past unmarked exit node, exit early
 			if n_next == nil or n_next == snippet.next then
@@ -143,6 +144,7 @@ local function jumpable(dir)
 		return inside_snippet() and seek_luasnip_cursor_node() and luasnip.jumpable()
 	end
 end
+
 M.methods.jumpable = jumpable
 
 M.setup = function()
@@ -280,17 +282,16 @@ M.setup = function()
 			}),
 
 			["<C-Space>"] = cmp.mapping.complete(),
-			["<C-e>"] = cmp.mapping({
+			["<C-e>"] = cmp.mapping {
 				i = cmp.mapping.abort(),
 				c = cmp.mapping.close(),
-			}),
+			},
 			["<CR>"] = cmp.mapping(function(fallback)
-				if
-					cmp.visible()
-					and cmp.confirm({
-						behavior = cmp.ConfirmBehavior.Replace,
-						select = false,
-					})
+				if cmp.visible()
+						and cmp.confirm {
+							behavior = cmp.ConfirmBehavior.Replace,
+							select = false,
+						}
 				then
 					return
 				end
