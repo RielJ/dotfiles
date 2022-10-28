@@ -1,0 +1,33 @@
+[Added Associations]
+x-scheme-handler/tg=userapp-Telegram Desktop-TV7YT1.desktop;
+application/pdf=wps-office-pdf.desktop;
+
+[Default Applications]
+audio/mpeg=vlc.desktop
+video/H264=vlc.desktop
+x-scheme-handler/tg=userapp-Telegram Desktop-TV7YT1.desktop
+video/x-ogm+ogg=vlc.desktop
+video/ogg=vlc.desktop
+video/x-matroska=vlc.desktop
+video/3gpp=vlc.desktop
+video/vnd.mpegurl=vlc.desktop
+video/mpeg=vlc.desktop
+video/x-msvideo=vlc.desktop
+video/quicktime=vlc.desktop
+video/x-ms-wmv=vlc.desktop
+video/dv=vlc.desktop
+video/mp2t=vlc.desktop
+video/3gpp2=vlc.desktop
+video/mp4=vlc.desktop
+video/x-theora+ogg=vlc.desktop
+video/x-flic=vlc.desktop
+video/x-nsv=vlc.desktop
+video/webm=vlc.desktop
+video/x-flv=vlc.desktop
+video/vnd.rn-realvideo=vlc.desktop
+video/x-anim=vlc.desktop
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
