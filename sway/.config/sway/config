@@ -194,6 +194,7 @@ mode "resize" {
 
 # return to default mode
       Return mode "default"
+      $mod+r mode "default"
       Escape mode "default"
   }
 }
