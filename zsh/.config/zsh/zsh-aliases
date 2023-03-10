@@ -81,7 +81,7 @@ alias _yta-flac="yt-dlp --extract-audio --audio-format flac "
 alias yta-flac="_yta-flac --paths ~/Music/ "
 alias yta-flac-chill="yt-dlp --paths ~/Music/ --extract-audio --audio-format flac "
 alias yta-mp3="yt-dlp --paths ~/Videos/ --extract-audio --audio-format mp3 "
-alias ytv-best="yt-dlp --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 "
+alias ytv-best="yt-dlp --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 --write-subs --write-auto-subs"
 alias ytv-playlist="yt-dlp -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 --write-subs --write-auto-subs "
 
 alias ram='rate-mirrors --allow-root arch | sudo tee /etc/pacman.d/mirrorlist'
