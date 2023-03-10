@@ -1,0 +1,2 @@
+bindsym $mod+Ctrl+r exec ~/.config/sway/scripts/sway-screen-share.sh
+bindsym $mod+Shift+r exec ~/.config/sway/scripts/sway-screen-record.sh

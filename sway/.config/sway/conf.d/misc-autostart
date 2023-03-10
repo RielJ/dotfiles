@@ -4,7 +4,13 @@
 # for Touchpad gestures
 exec libinput-gestures-setup start
 
-exec --no-startup-id /usr/lib/xdg-desktop-portal -r
+exec autotiling
+
+exec nm-applet --indicator
+
+exec flameshot
+
+# exec --no-startup-id /usr/lib/xdg-desktop-portal -r
 
 # exec --no-startup-id flameshot -r
 # background
