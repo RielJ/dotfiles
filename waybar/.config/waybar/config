@@ -56,7 +56,7 @@
         "format-icons": [""],
         "interval": 3600,
         "escape": true,
-        "on-click": "nwgbar"
+        "on-click": "nwg-bar"
       },
       "custom/recorder": {
         "format": "",
@@ -183,7 +183,7 @@
       },
      "custom/launcher": {
     	   "format":" <span></span>",
-    	   "on-click": "exec nwggrid",
+    	   "on-click": "exec wofi -c ~/.config/wofi/config -I",
     	   "tooltip": false,
      },
       "tray": {
