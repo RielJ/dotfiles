@@ -1,25 +1,10 @@
-require("luasnip.loaders.from_vscode").lazy_load()
-require("luasnip.loaders.from_lua").lazy_load {
-  paths = "~/.config/nvim/lua/rielj/snippets",
-  default_priority = 1,
-}
---
+local ls = require("luasnip")
+local types = require("luasnip.util.types")
 
-local utils = require "rielj.luasnip"
-local ls = require "luasnip"
-local types = require "luasnip.util.types"
-ls.setup {
+ls.setup({
   history = false, --keep around last snippet local to jump back
   updateevents = "TextChanged,TextChangedI", --update changes as you type
   enable_autosnippets = true,
-  snip_env = {
-    same = function()
-      table.insert(getfenv(2).ls_filenippets, utils.same)
-    end,
-    filename = function()
-      table.insert(getfenv(2).ls_file_snippets, utils.get_filename)
-    end,
-  },
   ext_opts = {
     [types.choiceNode] = {
       active = {
@@ -28,18 +13,7 @@ ls.setup {
     },
     snippet_passive = {},
   },
-}
-
--- ls.setup {
---   snip_env = {
---     same = function()
---       table.insert(getfenv(2).ls_file_snippets, utils.same)
---     end,
---     filename = function()
---       table.insert(getfenv(2).ls_file_snippets, utils.get_filename)
---     end,
---   },
--- }
+})
 
 -- <c-k> is my expansion key
 -- this will expand the current item or jump to the next item within the snippet.
@@ -81,3 +55,9 @@ vim.keymap.set("n", "<leader><leader>s", "<cmd>source ~/.config/nvim/after/plugi
 -- vim.api.nvim_set_keymap("s", "<C-l>", "<Plug>luasnip-next-choice", {})
 -- vim.api.nvim_set_keymap("i", "<C-h>", "<Plug>luasnip-prev-choice", {})
 -- vim.api.nvim_set_keymap("s", "<C-h>", "<Plug>luasnip-prev-choice", {})
+require("luasnip.loaders.from_vscode").lazy_load()
+require("luasnip.loaders.from_lua").lazy_load({
+  paths = "~/.config/nvim/lua/rielj/snippets",
+  default_priority = 1,
+})
+--

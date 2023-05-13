@@ -1,4 +1,4 @@
-local ls = require "luasnip"
+local ls = require("luasnip")
 
 local snippet = ls.s
 local f = ls.function_node
@@ -7,13 +7,13 @@ local i = ls.insert_node
 
 local shortcut = function(val)
   if type(val) == "string" then
-    return { t { val }, i(0) }
+    return { t({ val }), i(0) }
   end
 
   if type(val) == "table" then
     for k, v in ipairs(val) do
       if type(v) == "string" then
-        val[k] = t { v }
+        val[k] = t({ v })
       end
     end
   end
@@ -24,9 +24,8 @@ end
 local M = {}
 
 M.get_filename = function()
-  return f(function(_, parent)
-    local filename = parent.snippet.env.TM_FILENAME_BASE
-    return filename
+  return f(function(_, snip)
+    return snip.env.TM_FILENAME_BASE
   end)
 end
 

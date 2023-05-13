@@ -1,11 +1,12 @@
 ---@diagnostic disable: undefined-global
+local utils = require("rielj.luasnip")
 return {
   s(
     {
-      trig = "mrfc",
+      trig = "rfc",
       priority = 2000,
     },
-    fmt(
+    fmta(
       [[
       import React, { ReactNode } from 'react'
 
@@ -20,7 +21,7 @@ return {
       export { <fn> }
     ]],
       {
-        fn = filename(),
+        fn = utils.get_filename(),
         types = c(1, {
           i(1),
           sn(2, {
@@ -52,7 +53,6 @@ return {
       },
       {
         repeat_duplicates = true,
-        delimiters = "<>",
       }
     )
   ),

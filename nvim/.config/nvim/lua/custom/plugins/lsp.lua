@@ -3,15 +3,16 @@ return {
     {
       "neovim/nvim-lspconfig",
       config = function()
-        require "rielj.lsp"
+        require("rielj.lsp")
       end,
       -- Additional lua configuration, makes nvim stuff amazing!
       -- 'folke/neodev.nvim',
     }, -- enable LSP,
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
-    "j-hui/fidget.nvim",
+    { "j-hui/fidget.nvim", opts = {} },
     "folke/neodev.nvim",
+    "nvim-lua/lsp-status.nvim",
     "jose-elias-alvarez/null-ls.nvim",
     "jose-elias-alvarez/nvim-lsp-ts-utils",
     {
@@ -35,14 +36,14 @@ return {
     {
       "WhoIsSethDaniel/mason-tool-installer.nvim",
       config = function()
-        require("mason-tool-installer").setup {
+        require("mason-tool-installer").setup({
           auto_update = true,
           debounce_hours = 24,
           ensure_installed = {
             "black",
             "isort",
           },
-        }
+        })
       end,
     },
 
@@ -54,17 +55,17 @@ return {
       cmd = "Trouble",
       config = function()
         -- Can use P to toggle auto movement
-        require("trouble").setup {
+        require("trouble").setup({
           auto_preview = false,
           auto_fold = true,
-        }
+        })
       end,
     },
     {
       "ray-x/lsp_signature.nvim",
       config = function()
         local _, sig = pcall(require, "lsp_signature")
-        sig.setup {
+        sig.setup({
           bind = true,
           doc_lines = 10,
           floating_window = false, -- show hint in a floating window, set to false for virtual text only mode
@@ -90,7 +91,7 @@ return {
           padding = "", -- character to pad on left and right of signature can be ' ', or '|'  etc
           shadow_blend = 36, -- if you using shadow as border use this set the opacity
           shadow_guibg = "Black", -- if you using shadow as border use this set the color e.g. 'Green' or '#121315'
-        }
+        })
       end,
       event = { "BufRead", "BufNew" },
     },
