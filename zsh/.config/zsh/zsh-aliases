@@ -75,6 +75,7 @@ alias ll="exa -l -g --icons"
 alias lla="ll -a"
 
 alias rshift="redshift -l 7.59:123.584033"
+alias gstep="gammastep -l 7.59:123.584033"
 alias yta-aac="yt-dlp --paths ~/Music/ --extract-audio --audio-format aac "
 alias yta-best="yt-dlp --paths ~/Music/ --extract-audio --audio-format best "
 alias _yta-flac="yt-dlp --extract-audio --audio-format flac "
@@ -101,7 +102,7 @@ alias sk='wshowkeys -a right -a bottom -m 150'
 
 alias _dbeaver="env GDK_BACKEND=x11 dbeaver"
 
-alias scrcpy_record="sudo modprobe v4l2loopback && scrcpy --rotation 1 --v4l2-sink=/dev/video0"
+alias scrcpy_record="sudo modprobe v4l2loopback && scrcpy --v4l2-sink=/dev/video4"
 alias nwmr="sudo systemctl restart NetworkManager"
 # alias vim="nvim"
 # alias realvim="vim"

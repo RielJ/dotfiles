@@ -1,5 +1,6 @@
 #!/bin/sh
 # some useful options (man zshoptions)
+[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"
 
 if [[ -z $DISPLAY && $TTY = /dev/tty1 ]]; then
     export SDL_VIDEODRIVER=wayland
@@ -24,7 +25,7 @@ autoload -Uz compinit
 zstyle ':completion:*' menu select
 # zstyle ':completion::complete:lsof:*' menu yes select
 zmodload zsh/complist
-# compinit
+compinit
 _comp_options+=(globdots)		# Include hidden files.
 
 autoload -U up-line-or-beginning-search
@@ -46,9 +47,12 @@ zsh_add_file "zsh-aliases"
 zsh_add_file "zsh-prompt"
 
 # Plugins
-zsh_add_plugin "zsh-users/zsh-autosuggestions"
-zsh_add_plugin "zsh-users/zsh-syntax-highlighting"
-zsh_add_completion "esc/conda-zsh-completion" false
+plug "zsh-users/zsh-autosuggestions"
+plug "zsh-users/zsh-syntax-highlighting"
+# plug "BuonOmo/yarn-extra-completion"
+# plug "g-plane/zsh-yarn-autocompletions"
+# plug "grigorii-zander/zsh-npm-scripts-autocomplete"
+# plug "sudosubin/zsh-github-cli"
 # zsh_add_completion "esc/conda-zsh-completion" false
 # For more plugins: https://github.com/unixorn/awesome-zsh-plugins
 # More completions https://github.com/zsh-users/zsh-completions
