@@ -4,6 +4,7 @@ exec mako
 #exec python3 ~/.config/sway/scripts/swayfader.py
 
 # Wob
-exec mkfifo $SWAYSOCK.wob
-exec tail -f $SWAYSOCK.wob | wob --border-color '#ffdcbb8c' --background-color '#cc3a3a3a' --bar-color '#ffdcbb8c'
-
+# set $WOBSOCK $XDG_RUNTIME_DIR/wob.sock
+# exec rm -f $WOBSOCK && mkfifo $WOBSOCK && tail -f $WOBSOCK | wob
+# exec mkfifo $WOBSOCK
+# exec tail -f $WOBSOCK | wob --config ~/.config/wob/wob.ini
