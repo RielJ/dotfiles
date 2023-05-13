@@ -19,17 +19,6 @@ return {
           },
           context_commentstring = {
             enable = true,
-            enable_autocmd = false,
-            config = {
-              typescript = "// %s",
-              css = "/* %s */",
-              scss = "/* %s */",
-              html = "<!-- %s -->",
-              svelte = "<!-- %s -->",
-              vue = "<!-- %s -->",
-              json = "",
-              lua = "--",
-            },
           },
           indent = { enable = true, disable = { "yaml", "html", "javascript", "python" } },
           autotag = { enable = true, filetypes = { "typescript", "typescriptreact", "vue" } },

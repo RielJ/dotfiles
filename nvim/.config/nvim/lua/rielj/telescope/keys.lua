@@ -18,7 +18,7 @@ map_tele("<leader>pp", "project_search")
 
 -- Git
 map_tele("<leader>gs", "git_status")
-map_tele("<leader>gc", "git_commits")
+-- map_tele("<leader>gc", "git_commits")
 -- keymap("n", "<leader>sb", "<cmd>Telescope git_branches<cr>", opts)
 -- keymap("n", "<leader>sf", "<cmd>Telescope find_files<cr>", opts)
 -- keymap("n", "<leader>sr", "<cmd>Telescope oldfiles<cr>", opts)
