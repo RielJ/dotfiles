@@ -1,11 +1,6 @@
 local _, neodev = pcall(require, "neodev")
 if neodev then
-  neodev.setup {
-    override = function(_, library)
-      library.enabled = true
-      library.plugins = true
-    end,
-  }
+  neodev.setup({})
 end
 
 local _, lspconfig = pcall(require, "lspconfig")
@@ -36,7 +31,7 @@ local servers = {
   html = true,
   pyright = true,
   vimls = true,
-  cmake = (1 == vim.fn.executable "cmake-language-server"),
+  cmake = (1 == vim.fn.executable("cmake-language-server")),
   cssls = true,
   tailwindcss = {
     cmd = { "tailwindcss-language-server", "--stdio" },
@@ -86,14 +81,18 @@ local setup_server = function(server, config)
   lspconfig[server].setup(config)
 end
 
-require("lspconfig").lua_ls.setup {
+require("lspconfig").lua_ls.setup({
   on_init = custom_init,
   on_attach = custom_attach,
   capabilities = updated_capabilities,
   settings = {
-    Lua = { workspace = { checkThirdParty = false }, semantic = { enable = false } },
+    Lua = {
+      workspace = { checkThirdParty = false },
+      semantic = { enable = false },
+      completion = { callSnippet = "Replace" },
+    },
   },
-}
+})
 
 for server, config in pairs(servers) do
   setup_server(server, config)
