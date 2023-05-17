@@ -21,7 +21,7 @@ exec flameshot
 # exec kanshi
 
 # Xdg DEsktop Portal
-# exec /usr/libexec/xdg-desktop-portal
+exec /usr/libexec/xdg-desktop-portal
 
 # Tracker daemon for gnome apps
 # exec tracker daemon -s
