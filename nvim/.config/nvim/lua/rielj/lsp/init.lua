@@ -43,25 +43,19 @@ local servers = {
   cssls = true,
   tailwindcss = {
     cmd = { "tailwindcss-language-server", "--stdio" },
+    settings = {
+      tailwindCSS = {
+        experimental = {
+          classRegex = {
+            {
+              "clsx\\(.*\\)",
+              "(?:'|\"|`)([^']*)(?:'|\"|`)",
+            },
+          },
+        },
+      },
+    },
   },
-  -- tsserver = {
-  --   init_options = ts_util.init_options,
-  --   cmd = { "typescript-language-server", "--stdio" },
-  --   filetypes = {
-  --     "javascript",
-  --     "javascriptreact",
-  --     "javascript.jsx",
-  --     "typescript",
-  --     "typescriptreact",
-  --     "typescript.tsx",
-  --   },
-  --   on_attach = function(client)
-  --     custom_attach(client)
-
-  --     ts_util.setup { auto_inlay_hints = false }
-  --     ts_util.setup_client(client)
-  --   end,
-  -- },
 }
 
 -- MASON
