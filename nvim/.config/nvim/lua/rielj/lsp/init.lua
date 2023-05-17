@@ -19,7 +19,15 @@ vim.tbl_deep_extend("force", updated_capabilities, require("cmp_nvim_lsp").defau
 local servers = {
   -- Also uses `shellcheck` and `explainshell`
   bashls = true,
-  eslint = true,
+  eslint = {
+    root_dir = lspconfig.util.root_pattern("package.json", ".git", ".eslintrc*"),
+    on_attach = function(_, bufnr)
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        buffer = bufnr,
+        command = "EslintFixAll",
+      })
+    end,
+  },
   graphql = {
     cmd = { "graphql-lsp", "server", "-m", "stream" },
     filetypes = {
