@@ -97,13 +97,13 @@ keymap("n", "<leader>be", "<cmd>lua require('rielj.bufferline').close_except_cur
 -- keymap("v", "<leader>/", "<ESC><cmd>lua require('Comment.api').toggle_linewise_op(vim.fn.visualmode())<CR>", opts)
 
 -- Telescope --
-keymap(
-  "n",
-  "<leader>f",
-  "<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ previewer = false }))<cr>",
-  opts
-)
-keymap("n", "<leader>st", "<cmd>Telescope live_grep<cr>", opts)
+-- keymap(
+--   "n",
+--   "<leader>f",
+--   "<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ previewer = false }))<cr>",
+--   opts
+-- )
+-- keymap("n", "<leader>st", "<cmd>Telescope live_grep<cr>", opts)
 
 -- For Escaping
 keymap("i", "jk", "<ESC>", opts)
@@ -133,7 +133,7 @@ keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
 keymap("n", "<leader>o", "o<ESC>", opts)
 
 -- NvimTree
-keymap("n", "<Leader>e", ":NvimTreeToggle<CR>", opts)
+keymap("n", "<leader>e", ":NvimTreeToggle<CR>", opts)
 
 -- The Primeagean top 5 remaps
 -- #1

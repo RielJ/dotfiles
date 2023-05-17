@@ -1,11 +1,11 @@
 if not pcall(require, "telescope") then
   return
 end
-local previewers = require "telescope.previewers"
-local sorters = require "telescope.sorters"
-local actions = require "telescope.actions"
+local previewers = require("telescope.previewers")
+local sorters = require("telescope.sorters")
+local actions = require("telescope.actions")
 
-require("telescope").setup {
+require("telescope").setup({
   defaults = {
     prompt_prefix = " ",
     selection_caret = " ",
@@ -111,11 +111,12 @@ require("telescope").setup {
       ["?"] = actions.which_key,
     },
   },
-}
+})
 
-_ = require("telescope").load_extension "fzf"
-_ = require("telescope").load_extension "file_browser"
-_ = require("telescope").load_extension "neoclip"
+_ = require("telescope").load_extension("fzf")
+_ = require("telescope").load_extension("file_browser")
+_ = require("telescope").load_extension("neoclip")
 
+pcall(require("telescope").load_extension, "neoclip")
 pcall(require("telescope").load_extension, "frecency")
 pcall(require("telescope").load_extension, "smart_history")
