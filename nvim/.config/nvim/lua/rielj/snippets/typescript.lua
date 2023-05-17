@@ -14,7 +14,7 @@ return -- Snippets
     }}
     ]],
       {
-        functionType = c(1, { t "function ", t "const " }),
+        functionType = c(1, { t("function "), t("const ") }),
         functionName = i(2, "functionName"),
         f(function(args)
           if args[1][1] == "function " then
@@ -24,12 +24,12 @@ return -- Snippets
           end
         end, { 1 }),
         parameters = c(3, {
-          sn(1, { t "{ ", i(1), t " }: { ", i(2), t " }" }),
-          t "",
+          sn(1, { t("{ "), i(1), t(" }: { "), i(2), t(" }") }),
+          t(""),
         }),
         returnType = c(4, {
-          sn(1, { t ": ", i(1, "void") }),
-          t "",
+          sn(1, { t(": "), i(1, "void") }),
+          t(""),
         }),
         f(function(args)
           if args[1][1] == "function " then
@@ -59,10 +59,19 @@ return -- Snippets
         i(2),
         c(3, {
           i(1),
-          sn(2, { t { "else {", "\t" }, i(1), t { "", "}" } }),
-          sn(3, { t { "else if (" }, i(1), t { ") {", "\t" }, i(2), t { "", "}" } }),
+          sn(2, { t({ "else {", "\t" }), i(1), t({ "", "}" }) }),
+          sn(3, { t({ "else if (" }), i(1), t({ ") {", "\t" }), i(2), t({ "", "}" }) }),
         }),
       }
+    )
+  ),
+  s(
+    "exc",
+    fmt(
+      [[
+      export const {} = {}
+    ]],
+      { i(1, "name"), i(2, "value") }
     )
   ),
 }

@@ -23,10 +23,19 @@ end
 
 local M = {}
 
-M.get_filename = function()
-  return f(function(_, snip)
-    return snip.env.TM_FILENAME_BASE
-  end)
+M.get_filename = function(snip)
+  if snip == nil or snip.env == nil then
+    return ""
+  end
+  local file_name = snip.env.TM_FILENAME_BASE
+  local path_split = vim.split(vim.fn.expand("%"), "/")
+  local folder = path_split[#path_split - 1]
+  print(vim.inspect(folder), vim.inspect(file_name))
+  if file_name == "index" then
+    return folder
+  end
+
+  return file_name
 end
 
 M.same = function(index)

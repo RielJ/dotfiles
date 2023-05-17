@@ -2,9 +2,19 @@ local ls = require("luasnip")
 local types = require("luasnip.util.types")
 
 ls.setup({
-  history = false, --keep around last snippet local to jump back
+  history = false,                           --keep around last snippet local to jump back
   updateevents = "TextChanged,TextChangedI", --update changes as you type
   enable_autosnippets = true,
+  snip_env = {
+    filename = function()
+      table.insert(
+        getfenv(2).ls_file_snippets,
+        ls.f(function(_, snip)
+          return snip.env.TM_FILENAME_BASE or ""
+        end)
+      )
+    end,
+  },
   ext_opts = {
     [types.choiceNode] = {
       active = {
@@ -48,6 +58,7 @@ vim.keymap.set({ "i", "s" }, "<c-u>", function()
 end, { silent = true })
 
 vim.keymap.set("n", "<leader><leader>s", "<cmd>source ~/.config/nvim/after/plugin/snippets.lua<CR>")
+vim.keymap.set("n", "<leader><leader>c", "<cmd>source ~/.config/nvim/lua/rielj/luasnip.lua<CR>")
 
 -- vim.keymap.set("i", "<c-u>", require "luasnip.extras.select_choice")
 -- vim.keymap.set("s", "<c-u>", require "luasnip.extras.select_choice")

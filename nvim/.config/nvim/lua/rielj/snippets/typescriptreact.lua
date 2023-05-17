@@ -3,39 +3,43 @@ local utils = require("rielj.luasnip")
 return {
   s(
     {
-      trig = "rfc",
+      trig = "trfc",
       priority = 2000,
     },
     fmta(
       [[
-      import React, { ReactNode } from 'react'
-
-      interface I<fn> {
-        <types>
-      }
-
-      function <fn>({<typesAuto>}: I<fn>): ReactNode {
-        return <<>><content><</>>
+      import React from 'react'
+      <types>
+      function <fn>(<typesAuto>): JSX.Element {
+        return <content>
       }
 
       export { <fn> }
     ]],
       {
-        fn = utils.get_filename(),
-        types = c(1, {
-          i(1),
-          sn(2, {
-            t({
-              "children?: ReactNode",
-              "\t",
-            }),
-            i(1),
-          }),
-        }),
-        typesAuto = f(function(args)
-          local str = " "
+        fn = f(function(_, snip)
+          return utils.get_filename(snip)
+        end),
+        types = d(1, function(_, snip)
+          local file_name = utils.get_filename(snip)
+          return sn(
+            nil,
+            c(1, {
+              sn(nil, {
+                t({ "", "" }),
+                t({ "interface I" .. file_name .. " {", "\t" }),
+                i(1),
+                t({ "", "}" }),
+                t({ "", "" }),
+              }),
+              t({ "" }),
+            })
+          )
+        end, {}),
+        typesAuto = f(function(args, snip)
+          local str = ""
           local params = args[1]
-          if #params ~= 0 then
+          if #params ~= 1 then
             for _, param_and_value in ipairs(params) do
               local param = string.gsub(vim.split(param_and_value, ":")[1], "%s+", "")
               local ps = vim.split(param_and_value, ":")
@@ -45,11 +49,22 @@ return {
                 end
               end
             end
-            return str:sub(1, -3) .. " "
+            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip)
           end
           return ""
         end, { 1 }),
-        content = i(2),
+        content = c(2, {
+          sn(nil, {
+            t("<>"),
+            i(1),
+            t("</>"),
+          }),
+          sn(nil, {
+            t("<div>"),
+            i(1),
+            t("</div>"),
+          }),
+        }),
       },
       {
         repeat_duplicates = true,
