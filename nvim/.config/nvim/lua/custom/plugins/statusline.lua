@@ -5,7 +5,7 @@ return {
       "NTBBloodbath/galaxyline.nvim",
       config = function()
         local _, gl = pcall(require, "galaxyline")
-        local condition = require "galaxyline.condition"
+        local condition = require("galaxyline.condition")
 
         local gls = gl.section
         gl.short_line_list = { "NvimTree", "packager", "vista" }
@@ -99,7 +99,7 @@ return {
         gls.left[5] = {
           GitBranch = {
             provider = function()
-              local vcs = require "galaxyline.providers.vcs"
+              local vcs = require("galaxyline.providers.vcs")
               local branch_name = vcs.get_git_branch()
               if string.len(branch_name) > 28 then
                 return string.sub(branch_name, 1, 25) .. "..."
@@ -258,7 +258,7 @@ return {
         -- Force manual load so that nvim boots with a status line
         gl.load_galaxyline()
       end,
-      dependencies = { "kyazdani42/nvim-web-devicons", lazy = true },
+      dependencies = { "nvim-tree/nvim-web-devicons" },
     },
   },
 }

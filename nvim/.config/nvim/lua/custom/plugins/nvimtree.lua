@@ -3,7 +3,13 @@ return {
     -- NvimTree
     {
       "kyazdani42/nvim-tree.lua",
-      dependencies = "kyazdani42/nvim-web-devicons",
+      dependencies = { "nvim-tree/nvim-web-devicons" },
+    },
+    {
+      "stevearc/oil.nvim",
+      opts = {},
+      -- Optional dependencies
+      dependencies = { "nvim-tree/nvim-web-devicons" },
     },
   },
 }

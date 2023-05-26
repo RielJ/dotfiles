@@ -10,7 +10,7 @@ return {
     }, -- enable LSP,
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
-    { "j-hui/fidget.nvim",               opts = {} },
+    { "j-hui/fidget.nvim", opts = {} },
     "folke/neodev.nvim",
     "nvim-lua/lsp-status.nvim",
     "jose-elias-alvarez/null-ls.nvim",
@@ -69,5 +69,6 @@ return {
       event = "BufRead",
       ft = { "rust", "go", "typescript", "typescriptreact" },
     },
+    { "mbbill/undotree" },
   },
 }

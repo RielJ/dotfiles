@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 local utils = require("rielj.luasnip")
 return {
+  s({ trig = "uc", priority = 2000 }, { t([['use client']]) }),
   s(
     {
       trig = "nlfc",
