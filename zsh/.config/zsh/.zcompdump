@@ -1,4 +1,4 @@
-#files: 827	version: 5.9
+#files: 825	version: 5.9
 
 _comps=(
 '-' '_precommand'
@@ -135,7 +135,6 @@ _comps=(
 'cabal' '_cabal'
 'cal' '_cal'
 'calendar' '_calendar'
-'cargo' '_cargo'
 'cat' '_cat'
 'catchsegv' '_precommand'
 'cc' '_gcc'
@@ -1517,7 +1516,6 @@ _comps=(
 'ypxfr' '_yp'
 'ytalk' '_other_accounts'
 'yt-dlp' '_yt-dlp'
-'zap' '_zap'
 'zargs' '_zargs'
 'zcalc' '_zcalc'
 '-zcalc-line-' '_zcalc_line'
@@ -1553,7 +1551,6 @@ _comps=(
 'zmv' '_zmv'
 'zone' '_hosts'
 'zoxide' '_zoxide'
-'__zoxide_z' '__zoxide_z_complete'
 'zparseopts' '_zparseopts'
 'zpool' '_zfs'
 'zpty' '_zpty'
@@ -1682,8 +1679,8 @@ bindkey '^[/' _history-complete-older
 bindkey '^[~' _bash_complete-word
 
 autoload -Uz _alacritty _bluetoothctl _bootctl _busctl _bwrap \
-            _cargo _coredumpctl _curl _exa _fd \
-            _flatpak _hostnamectl _journalctl _kernel-install _kscreen-doctor \
+            _coredumpctl _curl _exa _fd _flatpak \
+            _fnm _hostnamectl _journalctl _kernel-install _kscreen-doctor \
             _libinput _localectl _loginctl _luarocks _luarocks-admin \
             _machinectl _mako _makoctl _meson _mkinitcpio \
             _mpv _networkctl _ninja _oomctl _pacman \
@@ -1845,8 +1842,7 @@ autoload -Uz _alacritty _bluetoothctl _bootctl _busctl _bwrap \
             _wait _which _widgets _zargs _zattr \
             _zcalc _zcalc_line _zcompile _zed _zftp \
             _zle _zmodload _zmv _zparseopts _zpty \
-            _zsh-mime-handler _zsocket _zstyle _ztodo _zap \
-            _fnm
+            _zsh-mime-handler _zsocket _zstyle _ztodo
 autoload -Uz +X _call_program
 
 typeset -gUa _comp_assocs
