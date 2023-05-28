@@ -14,6 +14,8 @@ end
 local luasnip = require("luasnip")
 local cmp = require("cmp")
 
+vim.api.nvim_set_hl(0, "GhostText", { fg = "#777777", bg = "#333333" })
+
 require("cmp").setup({
   confirm_opts = {
     behavior = cmp.ConfirmBehavior.Replace,
@@ -24,7 +26,9 @@ require("cmp").setup({
     keyword_length = 1,
   },
   experimental = {
-    ghost_text = true,
+    ghost_text = {
+      hl_group = "GhostText",
+    },
   },
   formatting = {
     format = function(entry, vim_item)
@@ -67,10 +71,10 @@ require("cmp").setup({
       local duplicates = {
         buffer = 1,
         path = 1,
-        nvim_lsp = 0,
+        nvim_lsp = nil,
         luasnip = 1,
       }
-      local duplicates_default = 0
+      local duplicates_default = nil
       vim_item.kind = kind_icons[vim_item.kind]
       vim_item.menu = source_names[entry.source.name]
       vim_item.dup = duplicates[entry.source.name] or duplicates_default
@@ -99,7 +103,7 @@ require("cmp").setup({
     { name = "treesitter" },
     { name = "crates" },
   },
-  mapping = {
+  mapping = cmp.mapping.preset.insert({
     ["<C-d>"] = cmp.mapping.scroll_docs(-4),
     ["<C-f>"] = cmp.mapping.scroll_docs(4),
     -- TODO: potentially fix emmet nonsense
@@ -168,5 +172,5 @@ require("cmp").setup({
       s = cmp.mapping.confirm({ select = true }),
       c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
     }),
-  },
+  }),
 })

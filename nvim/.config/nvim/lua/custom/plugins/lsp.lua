@@ -25,11 +25,9 @@ return {
         "typescript.tsx",
       },
       event = { "BufReadPre", "BufNew" },
-      config = function()
-        require("rielj.typescript").config()
-      end,
       dependencies = "williamboman/mason.nvim",
     },
+    "axelvc/template-string.nvim",
     "onsails/lspkind-nvim",
 
     {

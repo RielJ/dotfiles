@@ -48,7 +48,7 @@ local servers = {
         experimental = {
           classRegex = {
             {
-              "clsx\\(.*\\)",
+              "clsx\\(([^)]*)\\)",
               "(?:'|\"|`)([^']*)(?:'|\"|`)",
             },
           },

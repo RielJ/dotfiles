@@ -151,34 +151,25 @@ local function on_attach(client, bufnr)
   M.buf_map(bufnr, "v", "gx", ":CssToJs<CR>")
 end
 
-M.config = function()
-  local status_ok, ts = pcall(require, "typescript")
-  if not status_ok then
-    return
-  end
+-- local ok, _ = pcall(require, "rielj.lsp")
+-- if not ok then
+-- 	return
+-- end
 
-  -- local ok, _ = pcall(require, "rielj.lsp")
-  -- if not ok then
-  -- 	return
-  -- end
-
-  ts.setup({
-    disable_commands = false, -- prevent the plugin from creating Vim commands
-    disable_formatting = false, -- disable tsserver's formatting capabilities
-    debug = false, -- enable debug logging for commands
-    server = {
-      -- pass options to lspconfig's setup method
-      on_attach = on_attach,
-      capabilities = require("rielj.lsp.handlers").capabilities,
-      -- init_options = ts_utils.init_options,
-      flags = {
-        debounce_text_changes = 150,
-      },
-      preferences = {
-        importModuleSpecifierPreference = "project-relative",
-      },
+require("typescript").setup({
+  disable_commands = false, -- prevent the plugin from creating Vim commands
+  disable_formatting = false, -- disable tsserver's formatting capabilities
+  debug = false, -- enable debug logging for commands
+  server = {
+    -- pass options to lspconfig's setup method
+    on_attach = on_attach,
+    capabilities = require("rielj.lsp.handlers").capabilities,
+    -- init_options = ts_utils.init_options,
+    flags = {
+      debounce_text_changes = 150,
     },
-  })
-end
-
-return M
+    preferences = {
+      importModuleSpecifierPreference = "project-relative",
+    },
+  },
+})

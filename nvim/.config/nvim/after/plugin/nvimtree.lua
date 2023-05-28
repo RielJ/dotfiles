@@ -90,8 +90,8 @@ require("nvim-tree").setup({
     root_folder_modifier = ":t",
   },
   filters = {
-    dotfiles = true,
-    -- custom = { "node_modules", "\\.cache" },
+    dotfiles = false,
+    custom = { "node_modules", "\\.cache", ".husky", ".next", ".vscode", ".git" },
     exclude = {},
   },
   trash = {

@@ -12,7 +12,7 @@ M.setup = function()
     save_after_format = false,
     diagnostics_format = "[#{c}] #{m} (#{s})",
     sources = {
-      require("typescript.extensions.null-ls.code-actions"),
+      -- require("typescript.extensions.null-ls.code-actions"),
       require("null-ls").builtins.formatting.eslint_d.with({
         condition = function(utils)
           return utils.root_has_file({ ".eslintrc", ".eslintrc.js" })
