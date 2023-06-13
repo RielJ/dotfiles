@@ -1,9 +1,9 @@
 anchor=top-right
 layer=overlay
 font="MesloLGS NF" 10
-background-color=#3b4252
+background-color=#002b36AA
+text-color=#fdf6e3
 height=800
-text-color=#eceff4
 margin=4,4,20
 padding=15
 border-size=5
