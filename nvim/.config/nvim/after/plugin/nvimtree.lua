@@ -91,7 +91,7 @@ require("nvim-tree").setup({
   },
   filters = {
     dotfiles = false,
-    custom = { "node_modules", "\\.cache", ".husky", ".next", ".vscode", ".git" },
+    -- custom = { "node_modules", "\\.cache", ".husky", ".next", ".vscode", ".git" },
     exclude = {},
   },
   trash = {
