@@ -5,7 +5,7 @@ return {
       "lukas-reineke/indent-blankline.nvim",
       config = function()
         local _, bl = pcall(require, "indent_blankline")
-        bl.setup {
+        bl.setup({
           bufname_exclude = { "README.md" },
           buftype_exclude = { "terminal", "nofile" },
           filetype_exclude = {
@@ -44,9 +44,9 @@ return {
             "lspinfo",
             "", -- for all buffers without a file type
           },
-          char = "▏",
-          -- char = "",
-          -- char_list = { "", "┊", "┆", "¦", "|", "¦", "┆", "┊", "" },
+          -- char = "▏",
+          char = "",
+          char_list = { "", "┊", "┆", "¦", "|", "¦", "┆", "┊", "" },
           char_highlight_list = {
             "IndentBlanklineIndent1",
             "IndentBlanklineIndent2",
@@ -86,7 +86,7 @@ return {
             "import_statement",
             "operation_type",
           },
-        }
+        })
         -- HACK: work-around for https://github.com/lukas-reineke/indent-blankline.nvim/issues/59
         vim.wo.colorcolumn = "99999"
         -- vim.cmd([[highlight IndentBlanklineIndent1 guifg=#E06C75 gui=nocombine]])
@@ -96,8 +96,8 @@ return {
         -- vim.cmd([[highlight IndentBlanklineIndent5 guifg=#61AFEF gui=nocombine]])
         -- vim.cmd([[highlight IndentBlanklineIndent6 guifg=#C678DD gui=nocombine]])
         vim.opt.list = true
-        vim.opt.listchars:append "space:⋅"
-        vim.g.indent_blankline_char = "▏"
+        vim.opt.listchars:append("space:⋅")
+        vim.g.indent_blankline_char = ""
         -- vim.opt.listchars:append("space:")
         -- vim.opt.listchars:append("eol:↴")
       end,
