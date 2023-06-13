@@ -3,6 +3,30 @@ local utils = require("rielj.luasnip")
 return {
   s({ trig = "uc", priority = 2000 }, { t([['use client']]) }),
   s(
+    { trig = "ims", priority = 2000 },
+    fmt(
+      [[
+    import styles from "./{fn}.module.scss"
+  ]],
+      {
+        fn = f(function(_, snip)
+          return utils.get_filename(snip)
+        end),
+      }
+    )
+  ),
+  s(
+    { trig = "clms", priority = 2000 },
+    fmt(
+      [[
+    className={{clsx(styles["{}"])}}
+  ]],
+      {
+        i(1),
+      }
+    )
+  ),
+  s(
     {
       trig = "nlfc",
       priority = 2000,
@@ -280,6 +304,18 @@ return {
       },
       {
         repeat_duplicates = true,
+      }
+    )
+  ),
+}, {
+  s(
+    { trig = "classN", priority = 2000 },
+    fmt(
+      [[
+    className="{}"
+  ]],
+      {
+        i(1),
       }
     )
   ),
