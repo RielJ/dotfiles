@@ -82,7 +82,7 @@ alias ua-update-all='export TMPFILE="$(mktemp)"; \
 alias display_ports='ss -lntu'
 alias kill_port="fuser -k"
 
-alias sk='wshowkeys -a right -a bottom -m 150'
+alias sk='wshowkeys -a right -a bottom -m 150 -F MesloLGS 14 -t 2'
 
 alias _dbeaver="env GDK_BACKEND=x11 dbeaver"
 
