@@ -33,6 +33,7 @@ keymap("n", "<leader>lpi", "<cmd>lua require('rielj.lsp.peek').Peek('implementat
 keymap("n", "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<cr>", opts)
 keymap("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", opts)
 keymap("n", "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", opts)
+keymap("n", "<leader>le", "<cmd>Telescope quickfix<cr>", opts)
 
 -- LSP TYPESCRIPT --
 keymap("n", "gs", "<cmd>lua require('typescript').actions.removeUnused()<cr>", opts)

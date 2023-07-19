@@ -12,14 +12,28 @@ local has_words_before = function()
 end
 
 local luasnip = require("luasnip")
+local cmp_autopairs = require("nvim-autopairs.completion.cmp")
 local cmp = require("cmp")
 
 vim.api.nvim_set_hl(0, "GhostText", { fg = "#777777", bg = "#333333" })
 
-require("cmp").setup({
-  confirm_opts = {
+cmp.setup({
+  view = {
+    entries = { name = "custom", selection_order = "near_cursor" },
+  },
+  -- enabled = function()
+  --   -- disable completion in comments
+  --   local context = require("cmp.config.context")
+  --   -- keep command mode completion enabled when cursor is in a comment
+  --   if vim.api.nvim_get_mode().mode == "c" then
+  --     return true
+  --   else
+  --     return not context.in_treesitter_capture("comment") and not context.in_syntax_group("Comment")
+  --   end
+  -- end,
+  confirm = {
     behavior = cmp.ConfirmBehavior.Replace,
-    select = false,
+    select = true,
   },
   completion = {
     ---@usage The minimum length of a word to complete on.
@@ -28,6 +42,33 @@ require("cmp").setup({
   experimental = {
     ghost_text = {
       hl_group = "GhostText",
+    },
+  },
+  sorting = {
+    -- TODO: Would be cool to add stuff like "See variable names before method names" in rust, or something like that.
+    comparators = {
+      cmp.config.compare.offset,
+      cmp.config.compare.exact,
+      cmp.config.compare.score,
+
+      -- copied from cmp-under, but I don't think I need the plugin for this.
+      -- I might add some more of my own.
+      function(entry1, entry2)
+        local _, entry1_under = entry1.completion_item.label:find("^_+")
+        local _, entry2_under = entry2.completion_item.label:find("^_+")
+        entry1_under = entry1_under or 0
+        entry2_under = entry2_under or 0
+        if entry1_under > entry2_under then
+          return false
+        elseif entry1_under < entry2_under then
+          return true
+        end
+      end,
+
+      cmp.config.compare.kind,
+      cmp.config.compare.sort_text,
+      cmp.config.compare.length,
+      cmp.config.compare.order,
     },
   },
   formatting = {
@@ -115,19 +156,18 @@ require("cmp").setup({
     --   "i",
     --   "s",
     -- }),
-    -- ["<C-k>"] = cmp.mapping(function(fallback)
-    --   if luasnip.jumpable(-1) then
-    --     luasnip.jump(-1)
-    --   end
-    -- end, {
-    --   "i",
-    --   "s",
-    -- }),
+    ["<C-l"] = cmp.mapping(function()
+      if luasnip.choice_active() then
+        luasnip.chane_choice(1)
+      end
+    end, {
+      "i",
+    }),
     ["<Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
       elseif luasnip.expand_or_jumpable() then
-        luasnip.expand_or_jump()
+        luasnip.expand_or_locally_jumpable()
       elseif has_words_before() then
         cmp.complete()
       elseif check_backspace() then
@@ -154,6 +194,16 @@ require("cmp").setup({
       "s",
     }),
     ["<C-Space>"] = cmp.mapping.complete(),
+    -- ["<C-Space>"] = cmp.mapping(function()
+    --   if cmp.visible() then
+    --     cmp.confirm({
+    --       behavior = cmp.ConfirmBehavior.Replace,
+    --       select = true,
+    --     })
+    --   else
+    --     cmp.complete()
+    --   end
+    -- end),
     ["<C-e>"] = cmp.mapping({
       i = cmp.mapping.abort(),
       c = cmp.mapping.close(),
@@ -163,7 +213,7 @@ require("cmp").setup({
         if cmp.visible() and cmp.get_active_entry() then
           cmp.confirm({
             behavior = cmp.ConfirmBehavior.Replace,
-            select = false,
+            select = true,
           })
         else
           fallback()
@@ -173,4 +223,10 @@ require("cmp").setup({
       c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
     }),
   }),
+})
+cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+require("cmp_tabnine.config").setup({
+  max_lines = 1000,
+  max_num_results = 10,
+  sort = true,
 })

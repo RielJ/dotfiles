@@ -8,9 +8,17 @@ return {
       -- Additional lua configuration, makes nvim stuff amazing!
       -- 'folke/neodev.nvim',
     }, -- enable LSP,
+    "b0o/schemastore.nvim",
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
-    { "j-hui/fidget.nvim", opts = {} },
+    {
+      "linrongbin16/lsp-progress.nvim",
+      requires = { "nvim-tree/nvim-web-devicons" },
+      config = function()
+        require("lsp-progress").setup()
+      end,
+    },
+    -- { "j-hui/fidget.nvim", opts = {} },
     "folke/neodev.nvim",
     "nvim-lua/lsp-status.nvim",
     "jose-elias-alvarez/null-ls.nvim",

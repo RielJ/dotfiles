@@ -7,7 +7,6 @@ M.tokyonight = function()
     "qf",
     "vista_kind",
     "terminal",
-    "packer",
     "spectre_panel",
     "NeogitStatus",
     "help",

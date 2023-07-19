@@ -1,4 +1,4 @@
-require("Comment").setup {
+require("Comment").setup({
   -- ignores empty lines
   ignore = "^$",
   pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
@@ -34,9 +34,9 @@ require("Comment").setup {
     --  Make sense to be related to your opleader.block
     block = "gbc",
   },
-}
+})
 
-local comment_ft = require "Comment.ft"
+local comment_ft = require("Comment.ft")
 comment_ft.set("lua", { "--%s", "--[[%s]]" })
 
 local icons = {
@@ -49,7 +49,7 @@ local icons = {
   ERROR = " ",
   REFS = "",
 }
-require("todo-comments").setup {
+require("todo-comments").setup({
   keywords = {
     FIX = { icon = icons.FIX },
     TODO = { icon = icons.TODO, alt = { "WIP" } },
@@ -70,4 +70,4 @@ require("todo-comments").setup {
     ref = { "FloatBorder" },
     default = { "Identifier" },
   },
-}
+})

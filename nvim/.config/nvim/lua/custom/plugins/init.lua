@@ -3,7 +3,7 @@ return {
     {
       "lewis6991/impatient.nvim",
       config = function()
-        require "impatient"
+        require("impatient")
         require("impatient").enable_profile()
       end,
     },
@@ -19,7 +19,7 @@ return {
     "tpope/vim-repeat",
     "tpope/vim-sleuth", -- detects indentation
     "godlygeek/tabular", -- Quickly align text by pattern
-    "romainl/vim-qf",
+    "kevinhwang91/nvim-bqf",
     -- log highlighter
     { "mtdl9/vim-log-highlighting", ft = { "text", "log" } },
 
@@ -27,7 +27,7 @@ return {
       "glacambre/firenvim",
       cond = not not vim.g.started_by_firenvim,
       build = function()
-        require("lazy").load { plugins = { "firenvim" }, wait = true }
+        require("lazy").load({ plugins = { "firenvim" }, wait = true })
         vim.fn["firenvim#install"](0)
       end,
     },
