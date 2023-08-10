@@ -7,6 +7,7 @@ if [[ -z $DISPLAY && $TTY = /dev/tty1 ]]; then
     export _JAVA_AWT_WM_NONREPARENTING=1
     export QT_QPA_PLATFORM=wayland
     export XDG_CURRENT_DESKTOP=sway
+    export MOZ_ENABLE_WAYLAND=1
     export XDG_SESSION_DESKTOP=sway
     exec sway 
 fi
@@ -26,13 +27,13 @@ zle -N down-line-or-beginning-search
 
 # Colors
 autoload -Uz colors && colors
-export ZDOTDIR=~/.config/zsh
+# export ZDOTDIR=~/.config/zsh
 
 # Plugins
 plug "zsh-users/zsh-autosuggestions"
 plug "hlissner/zsh-autopair"
 # plug "zap-zsh/supercharge"
-plug "zap-zsh/zap-prompt"
+# plug "zap-zsh/zap-prompt"
 plug "zap-zsh/fnm"
 plug "zap-zsh/fzf"
 plug "zap-zsh/exa"
