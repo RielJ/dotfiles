@@ -209,16 +209,17 @@ function M.buffer_git_files()
   }))
 end
 
-function M.lsp_code_actions()
-  local opts = themes.get_dropdown({
-    winblend = 10,
-    border = true,
-    previewer = false,
-    shorten_path = false,
-  })
+-- DEPRECATED
+-- function M.lsp_code_actions()
+--   local opts = themes.get_dropdown({
+--     winblend = 10,
+--     border = true,
+--     previewer = false,
+--     shorten_path = false,
+--   })
 
-  require("telescope.builtin").lsp_code_actions(opts)
-end
+--   require("telescope.builtin").lsp_code_actions(opts)
+-- end
 
 function M.live_grep()
   require("telescope.builtin").live_grep({

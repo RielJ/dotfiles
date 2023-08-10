@@ -18,6 +18,10 @@ end
 vim.opt.runtimepath:prepend(lazypath)
 
 require("lazy").setup("custom.plugins", {
+  change_detection = {
+    enabled = false,
+    notify = false,
+  },
   ui = {
     icons = {
       cmd = "⌘",

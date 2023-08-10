@@ -8,20 +8,20 @@ M.setup = function()
     debug = false,
     on_attach = custom_attach,
     capabilities = updated_capabilities,
-    debounce = 750,
+    debounce = 1000,
     save_after_format = false,
     diagnostics_format = "[#{c}] #{m} (#{s})",
     sources = {
       -- require("typescript.extensions.null-ls.code-actions"),
       require("null-ls").builtins.formatting.eslint_d.with({
         condition = function(utils)
-          return utils.root_has_file({ ".eslintrc", ".eslintrc.js" })
+          return utils.root_has_file({ ".eslintrc*" })
         end,
         prefer_local = "node_modules/.bin",
       }),
       require("null-ls").builtins.formatting.prettier.with({
         condition = function(utils)
-          return not utils.root_has_file({ ".eslintrc", ".eslintrc.js" })
+          return not utils.root_has_file({ ".eslintrc*" })
         end,
         prefer_local = "node_modules/.bin",
       }),

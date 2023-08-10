@@ -16,7 +16,6 @@ return {
       "tzachar/cmp-tabnine",
       build = "./install.sh",
       dependencies = "hrsh7th/nvim-cmp",
-      lazy = true,
       event = "InsertEnter",
     },
   },

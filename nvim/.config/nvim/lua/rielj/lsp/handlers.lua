@@ -49,7 +49,7 @@ local function lsp_highlight_document(client, bufnr)
   -- Set autocommands conditional on server_capabilities
   local augroup_highlight = vim.api.nvim_create_augroup("custom-lsp-references", { clear = true })
   if client.server_capabilities.document_highlight then
-    vim.api.nvim_clear_autocmds { group = augroup_highlight, buffer = bufnr }
+    vim.api.nvim_clear_autocmds({ group = augroup_highlight, buffer = bufnr })
     vim.api.nvim_create_autocmd("CursorHold", {
       group = augroup_highlight,
       buffer = bufnr,
@@ -67,8 +67,7 @@ local function lsp_highlight_document(client, bufnr)
   end
 end
 
-local function lsp_keymaps()
-  local bufnr = 0
+local function lsp_keymaps(bufnr)
   local opts = { noremap = true, silent = true }
   vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
@@ -94,13 +93,13 @@ end
 function M.common_on_attach(client, bufnr)
   local augroup_format = vim.api.nvim_create_augroup("custom-lsp-format", { clear = true })
   if vim.lsp.handlers["textDocument/formatting"] and client.name ~= "typescript" then
-    vim.api.nvim_clear_autocmds { group = augroup_format, buffer = bufnr }
+    vim.api.nvim_clear_autocmds({ group = augroup_format, buffer = bufnr })
     vim.api.nvim_create_autocmd("BufWritePre", {
       group = augroup_format,
       buffer = bufnr,
       callback = function()
         -- on 0.8, you should use vim.lsp.buf.format({ bufnr = bufnr }) instead
-        M.format { { filter = M.format_filter, bufnr = bufnr } }
+        M.format({ { filter = M.format_filter, bufnr = bufnr } })
       end,
     })
   end
@@ -111,7 +110,7 @@ end
 function M.format_filter(clients)
   return vim.tbl_filter(function(client)
     local status_ok, formatting_supported = pcall(function()
-      return client.supports_method "textDocument/formatting"
+      return client.supports_method("textDocument/formatting")
     end)
     -- give higher prio to null-ls
     if status_ok and formatting_supported and client.name == "null-ls" then
@@ -125,7 +124,7 @@ end
 function M.rename_filter(clients)
   return vim.tbl_filter(function(client)
     local status_ok, renaming_supportedd = pcall(function()
-      return client.supports_method "textDocument/rename"
+      return client.supports_method("textDocument/rename")
     end)
     return status_ok and renaming_supportedd and client.name ~= "null-ls"
   end, clients)
@@ -141,7 +140,7 @@ function M.format(opts)
   end
 
   local bufnr = opts.bufnr or vim.api.nvim_get_current_buf()
-  local clients = vim.lsp.get_active_clients(bufnr)
+  local clients = vim.lsp.get_active_clients({ bufnr })
 
   if opts.filter then
     clients = opts.filter(clients)
@@ -156,11 +155,11 @@ function M.format(opts)
   end
 
   clients = vim.tbl_filter(function(client)
-    return client.supports_method "textDocument/formatting"
+    return client.supports_method("textDocument/formatting")
   end, clients)
 
   if #clients == 0 then
-    vim.notify "[LSP] Format request failed, no matching language servers."
+    vim.notify("[LSP] Format request failed, no matching language servers.")
   end
 
   local timeout_ms = opts.timeout_ms or 1000

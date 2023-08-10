@@ -19,22 +19,30 @@ vim.tbl_deep_extend("force", updated_capabilities, require("cmp_nvim_lsp").defau
 local rust_analyzer, rust_analyzer_cmd = nil, { "rustup", "run", "nightly", "rust-analyzer" }
 local has_rt, rt = pcall(require, "rust-tools")
 if has_rt then
-  local extension_path = vim.fn.expand("~/.vscode/extensions/sadge-vscode/extension/")
-  local codelldb_path = extension_path .. "adapter/codelldb"
-  local liblldb_path = extension_path .. "lldb/lib/liblldb.so"
+  -- TODO: Implement DAP
+  -- local extension_path = vim.fn.expand("~/.vscode/extensions/sadge-vscode/extension/")
+  -- local codelldb_path = extension_path .. "adapter/codelldb"
+  -- local liblldb_path = extension_path .. "lldb/lib/liblldb.so"
 
   rt.setup({
     server = {
       cmd = rust_analyzer_cmd,
       capabilities = updated_capabilities,
-      on_attach = custom_attach,
+      on_attach = function(client, bufnr)
+        -- TODO: Implement Hover Actions and Code Action Groups
+        custom_attach(client, bufnr)
+        -- Hover actions
+        -- vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions, { buffer = bufnr })
+        -- Code action groups
+        -- vim.keymap.set("n", "<Leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
+      end,
     },
-    dap = {
-      adapter = require("rust-tools.dap").get_codelldb_adapter(codelldb_path, liblldb_path),
-    },
+    -- dap = {
+    --   adapter = require("rust-tools.dap").get_codelldb_adapter(codelldb_path, liblldb_path),
+    -- },
     tools = {
       inlay_hints = {
-        auto = false,
+        auto = true,
       },
     },
   })
@@ -53,9 +61,10 @@ end
 
 local servers = {
   -- Also uses `shellcheck` and `explainshell`
+  angularls = true,
   bashls = true,
   eslint = {
-    root_dir = lspconfig.util.root_pattern("package.json", ".git", ".eslintrc*"),
+    root_dir = lspconfig.util.root_pattern(".eslintrc*"),
     on_attach = function(_, bufnr)
       vim.api.nvim_create_autocmd("BufWritePre", {
         buffer = bufnr,
@@ -112,6 +121,7 @@ local servers = {
   cmake = (1 == vim.fn.executable("cmake-language-server")),
   cssls = true,
   tailwindcss = {
+    root_dir = lspconfig.util.root_pattern("tailwind.config.js"),
     cmd = { "tailwindcss-language-server", "--stdio" },
     settings = {
       tailwindCSS = {
