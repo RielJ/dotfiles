@@ -9,7 +9,7 @@ if [[ -z $DISPLAY && $TTY = /dev/tty1 ]]; then
     export XDG_CURRENT_DESKTOP=sway
     export MOZ_ENABLE_WAYLAND=1
     export XDG_SESSION_DESKTOP=sway
-    exec sway 
+    exec env XDG_CURRENT_DESKTOP=sway dbus-run-session sway
 fi
 
 setopt autocd extendedglob nomatch menucomplete

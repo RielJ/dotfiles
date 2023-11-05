@@ -20,6 +20,9 @@ alias useconda='export PATH=$HOME/.miniconda/bin:$PATH'
 
 # GIT
 alias glog='git log --oneline --decorate --graph --all'
+# format:%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s
+# glog --pretty=format:"%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s" --date=short
+alias glogp='git log --oneline --decorate --graph --all --pretty=format:"%C(yellow)%h %Cblue%>(12)%ad %Cgreen%<(7)%aN%Cred%d %Creset%s" --date=short'
 alias gspp='git stash && git pull --rebase && git stash pop'
 
 # confirm before overwriting something
@@ -95,3 +98,5 @@ alias vim="nvim"
 # it
 
 alias nvm='echo "(╯°□°)╯︵ɯʌu, did you mean fnm?"'
+alias bluetooth_send="/usr/lib/bluetooth/obexd -n"
+alias video_screenshare="sudo modprobe -r v4l2loopback && sudo modprobe v4l2loopback exclusive_caps=1 card_label=VirtualVideoDevice && wf-recorder --muxer=v4l2 --codec=rawvideo --file=/dev/video2 -x yuv420p"
