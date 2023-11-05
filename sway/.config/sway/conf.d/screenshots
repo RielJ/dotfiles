@@ -25,7 +25,7 @@ bindsym $mod+Shift+s exec grimshot --notify copy area
 # bindsym $mod+Shift+s exec flameshot gui
 
 # Region-select-screenshot to file
-bindsym $mod+ctrl+s exec grimshot --notify save area
+bindsym $mod+ctrl+s exec grimshot --notify save area ~/Pictures/screenshots/$(date +"grimshot-%Y-%m-%d-%H-%M-%S.png")
 
 
 # Current display to clipboard

@@ -20,7 +20,7 @@ set $right l
 # See https://github.com/swaywm/sway/issues/5732
 exec systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK
 exec dbus-update-activation-environment 2>/dev/null && \
-     dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK
+     dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway
 # End of workaround
 
 set $WOBSOCK $XDG_RUNTIME_DIR/wob.sock
