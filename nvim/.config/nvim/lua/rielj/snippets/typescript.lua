@@ -1,4 +1,5 @@
 ---@diagnostic disable: undefined-global
+local utils = require("rielj.luasnip")
 return -- Snippets
 {
   s(
@@ -42,6 +43,63 @@ return -- Snippets
       }
     )
   ),
+  s(
+    {
+      trig = "ruh",
+      priority = 2000,
+    },
+    fmt(
+      [[
+      {types}
+
+      export const {fn} = ({typesAuto}) => {{
+        return null
+      }}
+    ]],
+      {
+        fn = f(function(_, snip)
+          return utils.get_filename(snip, false)
+        end),
+        types = d(1, function(_, snip)
+          local file_name = utils.get_filename(snip, true)
+          return sn(
+            nil,
+            c(1, {
+              sn(nil, {
+                t({ "", "" }),
+                t({ "type T" .. file_name .. "Props = {", "\t" }),
+                i(1),
+                t({ "", "}" }),
+                t({ "", "" }),
+              }),
+              t({ "" }),
+            })
+          )
+        end, {}),
+        typesAuto = f(function(args, snip)
+          local str = ""
+          local params = args[1]
+          if #params ~= 1 then
+            for _, param_and_value in ipairs(params) do
+              local param = string.gsub(vim.split(param_and_value, ":")[1], "%s+", "")
+              local ps = vim.split(param_and_value, ":")
+              if #ps == 2 then
+                if param:sub(-1) ~= "?" and param ~= "" then
+                  str = str .. param .. ", "
+                end
+              end
+            end
+            return "" .. "{ " .. str:sub(1, -3) .. " }: T" .. utils.get_filename(snip, true) .. "Props"
+          end
+          return ""
+        end, { 1 }),
+      },
+      {
+        repeat_duplicates = true,
+      }
+    )
+  ),
+
   s(
     {
       trig = "tif",

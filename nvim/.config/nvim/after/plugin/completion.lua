@@ -18,19 +18,32 @@ local cmp = require("cmp")
 vim.api.nvim_set_hl(0, "GhostText", { fg = "#777777", bg = "#333333" })
 
 cmp.setup({
+  -- enabled = true,
+  -- matching = {},
+  -- preselect =cmp.Preselect,
+  -- confirmation = {
+  --   default_behavior = cmp.ConfirmBehavior.Replace,
+  -- },
+  -- revision = 1,
+  -- performance = {
+  --   async_budget = 1000,
+  -- },
   view = {
     entries = { name = "custom", selection_order = "near_cursor" },
   },
-  -- enabled = function()
-  --   -- disable completion in comments
-  --   local context = require("cmp.config.context")
-  --   -- keep command mode completion enabled when cursor is in a comment
-  --   if vim.api.nvim_get_mode().mode == "c" then
-  --     return true
-  --   else
-  --     return not context.in_treesitter_capture("comment") and not context.in_syntax_group("Comment")
-  --   end
-  -- end,
+  enabled = function()
+    -- disable completion in comments
+    local context = require("cmp.config.context")
+    -- keep command mode completion enabled when cursor is in a comment
+    if vim.bo.buftype == 'prompt' or (vim.fn.reg_recording() ~= '') or (vim.fn.reg_executing() ~= '') then
+      return false
+    end
+    if vim.api.nvim_get_mode().mode == "c" then
+      return true
+    else
+      return not context.in_treesitter_capture("comment") and not context.in_syntax_group("Comment")
+    end
+  end,
   confirm = {
     behavior = cmp.ConfirmBehavior.Replace,
     select = true,

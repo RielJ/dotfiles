@@ -9,6 +9,7 @@ M.setup = function()
     on_attach = custom_attach,
     capabilities = updated_capabilities,
     debounce = 1000,
+    default_timeout = 7500,
     save_after_format = false,
     diagnostics_format = "[#{c}] #{m} (#{s})",
     sources = {
@@ -27,7 +28,7 @@ M.setup = function()
       }),
       -- require("null-ls").builtins.formatting.shfmt,
       -- require("null-ls").builtins.formatting.clang_format,
-      require("null-ls").builtins.formatting.stylua,
+      -- require("null-ls").builtins.formatting.stylua,
       require("null-ls").builtins.formatting.rustfmt,
       -- require("null-ls").builtins.formatting.black.with({ extra_args = { "--fast" } }),
       -- require("null-ls").builtins.diagnostics.solhint,

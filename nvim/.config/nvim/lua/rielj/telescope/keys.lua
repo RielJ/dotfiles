@@ -21,7 +21,7 @@ map_tele("<space>f/", "grep_last_search", {
 -- Files
 vim.api.nvim_set_keymap("n", "<leader>fr", "<cmd>Telescope oldfiles<CR>", { noremap = true, silent = true })
 -- map_tele("<space>ca", "lsp_code_actions") -- DEPRECATED
-map_tele("<space>fn", "noeclip")
+map_tele("<space>fn", "neoclip")
 map_tele("<space>ft", "git_files")
 map_tele("<space>fg", "multi_rg")
 map_tele("<space>fo", "oldfiles")

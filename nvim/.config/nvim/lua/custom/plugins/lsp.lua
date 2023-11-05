@@ -11,19 +11,26 @@ return {
     "b0o/schemastore.nvim",
     "williamboman/mason.nvim",
     "williamboman/mason-lspconfig.nvim",
+    -- {
+    --   "linrongbin16/lsp-progress.nvim",
+    --   requires = { "nvim-tree/nvim-web-devicons" },
+    --   config = function()
+    --     require("lsp-progress").setup({})
+    --   end,
+    -- },
     {
-      "linrongbin16/lsp-progress.nvim",
-      requires = { "nvim-tree/nvim-web-devicons" },
-      config = function()
-        require("lsp-progress").setup()
-      end,
+      "j-hui/fidget.nvim",
+      tag = "legacy",
+      event = "LspAttach",
+      opts = {
+        -- options
+      },
     },
-    -- { "j-hui/fidget.nvim", opts = {} },
-    "folke/neodev.nvim",
-    "nvim-lua/lsp-status.nvim",
-    "jose-elias-alvarez/null-ls.nvim",
+    { "folke/neodev.nvim",               opts = {} },
+    -- "nvim-lua/lsp-status.nvim",
+    "nvimtools/none-ls.nvim",
     {
-      "jose-elias-alvarez/typescript.nvim",
+      "pmizio/typescript-tools.nvim",
       ft = {
         "javascript",
         "javascriptreact",
@@ -33,8 +40,21 @@ return {
         "typescript.tsx",
       },
       event = { "BufReadPre", "BufNew" },
-      dependencies = "williamboman/mason.nvim",
+      dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
     },
+    -- {
+    --   "jose-elias-alvarez/typescript.nvim",
+    --   ft = {
+    --     "javascript",
+    --     "javascriptreact",
+    --     "javascript.jsx",
+    --     "typescript",
+    --     "typescriptreact",
+    --     "typescript.tsx",
+    --   },
+    --   event = { "BufReadPre", "BufNew" },
+    --   dependencies = "williamboman/mason.nvim",
+    -- },
     "axelvc/template-string.nvim",
     "onsails/lspkind-nvim",
 

@@ -191,6 +191,17 @@ gls.left[16] = {
   },
 }
 -- gls.left[17] = {
+--   LspProgress = {
+--     provider = function()
+--       return require('lsp-progress').progress()
+--     end,
+--     event = "LspProgressStatusUpdated",
+--     highlight = { colors.blue, colors.section_bg },
+--     separator = " ",
+--     separator_highlight = { colors.section_bg, colors.bg },
+--   },
+-- }
+-- gls.left[17] = {
 -- 	NvimGPS = {
 -- 		provider = function()
 -- 			return gps.get_location()

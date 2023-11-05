@@ -1,7 +1,14 @@
 require("Comment").setup({
   -- ignores empty lines
   ignore = "^$",
-  pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+  pre_hook = function(...)
+    local loaded, ts_comment = pcall(require, "ts_context_commentstring.integrations.comment_nvim")
+    if loaded and ts_comment then
+      return ts_comment.create_pre_hook()(...)
+    end
+  end,
+  -- pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+  sticky = true,
   padding = true,
   -- LHS of operator-pending mapping in NORMAL + VISUAL mode
   opleader = {

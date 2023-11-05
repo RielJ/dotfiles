@@ -34,6 +34,7 @@ require("telescope").setup({
       "--hidden",
     },
     file_ignore_patterns = {
+      "*.angular",
       "**/*node_modules",
       "**/*lock.json",
       "**/*lock.yaml",
@@ -98,10 +99,10 @@ require("telescope").setup({
   },
   extensions = {
     fzf = {
-      fuzzy = true, -- false will only do exact matching
+      fuzzy = true,                   -- false will only do exact matching
       override_generic_sorter = true, -- override the generic sorter
-      override_file_sorter = true, -- override the file sorter
-      case_mode = "smart_case", -- or "ignore_case" or "respect_case"
+      override_file_sorter = true,    -- override the file sorter
+      case_mode = "smart_case",       -- or "ignore_case" or "respect_case"
     },
   },
   file_previewer = previewers.vim_buffer_cat.new,
@@ -164,8 +165,8 @@ require("telescope").setup({
 
 _ = require("telescope").load_extension("fzf")
 _ = require("telescope").load_extension("file_browser")
-_ = require("telescope").load_extension("neoclip")
+-- _ = require("telescope").load_extension("neoclip")
 
-pcall(require("telescope").load_extension, "neoclip")
-pcall(require("telescope").load_extension, "frecency")
+-- pcall(require("telescope").load_extension, "neoclip")
+-- pcall(require("telescope").load_extension, "frecency")
 pcall(require("telescope").load_extension, "smart_history")

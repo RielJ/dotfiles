@@ -35,7 +35,47 @@ if has_rt then
         -- vim.keymap.set("n", "<C-space>", rt.hover_actions.hover_actions, { buffer = bufnr })
         -- Code action groups
         -- vim.keymap.set("n", "<Leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
+        vim.keymap.set("n", "K", function()
+          -- _G.X.help_float = 1
+          rt.hover_actions.hover_actions()
+        end, { buffer = bufnr })
+        vim.keymap.set("n", "ga", rt.code_action_group.code_action_group, { buffer = bufnr })
+
+        vim.api.nvim_create_autocmd("BufWritePre", {
+          buffer = bufnr,
+          callback = function()
+            vim.lsp.buf.format({ name = "rust_analyzer" })
+          end,
+          desc = "Auto format on save for rust codes",
+        })
       end,
+      handlers = {
+        ["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
+          virtual_text = {
+            prefix = "",
+            spacing = 0,
+            format = function(diag)
+              if diag.severity == vim.diagnostic.severity.ERROR then
+                return diag.message
+              end
+              return ""
+            end,
+          },
+        }),
+      },
+    },
+    settings = {
+      ["rust-analyzer"] = {
+        diagnostics = {
+          enable = true,
+        },
+        checkOnSave = {
+          command = "clippy",
+        },
+        cargo = {
+          allFeatures = true,
+        },
+      },
     },
     -- dap = {
     --   adapter = require("rust-tools.dap").get_codelldb_adapter(codelldb_path, liblldb_path),
@@ -54,24 +94,34 @@ else
         checkOnSave = {
           command = "clippy",
         },
+        diagnostics = {
+          enable = true,
+        },
+        cargo = {
+          allFeatures = true,
+        },
       },
     },
+    root_dir = lspconfig.util.root_pattern("Cargo.toml"),
+    filetypes = { "rust" },
   }
 end
 
 local servers = {
   -- Also uses `shellcheck` and `explainshell`
-  angularls = true,
+  -- angularls = true,
   bashls = true,
-  eslint = {
-    root_dir = lspconfig.util.root_pattern(".eslintrc*"),
-    on_attach = function(_, bufnr)
-      vim.api.nvim_create_autocmd("BufWritePre", {
-        buffer = bufnr,
-        command = "EslintFixAll",
-      })
-    end,
-  },
+
+  -- eslint = {
+  --   enable = false,
+  --   root_dir = lspconfig.util.root_pattern(".eslintrc*"),
+  --   on_attach = function(_, bufnr)
+  --     vim.api.nvim_create_autocmd("BufWritePre", {
+  --       buffer = bufnr,
+  --       command = "EslintFixAll",
+  --     })
+  --   end,
+  -- },
   graphql = {
     cmd = { "graphql-lsp", "server", "-m", "stream" },
     filetypes = {
@@ -115,13 +165,35 @@ local servers = {
     },
   },
   html = true,
+  dockerls = true,
   pyright = true,
   prismals = true,
   vimls = true,
   cmake = (1 == vim.fn.executable("cmake-language-server")),
-  cssls = true,
+  cssls = {
+    settings = {
+      css = {
+        validate = true,
+        lint = {
+          unknownAtRules = "ignore",
+        },
+      },
+      scss = {
+        validate = true,
+        lint = {
+          unknownAtRules = "ignore",
+        },
+      },
+      less = {
+        validate = true,
+        lint = {
+          unknownAtRules = "ignore",
+        },
+      },
+    },
+  },
   tailwindcss = {
-    root_dir = lspconfig.util.root_pattern("tailwind.config.js"),
+    root_dir = lspconfig.util.root_pattern({ "tailwind.config.js", "tailwind.config.ts" }),
     cmd = { "tailwindcss-language-server", "--stdio" },
     settings = {
       tailwindCSS = {
@@ -131,7 +203,14 @@ local servers = {
               "clsx\\(([^)]*)\\)",
               "(?:'|\"|`)([^']*)(?:'|\"|`)",
             },
-            { "cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]" },
+            {
+              "cva\\(([^)]*)\\)",
+              "(?:'|\"|`)([^']*)(?:'|\"|`)", --[[ "[\"'`]([^\"'`]*).*?[\"'`]"  ]]
+            },
+            {
+              "cn\\(([^)]*)\\)",
+              "(?:'|\"|`)([^']*)(?:'|\"|`)", --[[ "[\"'`]([^\"'`]*).*?[\"'`]"  ]]
+            },
           },
         },
       },
@@ -162,6 +241,8 @@ local servers = {
       solidity = { includePath = "", remapping = { ["@OpenZeppelin/"] = "OpenZeppelin/openzeppelin-contracts@4.6.0/" } },
     },
   },
+  tflint = true,
+  terraformls = true,
 }
 
 -- MASON

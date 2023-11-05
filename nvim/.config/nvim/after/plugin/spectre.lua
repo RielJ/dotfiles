@@ -116,7 +116,7 @@ require("spectre").setup({
   default = {
     find = {
       cmd = "rg",
-      options = { "ignore-case" },
+      options = { "ignore-case", "-U" },
     },
     replace = {
       cmd = "sed",
@@ -125,4 +125,10 @@ require("spectre").setup({
   replace_vim_cmd = "cdo",
   is_open_target_win = true, --open file on opener window
   is_insert_mode = false, -- start open panel on is_insert_mode
+})
+-- vim.keymap.set('n', '<leader>sp', '<cmd>lua require("spectre").open_file_search({select_word=true})<CR>', {
+--     desc = "Search on current file"
+-- })
+vim.keymap.set("v", "<leader>sw", '<esc><cmd>lua require("spectre").open_visual()<CR>', {
+  desc = "Search current word",
 })

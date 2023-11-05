@@ -11,14 +11,19 @@ local lazygit = Terminal:new {
     -- not natively supported but implemented in this plugin.
     -- border = 'single' | 'double' | 'shadow' | 'curved' | ... other options supported by win open
     border = "curved",
-    -- width = <value>,
-    -- height = <value>,
+    -- width = 100000,
+    -- height = 100000,
     winblend = 0,
     highlights = {
       border = "Normal",
       background = "Normal",
     },
   },
+  on_open = function(_)
+    vim.cmd "startinsert!"
+  end,
+  on_close = function(_) end,
+  count = 99,
 }
 
 M._exec_toggle = function(opts)

@@ -5,11 +5,11 @@ return {
       "andweeb/presence.nvim",
       enabled = true,
     },
-    {
-      "AckslD/nvim-neoclip.lua",
-      opts = {},
-      dependencies = { "kkharji/sqlite.lua", module = "sqlite" },
-    },
+    -- {
+    --   "AckslD/nvim-neoclip.lua",
+    --   opts = {},
+    --   dependencies = { "kkharji/sqlite.lua", module = "sqlite" },
+    -- },
 
     -- hlslens
     {
@@ -20,11 +20,11 @@ return {
     -- Matchup
     {
       "andymass/vim-matchup",
-      event = "BufReadPost",
+      -- event = "BufReadPost",
       config = function()
         vim.g.matchup_enabled = 1
         vim.g.matchup_surround_enabled = 1
-        vim.g.matchup_matchparen_deferred = 1
+        -- vim.g.matchup_matchparen_deferred = 1
         vim.g.matchup_matchparen_offscreen = { method = "popup" }
       end,
     },

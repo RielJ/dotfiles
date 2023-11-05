@@ -7,6 +7,7 @@ return {
     fmt(
       [[
     import styles from "./{fn}.module.scss"
+    import clsx from "clsx"
   ]],
       {
         fn = f(function(_, snip)
@@ -20,6 +21,17 @@ return {
     fmt(
       [[
     className={{clsx(styles["{}"])}}
+  ]],
+      {
+        i(1),
+      }
+    )
+  ),
+  s(
+    { trig = "clm", priority = 2000 },
+    fmt(
+      [[
+    clsx(styles["{}"])
   ]],
       {
         i(1),
@@ -43,16 +55,16 @@ return {
     ]],
       {
         fn = f(function(_, snip)
-          return utils.get_filename(snip)
+          return utils.get_filename(snip, true)
         end),
         types = d(1, function(_, snip)
-          local file_name = utils.get_filename(snip)
+          local file_name = utils.get_filename(snip, true)
           return sn(
             nil,
             c(1, {
               sn(nil, {
                 t({ "", "" }),
-                t({ "interface I" .. file_name .. " {", "\t", "children: React.ReactNode", "", "\t" }),
+                t({ "type T" .. file_name .. " = {", "\t", "children: React.ReactNode", "", "\t" }),
                 i(1),
                 t({ "", "}" }),
                 t({ "", "" }),
@@ -74,7 +86,7 @@ return {
                 end
               end
             end
-            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip)
+            return "" .. "{ " .. str:sub(1, -3) .. " }: T" .. utils.get_filename(snip, true)
           end
           return ""
         end, { 1 }),
@@ -114,10 +126,10 @@ return {
     ]],
       {
         fn = f(function(_, snip)
-          return utils.get_filename(snip)
+          return utils.get_filename(snip, true)
         end),
         types = d(1, function(_, snip)
-          local file_name = utils.get_filename(snip)
+          local file_name = utils.get_filename(snip, true)
           return sn(
             nil,
             c(1, {
@@ -145,7 +157,7 @@ return {
                 end
               end
             end
-            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip)
+            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip, true)
           end
           return ""
         end, { 1 }),
@@ -184,10 +196,10 @@ return {
     ]],
       {
         fn = f(function(_, snip)
-          return utils.get_filename(snip)
+          return utils.get_filename(snip, true)
         end),
         types = d(1, function(_, snip)
-          local file_name = utils.get_filename(snip)
+          local file_name = utils.get_filename(snip, true)
           return sn(
             nil,
             c(1, {
@@ -215,7 +227,7 @@ return {
                 end
               end
             end
-            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip)
+            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip, true)
           end
           return ""
         end, { 1 }),
@@ -254,16 +266,16 @@ return {
     ]],
       {
         fn = f(function(_, snip)
-          return utils.get_filename(snip)
+          return utils.get_filename(snip, true)
         end),
         types = d(1, function(_, snip)
-          local file_name = utils.get_filename(snip)
+          local file_name = utils.get_filename(snip, true)
           return sn(
             nil,
             c(1, {
               sn(nil, {
                 t({ "", "" }),
-                t({ "interface I" .. file_name .. " {", "\t" }),
+                t({ "type T" .. file_name .. "Props = {", "\t" }),
                 i(1),
                 t({ "", "}" }),
                 t({ "", "" }),
@@ -285,20 +297,20 @@ return {
                 end
               end
             end
-            return "" .. "{ " .. str:sub(1, -3) .. " }: I" .. utils.get_filename(snip)
+            return "" .. "{ " .. str:sub(1, -3) .. " }: T" .. utils.get_filename(snip, true) .. "Props"
           end
           return ""
         end, { 1 }),
         content = c(2, {
           sn(nil, {
-            t("<>"),
-            i(1),
-            t("</>"),
-          }),
-          sn(nil, {
             t("<div>"),
             i(1),
             t("</div>"),
+          }),
+          sn(nil, {
+            t("<>"),
+            i(1),
+            t("</>"),
           }),
         }),
       },

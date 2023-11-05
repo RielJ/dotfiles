@@ -21,21 +21,35 @@ local shortcut = function(val)
   return val
 end
 
+local function pascal_cased(input)
+  local result = input:gsub("[-_](%w)", function(c)
+    return c:upper()
+  end)
+
+  return result:gsub("^%l", string.upper) -- Convert the first character to uppercase
+end
+
 local M = {}
 
-M.get_filename = function(snip)
+M.get_filename = function(snip, to_pascal_case)
+  local result
   if snip == nil or snip.env == nil then
     return ""
   end
   local file_name = snip.env.TM_FILENAME_BASE
   local path_split = vim.split(vim.fn.expand("%"), "/")
   local folder = path_split[#path_split - 1]
+  result = file_name
   print(vim.inspect(folder), vim.inspect(file_name))
   if file_name == "index" then
-    return folder
+    result = folder
   end
 
-  return file_name
+  if to_pascal_case then
+    return pascal_cased(result)
+  else
+    return result
+  end
 end
 
 M.same = function(index)
