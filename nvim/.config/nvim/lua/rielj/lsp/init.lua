@@ -16,7 +16,7 @@ local custom_attach = require("rielj.lsp.handlers").common_on_attach
 
 vim.tbl_deep_extend("force", updated_capabilities, require("cmp_nvim_lsp").default_capabilities())
 
-local rust_analyzer, rust_analyzer_cmd = nil, { "rustup", "run", "nightly", "rust-analyzer" }
+local rust_analyzer, rust_analyzer_cmd = nil, { "rustup", "run", "stable", "rust-analyzer" }
 local has_rt, rt = pcall(require, "rust-tools")
 if has_rt then
   -- TODO: Implement DAP
@@ -131,24 +131,25 @@ local servers = {
     },
   },
   rust_analyzer = rust_analyzer,
+  templ = true,
   gopls = {
-    -- root_dir = function(fname)
-    --   local Path = require "plenary.path"
-    --
-    --   local absolute_cwd = Path:new(vim.loop.cwd()):absolute()
-    --   local absolute_fname = Path:new(fname):absolute()
-    --
-    --   if string.find(absolute_cwd, "/cmd/", 1, true) and string.find(absolute_fname, absolute_cwd, 1, true) then
-    --     return absolute_cwd
-    --   end
-    --
-    --   return lspconfig_util.root_pattern("go.mod", ".git")(fname)
-    -- end,
+    root_dir = function(fname)
+      local Path = require "plenary.path"
+
+      local absolute_cwd = Path:new(vim.loop.cwd()):absolute()
+      local absolute_fname = Path:new(fname):absolute()
+
+      if string.find(absolute_cwd, "/cmd/", 1, true) and string.find(absolute_fname, absolute_cwd, 1, true) then
+        return absolute_cwd
+      end
+
+      return lspconfig.util.root_pattern("go.mod", ".git")(fname)
+    end,
 
     settings = {
       gopls = {
         codelenses = { test = true },
-        hints = inlays and {
+        hints = {
           assignVariableTypes = true,
           compositeLiteralFields = true,
           compositeLiteralTypes = true,
@@ -156,7 +157,7 @@ local servers = {
           functionTypeParameters = true,
           parameterNames = true,
           rangeVariableTypes = true,
-        } or nil,
+        },
       },
     },
 
@@ -164,7 +165,26 @@ local servers = {
       debounce_text_changes = 200,
     },
   },
-  html = true,
+  html = {
+    settings = {
+      html = {
+        suggest = {
+          html5 = true,
+        },
+      },
+    },
+    filetypes = { "html", "templ" },
+  },
+  htmx = {
+    settings = {
+      html = {
+        suggest = {
+          html5 = true,
+        },
+      },
+    },
+    filetypes = { "html", "templ" },
+  },
   dockerls = true,
   pyright = true,
   prismals = true,

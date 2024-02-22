@@ -80,45 +80,45 @@
 --   },
 -- })
 require("ibl").setup({
-  exclude = {
-    filetypes = {
-      "alpha",
-      "log",
-      "gitcommit",
-      "dapui_scopes",
-      "dapui_stacks",
-      "dapui_watches",
-      "dapui_breakpoints",
-      "dapui_hover",
-      "LuaTree",
-      "dbui",
-      "UltestSummary",
-      "UltestOutput",
-      "vimwiki",
-      "markdown",
-      "json",
-      "txt",
-      "vista",
-      "NvimTree",
-      "git",
-      "TelescopePrompt",
-      "undotree",
-      "flutterToolsOutline",
-      "org",
-      "orgagenda",
-      "help",
-      "startify",
-      "dashboard",
-      "packer",
-      "neogitstatus",
-      "NvimTree",
-      "Outline",
-      "Trouble",
-      "lspinfo",
-      "", -- for all buffers without a file type
-    },
-    buftypes = { "terminal", "nofile" },
-  },
+  -- exclude = {
+  --   filetypes = {
+  --     "alpha",
+  --     "log",
+  --     "gitcommit",
+  --     "dapui_scopes",
+  --     "dapui_stacks",
+  --     "dapui_watches",
+  --     "dapui_breakpoints",
+  --     "dapui_hover",
+  --     "LuaTree",
+  --     "dbui",
+  --     "UltestSummary",
+  --     "UltestOutput",
+  --     "vimwiki",
+  --     "markdown",
+  --     "json",
+  --     "txt",
+  --     "vista",
+  --     "NvimTree",
+  --     "git",
+  --     "TelescopePrompt",
+  --     "undotree",
+  --     "flutterToolsOutline",
+  --     "org",
+  --     "orgagenda",
+  --     "help",
+  --     "startify",
+  --     "dashboard",
+  --     "packer",
+  --     "neogitstatus",
+  --     "NvimTree",
+  --     "Outline",
+  --     "Trouble",
+  --     "lspinfo",
+  --     "", -- for all buffers without a file type
+  --   },
+  --   buftypes = { "terminal", "nofile" },
+  -- },
   indent = {
     char = { "", "┊", "┆", "¦", "|", "¦", "┆", "┊", "" },
   },
@@ -133,7 +133,11 @@ require("ibl").setup({
 vim.wo.colorcolumn = "99999"
 
 vim.opt.list = true
-vim.opt.listchars:append("space:⋅")
+vim.opt.listchars:append({
+  space = "⋅",
+  tab = "→ ",
+})
+-- vim.opt.listchars:append("space:⋅,tab:→")
 -- vim.g.indent_blankline_char = ""
 -- vim.opt.listchars:append("space:")
 -- vim.opt.listchars:append("eol:↴")
