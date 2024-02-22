@@ -18,6 +18,7 @@ set $right l
 # Workaround for GTK apps hanging during init
 # See https://github.com/swaywm/sway/wiki#gtk-applications-take-20-seconds-to-start
 # See https://github.com/swaywm/sway/issues/5732
+# include /etc/sway/config.d/*
 exec systemctl --user import-environment DISPLAY WAYLAND_DISPLAY SWAYSOCK
 exec dbus-update-activation-environment 2>/dev/null && \
      dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP=sway
@@ -27,7 +28,8 @@ set $WOBSOCK $XDG_RUNTIME_DIR/wob.sock
 exec rm -f $WOBSOCK && mkfifo $WOBSOCK && tail -f $WOBSOCK | wob
 
 # Your preferred terminal emulator
-set $term alacritty
+# set $term alacritty
+set $term kitty
 
 # exec --no-startup-id libinput-gestures
 
