@@ -55,6 +55,7 @@ alias gpg-retrieve="gpg2 --keyserver-options auto-key-retrieve --receive-keys"
 # systemd
 alias list_systemctl="systemctl list-unit-files --state=enabled"
 
+alias ls="exa --icons --group-directories-first"
 alias ll="exa -l -g --icons"
 alias lla="ll -a"
 
@@ -80,12 +81,12 @@ alias ua-update-all='export TMPFILE="$(mktemp)"; \
       && sudo mv /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist-backup \
       && sudo mv $TMPFILE /etc/pacman.d/mirrorlist \
       && ua-drop-caches \
-      && yay -Syyu --noconfirm'
+      && yay -Syyu --noconfirm'eza
 
 alias display_ports='ss -lntu'
 alias kill_port="fuser -k"
 
-alias sk='wshowkeys -a right -a bottom -m 150 -F MesloLGS 14 -t 2'
+alias sk='wshowkeys -a right -a bottom -m 150 -F MesloLGS 14 -t 1'
 
 alias _dbeaver="env GDK_BACKEND=x11 dbeaver"
 
