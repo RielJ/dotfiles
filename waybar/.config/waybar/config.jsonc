@@ -1,0 +1,290 @@
+[
+  {
+    "layer": "top",
+    "position": "top",
+    "mod": "dock",
+    "exclusive": true,
+    "passthrough": false,
+    "modules-left": [
+      // "hyprland/workspaces",
+      // "hyprland/window",
+      "sway/workspaces",
+      "sway/window"
+    ],
+    "modules-center": [
+      "clock"
+    ],
+    "modules-right": [
+      "custom/recorder",
+      "backlight",
+      "pulseaudio",
+      "cpu",
+      "memory",
+      "network",
+      "battery",
+      "custom/powermenu"
+    ],
+    "hyprland/window": {
+      "format": "   {}",
+      "rewrite": {
+        "(.*) — Mozilla Firefox": "🌎 $1",
+        "(.*) - fish": "> [$1]"
+      },
+      "separate-outputs": true
+    },
+    "sway/window": {
+      "format": "{title}",
+      "max-length": 50,
+      "rewrite": {
+        "(.*) - Mozilla Firefox": "🌎 $1",
+        "(.*) - vim": " $1",
+        "(.*) - zsh": " [$1]"
+      }
+    },
+    "sway/workspaces": {
+      "disable-scroll": true,
+      "disable-markup": false,
+      "all-outputs": true,
+      "on-click": "activate",
+      "format": "{icon}",
+      "format-icons": {
+        "1": "1 <span font='Font Awesome 5 Free 11'> </span>",
+        "2": "2 <span font='Font Awesome 5 Free 11'> </span>",
+        "3": "3 <span font='Font Awesome 5 Free 11'> </span>",
+        "4": "4 <span font='Font Awesome 5 Free 11'> </span>",
+        "5": "5 <span font='Font Awesome 5 Free 11'> </span>",
+        "6": "6 <span font='Font Awesome 5 Free 11'> </span>",
+        "7": "7 <span font='Font Awesome 5 Free 11'> </span>",
+        "8": "8 <span font='Font Awesome 5 Free 11'> </span>",
+        "9": "9 <span font='Font Awesome 5 Free 11'> </span>"
+      }
+    },
+    "hyprland/workspaces": {
+      "disable-scroll": true,
+      "disable-markup": false,
+      "all-outputs": true,
+      "on-click": "activate",
+      "format": "{icon}",
+      "format-icons": {
+        "1": "1 <span font='Font Awesome 5 Free 11'> </span>",
+        "2": "2 <span font='Font Awesome 5 Free 11'> </span>",
+        "3": "3 <span font='Font Awesome 5 Free 11'> </span>",
+        "4": "4 <span font='Font Awesome 5 Free 11'> </span>",
+        "5": "5 <span font='Font Awesome 5 Free 11'> </span>",
+        "6": "6 <span font='Font Awesome 5 Free 11'> </span>",
+        "7": "7 <span font='Font Awesome 5 Free 11'> </span>",
+        "8": "8 <span font='Font Awesome 5 Free 11'> </span>",
+        "9": "9 <span font='Font Awesome 5 Free 11'> </span>"
+      }
+    },
+    "wlr/window": {
+      "max-length": 60,
+      // "tooltip": false
+      "format": "    {}"
+    },
+    "clock": {
+      "format": " {:%a, %d %b |  %I:%M %p}", //12 hour format
+      // "format": "{:%a %d %b - %H:%M}",
+      "tooltip-format": "<big>{:%B %Y}</big>\n<tt><big>{calendar}</big></tt>",
+      "on-click": "gnome-calendar"
+    },
+    "custom/cpu_speed": {
+      "interval": 10,
+      "return-type": "json",
+      "exec": "~/.config/waybar/modules/cpu_speed.sh",
+      "format": "<span font='Font Awesome 5 Free 11'>{icon}</span>  {}",
+      "format-icons": [
+        ""
+      ],
+      "escape": true,
+      "on-click": "kitty -e htop"
+    },
+    "wlr/language": {
+      "format": "<span font='Font Awesome 5 Free 9'>🏳️</span> {}",
+      "tooltip-format": "{long}",
+      "on-click": "swaymsg input 'type:keyboard' xkb_switch_layout next"
+    },
+    "custom/powermenu": {
+      "return-type": "json",
+      "exec": "~/.config/waybar/modules/powermenu.sh",
+      "format": "<span font='Font Awesome 5 Free 9'>{icon}</span>  {}",
+      "format-icons": [
+        ""
+      ],
+      "interval": 3600,
+      "escape": true,
+      "on-click": "nwg-bar"
+    },
+    "custom/recorder": {
+      "format": "",
+      "return-type": "json",
+      "interval": 4,
+      "exec": "echo '{\"class\": \"recording\"}'",
+      "exec-if": "pgrep wf-recorder",
+      "on-click": "killall -s SIGINT wf-recorder"
+    },
+    "battery": {
+      "format": "<span font='Font Awesome 5 Free 11'>{icon}</span>  {capacity}%",
+      "format-icons": [
+        "",
+        "",
+        "",
+        " ",
+        ""
+      ],
+      "format-time": "{H}h{M}m",
+      "format-charging": "<span font='Font Awesome 5 Free'></span>  <span font='Font Awesome 5 Free 11'>{icon}</span>  {capacity}%",
+      "format-full": "<span font='Font Awesome 5 Free'></span>  <span font='Font Awesome 5 Free 11'>{icon}</span>",
+      "interval": 30,
+      "states": {
+        "warning": 25,
+        "critical": 10
+      },
+      "tooltip": false
+    },
+    "network": {
+      "format": "{icon}",
+      "format-alt": "{ipaddr}/{cidr} {icon}",
+      "format-alt-click": "click-right",
+      "format-wifi": "<span font='Font Awesome 5 Free 10'></span>  {essid} ({signalStrength}%)",
+      "format-ethernet": " {ifname}",
+      "format-disconnected": "⚠ Disconnected",
+      "on-click": "kitty -e ~/sway/scripts/network-manager",
+      // "on-click": "gnome-control-center wifi",
+      "tooltip": false
+    },
+    "pulseaudio": {
+      "format": "<span font='Font Awesome 5 Free 11'>{icon:2}</span>{volume:4}%   {format_source}",
+      "format-alt": "<span font='Font Awesome 5 Free 11'>{icon:2}</span> {volume:4}%   {format_source}",
+      "format-source": " ",
+      "format-source-muted": " ",
+      "format-alt-click": "click-right",
+      "format-muted": "<span font='Font Awesome 5 Free 11'></span>",
+      "format-icons": {
+        "headphone": [
+          " ",
+          " ",
+          " ",
+          " "
+        ],
+        "default": [
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "scroll-step": 2,
+      "on-click": "pavucontrol",
+      "tooltip": false
+    },
+    "custom/storage": {
+      "format": "{} ",
+      "format-alt": "{percentage}% ",
+      "format-alt-click": "click-right",
+      "return-type": "json",
+      "interval": 60,
+      "exec": "~/.config/waybar/modules/storage.sh"
+    },
+    "backlight": {
+      "format": "{icon}    {percent}%",
+      "format-alt": "{percent}% {icon}",
+      "format-alt-click": "click-right",
+      "format-icons": [
+        "",
+        ""
+      ],
+      "on-scroll-down": "brightnessctl -c backlight set 5%-",
+      "on-scroll-up": "brightnessctl -c backlight set +5%"
+    },
+    "temperature": {
+      "format": "<span font='Font Awesome 5 Free 9'></span> {temperatureC:3}°C",
+      //"hwmon-path": "/sys/devices/platform/coretemp.0/hwmon/hwmon3/temp1_input",
+      "hwmon-path": "/sys/class/thermal/thermal_zone10/temp",
+      //"on-click": "terminator -e 'watch -n1 sensors'"
+      "on-click": "psensor"
+    },
+    "cpu": {
+      "format": "﬙ {usage}%",
+      "on-click": "kitty -e btop"
+    },
+    "memory": {
+      "format": " {used:0.1f}GB",
+      "on-click": "kitty -e btop"
+    },
+    "custom/weather": {
+      "format": "{}",
+      "format-alt": "{alt}: {}",
+      "format-alt-click": "click-right",
+      "interval": 1800,
+      "return-type": "json",
+      "exec": "~/.config/waybar/modules/weather.sh",
+      "exec-if": "ping wttr.in -c1",
+      // "on-click": "terminator -p Small -e 'bash -c \"curl -s https://en.wttr.in; read line\"'"
+      "on-click": "gnome-weather"
+    },
+    "idle_inhibitor": {
+      "format": "{icon}",
+      "format-alt": "{icon} idle {status}",
+      "format-alt-click": "click-right",
+      "format-icons": {
+        "activated": "<span font='Font Awesome 5 Free 9'></span>",
+        "deactivated": "<span font='Font Awesome 5 Free 9'></span>"
+      },
+      "tooltip": false
+    }
+    // "wlr/taskbar": {
+    //   "format": "{icon}",
+    //   "icon-size": 14,
+    //   "icon-theme": "Numix-Circle",
+    //   "tooltip-format": "{title}",
+    //   "on-click": "activate",
+    //   "on-click-middle": "close"
+    // }
+  },
+  {
+    "layer": "bottom",
+    "position": "bottom",
+    "modules-left": [
+      "custom/launcher",
+      "wlr/taskbar"
+    ],
+    "modules-center": [
+      "custom/mediaplayer"
+    ],
+    "modules-right": [
+      "tray"
+    ],
+    "custom/mediaplayer": {
+      "exec": "/usr/bin/python3 ~/.config/waybar/modules/mediaplayer.py",
+      "format": "<span font='Font Awesome 5 Free 11'> </span>  {}",
+      "return-type": "json",
+      "on-click": "playerctl play-pause",
+      "on-scroll-up": "playerctl next",
+      "on-scroll-down": "playerctl previous"
+    },
+    "tray": {
+      "icon-size": 16,
+      "spacing": 10
+    },
+    "custom/launcher": {
+      "format": " <span></span>",
+      "on-click": "exec wofi -c ~/.config/wofi/config -I",
+      "tooltip": false
+    },
+    "wlr/taskbar": {
+      "format": "{icon}",
+      "icon-size": 24,
+      "all-outputs": true,
+      "tooltip-format": "{name} - {title}",
+      "on-click": "activate",
+      "on-click-middle": "close",
+      "ignore-list": [
+        "wofi"
+      ],
+      "app_ids-mapping": {
+        "steam_app_39210": "Final Fantasy 14"
+      }
+    }
+  }
+]

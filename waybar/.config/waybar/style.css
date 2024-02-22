@@ -58,6 +58,48 @@ tooltip {
     background-color: yellow;
 }
 
+#hyprland-workspaces {
+	/* background-color: #2a2e38;
+	border-radius: 15px 0px 0px 15px;
+    margin-left: 10px;*/
+}
+
+#hyprland-workspaces button {
+    padding: 5px 10px;
+    color: #bbc2cf;
+}
+
+#hyprland-workspaces button.visible {
+    box-shadow: 2px 2px 6px 1px black;
+    color: #2a2e38;
+    background-color: #5a5d5f;
+    border-radius: 15px;
+}
+
+#hyprland-workspaces button.focused.current_output {
+    box-shadow: 2px 2px 6px 1px black;
+    color: #2a2e38;
+    background-color: #51afef;
+    border-radius: 15px;
+}
+
+#hyprland-workspaces button.urgent {
+    color: #6d4774;
+    background-color: #7bc275;
+    border-radius: 15px;
+}
+
+#hyprland-workspaces button:hover {
+	background-color: #5cEfFF;
+	color: black;
+	border-radius: 15px;
+}
+
+#hyprland-workspaces button.focused:hover {
+    color: black;
+    background-color: yellow;
+}
+
 #clock,
 #backlight,
 #battery,
@@ -80,9 +122,11 @@ tooltip {
 #window,
 #custom-mediaplayer,
 #workspaces {
-	padding: 1px 10px;
+    padding: 1px 10px;
   color: white;
 }
+
+#custom-launcher { padding: 0px 10px; }
 
 #custom-powermenu {
     /* color: #FCCE7B;
