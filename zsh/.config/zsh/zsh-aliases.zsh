@@ -84,7 +84,7 @@ alias ua-update-all='export TMPFILE="$(mktemp)"; \
       && yay -Syyu --noconfirm'eza
 
 alias display_ports='ss -lntu'
-alias kill_port="fuser -k"
+alias kill_port="fuser -k -n tcp "
 
 alias sk='wshowkeys -a right -a bottom -m 150 -F MesloLGS 14 -t 1'
 
@@ -101,3 +101,5 @@ alias vim="nvim"
 alias nvm='echo "(╯°□°)╯︵ɯʌu, did you mean fnm?"'
 alias bluetooth_send="/usr/lib/bluetooth/obexd -n"
 alias video_screenshare="sudo modprobe -r v4l2loopback && sudo modprobe v4l2loopback exclusive_caps=1 card_label=VirtualVideoDevice && wf-recorder --muxer=v4l2 --codec=rawvideo --file=/dev/video2 -x yuv420p"
+alias reflector-fast="reflector --sort rate --save /etc/pacman.d/mirrorlist -a 6 -c 'Hong Kong,Singapore,Japan' --verbose --download-timeout 10"
+alias hbrnt="sudo systemctl hibernate"

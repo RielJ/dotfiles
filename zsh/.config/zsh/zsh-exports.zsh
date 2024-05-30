@@ -24,6 +24,7 @@ export WLR_NO_HARDWARE_CURSORS=1
 export _JAVA_AWT_WM_NONREPARENTING=1
 
 export XDG_CURRENT_DESKTOP=sway
+# export XDG_CONFIG_HOME=/home/rielj/
 export XDG_SESSION_TYPE=wayland
 export GDK_BACKEND=wayland
 export GBM_BACKEND=nvidia-drm

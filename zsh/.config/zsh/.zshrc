@@ -43,6 +43,8 @@ autoload -Uz colors && colors
 # Plugins
 plug "zsh-users/zsh-autosuggestions"
 plug "hlissner/zsh-autopair"
+plug "greymd/docker-zsh-completion"
+# plug "sroze/docker-compose-zsh-plugin"
 # plug "zap-zsh/supercharge"
 # plug "zap-zsh/zap-prompt"
 plug "zap-zsh/fnm"
