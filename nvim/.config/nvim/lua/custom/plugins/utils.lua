@@ -5,11 +5,11 @@ return {
       "andweeb/presence.nvim",
       enabled = true,
     },
-    -- {
-    --   "AckslD/nvim-neoclip.lua",
-    --   opts = {},
-    --   dependencies = { "kkharji/sqlite.lua", module = "sqlite" },
-    -- },
+    {
+      "AckslD/nvim-neoclip.lua",
+      opts = {},
+      dependencies = { "kkharji/sqlite.lua", module = "sqlite" },
+    },
 
     -- hlslens
     {
@@ -40,5 +40,12 @@ return {
       cmd = { "Cheat", "CheatWithoutComments", "CheatList", "CheatListWithoutComments" },
       keys = "<leader>?",
     },
+    -- Code Shot
+    {
+      "niuiic/code-shot.nvim",
+      dependencies = "niuiic/core.nvim",
+    }
   },
+
+
 }

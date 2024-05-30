@@ -61,6 +61,13 @@ if has_rt then
               return ""
             end,
           },
+          signs = {
+            severity = { min = vim.diagnostic.severity.WARNING },
+          },
+          underline = {
+            severity = { min = vim.diagnostic.severity.ERROR },
+          },
+
         }),
       },
     },
@@ -111,6 +118,7 @@ local servers = {
   -- Also uses `shellcheck` and `explainshell`
   -- angularls = true,
   bashls = true,
+  bufls = true,
 
   -- eslint = {
   --   enable = false,
@@ -164,6 +172,7 @@ local servers = {
     flags = {
       debounce_text_changes = 200,
     },
+    filetypes = { "go", "gomod", "gowork", "gotmpl" },
   },
   html = {
     settings = {
@@ -186,6 +195,7 @@ local servers = {
     filetypes = { "html", "templ" },
   },
   dockerls = true,
+  yamlls = true,
   pyright = true,
   prismals = true,
   vimls = true,
@@ -212,6 +222,7 @@ local servers = {
       },
     },
   },
+  -- sqls = true,
   tailwindcss = {
     root_dir = lspconfig.util.root_pattern({ "tailwind.config.js", "tailwind.config.ts" }),
     cmd = { "tailwindcss-language-server", "--stdio" },
@@ -237,6 +248,10 @@ local servers = {
     },
   },
   jsonls = {
+    cmd = {
+      "vscode-json-languageserver",
+      "--stdio",
+    },
     settings = {
       json = {
         schemas = require("schemastore").json.schemas(),
@@ -252,15 +267,19 @@ local servers = {
       },
     },
   },
-  solc = {
-    cmd = { "solc", "--lsp" },
-  },
-  solidity = {
-    settings = {
-      -- example of global remapping
-      solidity = { includePath = "", remapping = { ["@OpenZeppelin/"] = "OpenZeppelin/openzeppelin-contracts@4.6.0/" } },
-    },
-  },
+  -- solang = true,
+  -- solc = {
+  --   cmd = { "solc", "--lsp" },
+  -- },
+  solidity_ls_nomicfoundation = true,
+  -- solidity = {
+  --   settings = {
+  --     -- example of global remapping
+  --     solidity = { includePath = "lib", remapping = { ["@OpenZeppelin/"] = "OpenZeppelin/openzeppelin-contracts@4.6.0/" } },
+  --   },
+  --   cmd = { "solidity-ls", "--stdio" }
+
+  -- },
   tflint = true,
   terraformls = true,
 }

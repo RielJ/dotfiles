@@ -50,11 +50,11 @@ keymap("n", "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", op
 keymap("n", "<leader>le", "<cmd>Telescope quickfix<cr>", opts)
 
 -- LSP TYPESCRIPT --
-keymap("n", "gs", "<cmd>lua require('typescript').actions.removeUnused()<cr>", opts)
-keymap("n", "gS", "<cmd>lua require('typescript').actions.organizeImports()<cr>", opts)
-keymap("n", "go", "<cmd>lua require('typescript').actions.addMissingImports()<cr>", opts)
-keymap("n", "gA", "<cmd>lua require('typescript').actions.fixAll()<cr>", opts)
-keymap("n", "gI", "<cmd>lua require('typescript').actions.renameFile(0, %)<cr>", opts)
+-- keymap("n", "gs", "<cmd>lua require('typescript').actions.removeUnused()<cr>", opts)
+-- keymap("n", "gS", "<cmd>lua require('typescript').actions.organizeImports()<cr>", opts)
+-- keymap("n", "go", "<cmd>lua require('typescript').actions.addMissingImports()<cr>", opts)
+-- keymap("n", "gA", "<cmd>lua require('typescript').actions.fixAll()<cr>", opts)
+-- keymap("n", "gI", "<cmd>lua require('typescript').actions.renameFile(0, %)<cr>", opts)
 
 -- Buffers --
 keymap("n", "<leader>bf", "<cmd>Telescope buffers<cr>", opts)

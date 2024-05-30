@@ -256,7 +256,6 @@ return {
     },
     fmt(
       [[
-      import React from 'react'
       {types}
       const {fn} = ({typesAuto}) => {{
         return {content}

@@ -58,7 +58,7 @@ return -- Snippets
     ]],
       {
         fn = f(function(_, snip)
-          return utils.get_filename(snip, false)
+          return utils.get_filename(snip, true):gsub("^%u", string.lower)
         end),
         types = d(1, function(_, snip)
           local file_name = utils.get_filename(snip, true)

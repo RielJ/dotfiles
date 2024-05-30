@@ -8,6 +8,7 @@ return {
       end,
     },
 
+    "godlygeek/tabular", -- Quickly align text by pattern
     -- TPOPE
     "tpope/vim-abolish", -- Cool things with words!
     "tpope/vim-surround",
@@ -17,7 +18,7 @@ return {
     "tpope/vim-characterize", -- ?
     "tpope/vim-scriptease",
     "tpope/vim-repeat",
-    "tpope/vim-sleuth", -- detects indentation
+    "tpope/vim-sleuth",  -- detects indentation
     "godlygeek/tabular", -- Quickly align text by pattern
     "kevinhwang91/nvim-bqf",
     -- log highlighter

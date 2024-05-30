@@ -57,6 +57,7 @@ return {
     -- },
     "axelvc/template-string.nvim",
     "onsails/lspkind-nvim",
+    "simrat39/inlay-hints.nvim",
 
     {
       "WhoIsSethDaniel/mason-tool-installer.nvim",

@@ -27,7 +27,7 @@ local header = {
   },
 }
 
-local handle = io.popen('fd -d 2 . $HOME"/.config/local/share/nvim/lazy" |  wc -l | tr -d "\n"')
+local handle = io.popen('fd -d 2 . $HOME"/.local/share/nvim/lazy" |  wc -l | tr -d "\n"')
 local plugins = handle:read("*a")
 handle:close()
 

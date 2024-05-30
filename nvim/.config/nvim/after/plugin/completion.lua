@@ -206,7 +206,25 @@ cmp.setup({
       "i",
       "s",
     }),
-    ["<C-Space>"] = cmp.mapping.complete(),
+    -- ["<C-Space>"] = cmp.mapping.complete(),
+    ["<C-Space>"] = cmp.mapping({
+      i = function()
+        if cmp.visible() then
+          if #cmp.get_entries() > 1 then
+            cmp.confirm({
+              behavior = cmp.ConfirmBehavior.Replace,
+              select = true,
+            })
+          else
+            cmp.complete()
+          end
+        else
+          cmp.complete()
+        end
+      end,
+      s = cmp.mapping.confirm({ select = true }),
+      c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+    }),
     -- ["<C-Space>"] = cmp.mapping(function()
     --   if cmp.visible() then
     --     cmp.confirm({

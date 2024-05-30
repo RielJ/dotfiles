@@ -14,12 +14,12 @@ M.setup = function()
     diagnostics_format = "[#{c}] #{m} (#{s})",
     sources = {
       -- require("typescript.extensions.null-ls.code-actions"),
-      require("null-ls").builtins.formatting.eslint_d.with({
-        condition = function(utils)
-          return utils.root_has_file({ ".eslintrc*" })
-        end,
-        prefer_local = "node_modules/.bin",
-      }),
+      -- require("null-ls").builtins.formatting.eslint_d.with({
+      --   condition = function(utils)
+      --     return utils.root_has_file({ ".eslintrc*" })
+      --   end,
+      --   prefer_local = "node_modules/.bin",
+      -- }),
       require("null-ls").builtins.formatting.prettier.with({
         condition = function(utils)
           return not utils.root_has_file({ ".eslintrc*" })
@@ -27,17 +27,20 @@ M.setup = function()
         prefer_local = "node_modules/.bin",
       }),
       -- require("null-ls").builtins.formatting.shfmt,
-      -- require("null-ls").builtins.formatting.clang_format,
+      require("null-ls").builtins.formatting.clang_format,
       -- require("null-ls").builtins.formatting.stylua,
-      require("null-ls").builtins.formatting.rustfmt,
+      require("null-ls").builtins.formatting.sql_formatter,
+      -- require("null-ls").builtins.diagnostics.sqlfluff.with({
+      --   extra_args = { "--dialect", "postgres" },
+      -- }),
       require("null-ls").builtins.formatting.gofumpt,
       require("null-ls").builtins.formatting.goimports_reviser,
       require("null-ls").builtins.formatting.golines,
       -- require("null-ls").builtins.formatting.black.with({ extra_args = { "--fast" } }),
-      -- require("null-ls").builtins.diagnostics.solhint,
+      -- require("null-ls").builtins.diagnostics.buf,
       -- require("null-ls").builtins.diagnostics.cppcheck,
 
-      require("null-ls").builtins.hover.dictionary,
+      -- require("null-ls").builtins.hover.dictionary,
     },
   })
 end

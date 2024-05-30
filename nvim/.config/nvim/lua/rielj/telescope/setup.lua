@@ -40,6 +40,8 @@ require("telescope").setup({
       "**/*lock.yaml",
       "**/*.next",
       "**/*.dist",
+      "**/*_templ.go",
+      "go.sum",
       "vendor/*",
       "%.lock",
       "__pycache__/*",

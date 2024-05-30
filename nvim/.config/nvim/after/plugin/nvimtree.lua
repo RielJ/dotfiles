@@ -5,12 +5,13 @@ require("nvim-tree").setup({
   hijack_netrw = true,
   hijack_unnamed_buffer_when_opening = false,
   sort_by = "name",
-  root_dirs = {},
+  root_dirs = {
+    ".git",
+  },
   prefer_startup_root = false,
-  sync_root_with_cwd = true,
+  sync_root_with_cwd = false,
   reload_on_bufenter = false,
   respect_buf_cwd = false,
-  -- on_attach = "default",
   select_prompts = false,
   view = {
     adaptive_size = false,
@@ -41,25 +42,9 @@ require("nvim-tree").setup({
   update_focused_file = {
     enable = true,
     debounce_delay = 15,
-    update_root = true,
+    update_root = false,
     ignore_list = {},
   },
-  -- diagnostics = {
-  --   enable = lvim.use_icons,
-  --   show_on_dirs = false,
-  --   show_on_open_dirs = true,
-  --   debounce_delay = 50,
-  --   severity = {
-  --     min = vim.diagnostic.severity.HINT,
-  --     max = vim.diagnostic.severity.ERROR,
-  --   },
-  --   icons = {
-  --     hint = lvim.icons.diagnostics.BoldHint,
-  --     info = lvim.icons.diagnostics.BoldInformation,
-  --     warning = lvim.icons.diagnostics.BoldWarning,
-  --     error = lvim.icons.diagnostics.BoldError,
-  --   },
-  -- },
   filters = {
     dotfiles = false,
     git_clean = false,
@@ -153,18 +138,8 @@ require("nvim-tree").setup({
     cmd = nil,
     args = {},
   },
-  -- disable_netrw = false,
-  -- hijack_netrw = true,
-  -- sort_by = "name",
-  -- auto_reload_on_write = false,
-  -- hijack_unnamed_buffer_when_opening = false,
-  -- hijack_directories = {
-  --   enable = true,
-  --   auto_open = true,
-  -- },
   open_on_tab = false,
-  -- hijack_cursor = false,
-  update_cwd = true,
+  update_cwd = false,
   diagnostics = {
     enable = false,
     show_on_dirs = false,
@@ -181,20 +156,6 @@ require("nvim-tree").setup({
       max = vim.diagnostic.severity.ERROR,
     },
   },
-  -- update_focused_file = {
-  --   enable = true,
-  --   update_cwd = true,
-  --   ignore_list = {},
-  -- },
-  -- system_open = {
-  --   cmd = nil,
-  --   args = {},
-  -- },
-  -- git = {
-  --   enable = true,
-  --   ignore = false,
-  --   timeout = 200,
-  -- },
   renderer = {
     add_trailing = false,
     group_empty = false,
@@ -247,47 +208,6 @@ require("nvim-tree").setup({
     },
     root_folder_modifier = ":t",
   },
-  -- filters = {
-  --   dotfiles = false,
-  --   -- custom = { "node_modules", "\\.cache", ".husky", ".next", ".vscode", ".git" },
-  --   exclude = {},
-  -- },
-  -- trash = {
-  --   cmd = "trash",
-  --   require_confirm = true,
-  -- },
-  -- log = {
-  --   enable = false,
-  --   truncate = false,
-  --   types = {
-  --     all = false,
-  --     config = false,
-  --     copy_paste = false,
-  --     diagnostics = false,
-  --     git = false,
-  --     profile = false,
-  --   },
-  -- },
-  -- actions = {
-  --   use_system_clipboard = true,
-  --   change_dir = {
-  --     enable = true,
-  --     global = false,
-  --     restrict_above_cwd = false,
-  --   },
-  --   open_file = {
-  --     quit_on_open = false,
-  --     resize_window = false,
-  --     window_picker = {
-  --       enable = true,
-  --       chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
-  --       exclude = {
-  --         filetype = { "notify", "packer", "qf", "diff", "fugitive", "fugitiveblame" },
-  --         buftype = { "nofile", "terminal", "help" },
-  --       },
-  --     },
-  --   },
-  -- },
   on_attach = function(bufnr)
     local api = require("nvim-tree.api")
     local keymap = vim.keymap.set
