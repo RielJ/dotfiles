@@ -1,9 +1,15 @@
-exec_always ~/sway/scripts/clipboard-daemon
+# exec_always ~/sway/scripts/clipboard-daemon
+#
+exec wl-paste --watch cliphist store
 
-bindsym $mod+Shift+f exec clipman pick --tool=wofi
+# bindsym $mod+Shift+f exec clipman pick -t wofi --err-on-no-selection && wtype -M ctrl -M shift v 
 
-bindsym $mod+Period exec ~/.config/sway/scripts/emoji.sh
+bindsym $mod+Shift+f exec cliphist list | wofi -dmenu | cliphist decode | wl-copy
+
+
+# bindsym $mod+Period exec ~/.config/sway/scripts/emoji.sh
 bindsym $mod+Comma exec ~/.config/sway/scripts/emoji2.sh
-# bindsym $mod+Period exec wofi-emoji
+bindsym $mod+Period exec ~/.config/sway/scripts/emoji3.sh
+# bindsym $mod+Period exec wofi-emoji > wl_copy
 # bindsym $mod+Period exec bemoji -t
 

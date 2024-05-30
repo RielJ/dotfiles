@@ -45,7 +45,7 @@ focus_follows_mouse yes
 bindsym {
 # start a terminal
     $mod+Return exec $term
-    $mod+Shift+Return exec thunar
+    $mod+Shift+Return exec nautilus
 
 # kill focused window
     $mod+Shift+q kill
