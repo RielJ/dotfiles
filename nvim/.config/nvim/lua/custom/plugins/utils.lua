@@ -14,7 +14,6 @@ return {
     -- hlslens
     {
       "kevinhwang91/nvim-hlslens",
-      event = "BufReadPost",
     },
 
     -- Matchup
@@ -30,16 +29,16 @@ return {
     },
 
     -- Cheatsheet
-    {
-      "RishabhRD/nvim-cheat.sh",
-      dependencies = "RishabhRD/popfix",
-      lazy = true,
-      config = function()
-        vim.g.cheat_default_window_layout = "vertical_split"
-      end,
-      cmd = { "Cheat", "CheatWithoutComments", "CheatList", "CheatListWithoutComments" },
-      keys = "<leader>?",
-    },
+    -- {
+    --   "RishabhRD/nvim-cheat.sh",
+    --   dependencies = "RishabhRD/popfix",
+    --   lazy = true,
+    --   config = function()
+    --     vim.g.cheat_default_window_layout = "vertical_split"
+    --   end,
+    --   cmd = { "Cheat", "CheatWithoutComments", "CheatList", "CheatListWithoutComments" },
+    --   keys = "<leader>?",
+    -- },
     -- Code Shot
     {
       "niuiic/code-shot.nvim",

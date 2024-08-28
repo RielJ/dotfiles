@@ -6,6 +6,11 @@ local sorters = require("telescope.sorters")
 local actions = require("telescope.actions")
 
 require("telescope").setup({
+  pickers = {
+    colorscheme = {
+      enable_preview = true,
+    },
+  },
   defaults = {
     -- preview = {
     --   tressiter = false,
@@ -97,6 +102,9 @@ require("telescope").setup({
         --@usage don't include the filename in the search results
         only_sort_text = true,
       },
+      colorscheme = {
+        enable_preview = true,
+      }
     },
   },
   extensions = {
@@ -112,6 +120,7 @@ require("telescope").setup({
   qflist_previewer = previewers.vim_buffer_qflist.new,
   file_sorter = sorters.get_fuzzy_file,
   generic_sorter = sorters.get_generic_fuzzy_sorter,
+
   ---@usage Mappings are fully customizable. Many familiar mapping patterns are setup as defaults.
   mappings = {
     i = {

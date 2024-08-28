@@ -37,3 +37,5 @@ require("lazy").setup("custom.plugins", {
     },
   },
 })
+
+vim.deprecate = function() end

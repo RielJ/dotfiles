@@ -74,7 +74,7 @@ keymap("t", "<C-l>", "<C-\\><C-N><C-w>l", term_opts)
 keymap("n", "<leader>lg", "<cmd>lua require 'rielj.terminal'._lazygit_toggle()<CR>", opts)
 
 -- Cheatsheet
-keymap("n", "?", "<cmd>CheatWithoutComments<cr>", opts)
+-- keymap("n", "?", "<cmd>CheatWithoutComments<cr>", opts)
 
 -- Glow
 keymap("n", "<leader>sg", "<cmd>Glow<CR>", opts)

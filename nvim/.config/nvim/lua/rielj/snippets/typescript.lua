@@ -1,7 +1,6 @@
 ---@diagnostic disable: undefined-global
 local utils = require("rielj.luasnip")
-return -- Snippets
-{
+return {
   s(
     {
       trig = "tfn",
@@ -67,7 +66,7 @@ return -- Snippets
             c(1, {
               sn(nil, {
                 t({ "", "" }),
-                t({ "type T" .. file_name .. "Props = {", "\t" }),
+                t({ "type " .. file_name .. "Props = {", "\t" }),
                 i(1),
                 t({ "", "}" }),
                 t({ "", "" }),
@@ -89,7 +88,7 @@ return -- Snippets
                 end
               end
             end
-            return "" .. "{ " .. str:sub(1, -3) .. " }: T" .. utils.get_filename(snip, true) .. "Props"
+            return "" .. "{ " .. str:sub(1, -3) .. " }: " .. utils.get_filename(snip, true) .. "Props"
           end
           return ""
         end, { 1 }),
@@ -130,6 +129,17 @@ return -- Snippets
       export const {} = {}
     ]],
       { i(1, "name"), i(2, "value") }
+    )
+  ),
+}, {
+  s("/**",
+    fmt(
+      [[
+      /**
+       * {}
+       */
+      ]],
+      { i(1) }
     )
   ),
 }

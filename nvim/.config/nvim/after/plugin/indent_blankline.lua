@@ -135,7 +135,7 @@ vim.wo.colorcolumn = "99999"
 vim.opt.list = true
 vim.opt.listchars:append({
   space = "⋅",
-  tab = "→ ",
+  tab = "⋅ ",
 })
 -- vim.opt.listchars:append("space:⋅,tab:→")
 -- vim.g.indent_blankline_char = ""

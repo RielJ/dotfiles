@@ -18,8 +18,7 @@ return {
     "tpope/vim-characterize", -- ?
     "tpope/vim-scriptease",
     "tpope/vim-repeat",
-    "tpope/vim-sleuth",  -- detects indentation
-    "godlygeek/tabular", -- Quickly align text by pattern
+    "tpope/vim-sleuth", -- detects indentation
     "kevinhwang91/nvim-bqf",
     -- log highlighter
     { "mtdl9/vim-log-highlighting", ft = { "text", "log" } },

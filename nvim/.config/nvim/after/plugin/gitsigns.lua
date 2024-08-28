@@ -1,35 +1,18 @@
 require("gitsigns").setup({
   signs = {
-    add = {
-      hl = "GitSignsAdd",
-      text = "▎",
-      numhl = "GitSignsAddNr",
-      linehl = "GitSignsAddLn",
-    },
-    change = {
-      hl = "GitSignsChange",
-      text = "▎",
-      numhl = "GitSignsChangeNr",
-      linehl = "GitSignsChangeLn",
-    },
-    delete = {
-      hl = "GitSignsDelete",
-      text = "契",
-      numhl = "GitSignsDeleteNr",
-      linehl = "GitSignsDeleteLn",
-    },
-    topdelete = {
-      hl = "GitSignsDelete",
-      text = "契",
-      numhl = "GitSignsDeleteNr",
-      linehl = "GitSignsDeleteLn",
-    },
-    changedelete = {
-      hl = "GitSignsChange",
-      text = "▎",
-      numhl = "GitSignsChangeNr",
-      linehl = "GitSignsChangeLn",
-    },
+    add = { text = "▎" },
+    change = { text = "▎" },
+    delete = { text = "" },
+    topdelete = { text = "" },
+    changedelete = { text = "▎" },
+    untracked = { text = "▎" },
+  },
+  signs_staged = {
+    add = { text = "▎" },
+    change = { text = "▎" },
+    delete = { text = "" },
+    topdelete = { text = "" },
+    changedelete = { text = "▎" },
   },
   numhl = false,
   linehl = false,
@@ -49,9 +32,6 @@ require("gitsigns").setup({
     delay = 1000,
     ignore_whitespace = false,
   },
-  current_line_blame_formatter_opts = {
-    relative_time = false,
-  },
   sign_priority = 6,
   update_debounce = 200,
   status_formatter = nil, -- Use default
@@ -64,16 +44,12 @@ require("gitsigns").setup({
     row = 0,
     col = 1,
   },
-  yadm = {
-    enable = false,
-  },
   on_attach = function(bufnr)
     local gs = package.loaded.gitsigns
 
-    local function map(mode, l, r, opts)
-      opts = opts or {}
-      opts.buffer = bufnr
-      vim.keymap.set(mode, l, r, opts)
+    local function map(mode, l, r, desc)
+      local des = desc or ""
+      vim.keymap.set(mode, l, r, { buffer = bufnr, desc = des })
     end
 
     -- Navigation
@@ -85,7 +61,7 @@ require("gitsigns").setup({
         gs.next_hunk()
       end)
       return "<Ignore>"
-    end, { expr = true })
+    end, "Next Hunk")
 
     map("n", "gk", function()
       if vim.wo.diff then
@@ -95,7 +71,7 @@ require("gitsigns").setup({
         gs.prev_hunk()
       end)
       return "<Ignore>"
-    end, { expr = true })
+    end, "Prev Hunk")
 
     -- Actions
     -- map("n", "<leader>hs", gs.stage_hunk)

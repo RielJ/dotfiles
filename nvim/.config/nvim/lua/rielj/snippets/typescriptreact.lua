@@ -274,7 +274,7 @@ return {
             c(1, {
               sn(nil, {
                 t({ "", "" }),
-                t({ "type T" .. file_name .. "Props = {", "\t" }),
+                t({ "type " .. file_name .. "Props = {", "\t" }),
                 i(1),
                 t({ "", "}" }),
                 t({ "", "" }),
@@ -296,7 +296,7 @@ return {
                 end
               end
             end
-            return "" .. "{ " .. str:sub(1, -3) .. " }: T" .. utils.get_filename(snip, true) .. "Props"
+            return "" .. "{ " .. str:sub(1, -3) .. " }: " .. utils.get_filename(snip, true) .. "Props"
           end
           return ""
         end, { 1 }),

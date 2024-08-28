@@ -28,7 +28,11 @@ return {
     },
     { "folke/neodev.nvim",               opts = {} },
     -- "nvim-lua/lsp-status.nvim",
-    "nvimtools/none-ls.nvim",
+    -- "nvimtools/none-ls.nvim",
+    {
+      'stevearc/conform.nvim',
+      opts = {},
+    },
     {
       "pmizio/typescript-tools.nvim",
       ft = {
@@ -38,8 +42,9 @@ return {
         "typescript",
         "typescriptreact",
         "typescript.tsx",
+        "svelte"
       },
-      event = { "BufReadPre", "BufNew" },
+      -- event = { "BufReadPre", "BufNew" },
       dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
     },
     -- {
@@ -56,7 +61,7 @@ return {
     --   dependencies = "williamboman/mason.nvim",
     -- },
     "axelvc/template-string.nvim",
-    "onsails/lspkind-nvim",
+    -- "onsails/lspkind-nvim",
     "simrat39/inlay-hints.nvim",
 
     {
