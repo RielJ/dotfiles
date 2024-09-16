@@ -52,11 +52,14 @@ plug "zap-zsh/fzf"
 plug "zap-zsh/exa"
 plug "zsh-users/zsh-syntax-highlighting"
 
+
 autoload -Uz compinit
 zstyle ':completion:*' menu select
 # zstyle ':completion::complete:lsof:*' menu yes select
 zmodload zsh/complist
 compinit
+
+source <(kubectl completion zsh)
 
 # Source
 plug "$HOME/.config/zsh/zsh-aliases.zsh"

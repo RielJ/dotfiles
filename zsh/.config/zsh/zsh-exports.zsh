@@ -1,5 +1,5 @@
 #!/bin/sh
-HISTFILE="$XDG_DATA_HOME"/zsh/history
+HISTFILE="$HOME/.config/zsh/.zsh_history"
 HISTSIZE=1000000
 SAVEHIST=1000000
 export PATH="$HOME/.local/bin":$PATH
@@ -10,6 +10,7 @@ export MANWIDTH=999
 export PATH=$HOME/.cargo/bin:$PATH
 export PATH=$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH
 export EDITOR=nvim
+export VISUAL=nvim
 export LD_PRELOAD=/usr/lib/libv4l/v4l2convert.so
 eval "$(zoxide init zsh)"
 # eval "`pip completion --zsh`"
