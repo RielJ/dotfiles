@@ -3,9 +3,9 @@ require("conform").setup({
     lua = { "stylua" },
 
     -- Conform will run the first available formatter
-    javascript = { "prettierd", "prettier", "eslint_d", "eslint", stop_after_first = true },
-    typescript = { "prettierd", "prettier", "eslint_d", "eslint", stop_after_first = true },
-    svelte = { "prettierd", "prettier", "eslint_d", "eslint", stop_after_first = true },
+    javascript = { "prettierd", "prettier", stop_after_first = true },
+    typescript = { "prettierd", "prettier", stop_after_first = true },
+    -- svelte = { "prettierd", "prettier", stop_after_first = true },
     html = { "prettierd", "prettier", stop_after_first = true },
     css = { "prettierd", "prettier", stop_after_first = true },
     json = { "prettierd", "prettier", stop_after_first = true },

@@ -2,8 +2,8 @@ local ls = require("luasnip")
 local types = require("luasnip.util.types")
 
 ls.setup({
-  history = false,                           --keep around last snippet local to jump back
-  updateevents = "TextChanged,TextChangedI", --update changes as you type
+  history = false, --keep around last snippet local to jump back
+  -- updateevents = "TextChanged,TextChangedI", --update changes as you type
   enable_autosnippets = true,
   snip_env = {
     filename = function()

@@ -4,7 +4,21 @@ return {
       "neovim/nvim-lspconfig",
       config = function()
         require("rielj.lsp")
+        -- require("lsp_lines").setup()
+        -- vim.diagnostic.config { virtual_text = true, virtual_lines = false }
+
+        -- vim.keymap.set("", "<leader>l", function()
+        --   local config = vim.diagnostic.config() or {}
+        --   if config.virtual_text then
+        --     vim.diagnostic.config { virtual_text = false, virtual_lines = true }
+        --   else
+        --     vim.diagnostic.config { virtual_text = true, virtual_lines = false }
+        --   end
+        -- end, { desc = "Toggle lsp_lines" })
       end,
+      dependencies = {
+        -- { "https://git.sr.ht/~whynothugo/lsp_lines.nvim" },
+      }
       -- Additional lua configuration, makes nvim stuff amazing!
       -- 'folke/neodev.nvim',
     }, -- enable LSP,
@@ -62,7 +76,7 @@ return {
     -- },
     "axelvc/template-string.nvim",
     -- "onsails/lspkind-nvim",
-    "simrat39/inlay-hints.nvim",
+    -- "simrat39/inlay-hints.nvim",
 
     {
       "WhoIsSethDaniel/mason-tool-installer.nvim",
