@@ -95,18 +95,18 @@ local function lsp_keymaps(bufnr)
 end
 
 function M.common_on_attach(client, bufnr)
-  local augroup_format = vim.api.nvim_create_augroup("custom-lsp-format", { clear = true })
-  if vim.lsp.handlers["textDocument/formatting"] and client.name ~= "typescript-tools" then
-    vim.api.nvim_clear_autocmds({ group = augroup_format, buffer = bufnr })
-    vim.api.nvim_create_autocmd("BufWritePre", {
-      group = augroup_format,
-      buffer = bufnr,
-      callback = function()
-        -- on 0.8, you should use vim.lsp.buf.format({ bufnr = bufnr }) instead
-        M.format({ { filter = M.format_filter, bufnr = bufnr } })
-      end,
-    })
-  end
+  -- local augroup_format = vim.api.nvim_create_augroup("custom-lsp-format", { clear = true })
+  -- if vim.lsp.handlers["textDocument/formatting"] and client.name ~= "typescript-tools" then
+  -- vim.api.nvim_clear_autocmds({ group = augroup_format, buffer = bufnr })
+  -- vim.api.nvim_create_autocmd("BufWritePre", {
+  --   group = augroup_format,
+  --   buffer = bufnr,
+  --   callback = function()
+  --     -- on 0.8, you should use vim.lsp.buf.format({ bufnr = bufnr }) instead
+  --     M.format({ { filter = M.format_filter, bufnr = bufnr } })
+  --   end,
+  -- })
+  -- end
   lsp_keymaps(bufnr)
   lsp_highlight_document(client, bufnr)
 end

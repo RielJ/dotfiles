@@ -32,6 +32,7 @@ map_tele("<space>fv", "find_nvim_source")
 map_tele("<space>fe", "file_browser")
 map_tele("<space>fz", "search_only_certain_files")
 map_tele("<space>fc", "colorscheme")
+map_tele("<space>fm", "media_files")
 
 -- Sourcegraph
 map_tele("<space>sf", "sourcegraph_find")

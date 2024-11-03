@@ -1,11 +1,3 @@
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-  pattern = "*",
-  callback = function(args)
-    require("conform").format({ bufnr = args.buf })
-    -- vim.cmd("lua require('rielj.lsp.handlers').format()")
-  end,
-})
-
 vim.api.nvim_create_user_command("Format", function(args)
   local range = nil
   if args.count ~= -1 then
@@ -15,5 +7,10 @@ vim.api.nvim_create_user_command("Format", function(args)
       ["end"] = { args.line2, end_line:len() },
     }
   end
-  require("conform").format({ async = true, lsp_format = "fallback", range = range })
+  require("conform").format({ timeout_ms = 4000, lsp_format = "fallback", range = range, stop_after_first = true })
 end, { range = true })
+
+-- vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+--   pattern = "*",
+--   callback = vim.cmd("Format")
+-- })

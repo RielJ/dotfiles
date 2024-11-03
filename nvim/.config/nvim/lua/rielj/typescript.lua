@@ -39,13 +39,18 @@ require("typescript-tools").setup({
     tsserver_max_memory = "auto",
     -- described below
     tsserver_format_options = {},
-    tsserver_file_preferences = {},
+    tsserver_file_preferences = {
+      importModuleSpecifierEnding = 'non-relative',
+      importModuleSpecifierPreference = 'non-relative',
+      importModuleSpecifier = 'non-relative',
+    },
     -- locale of all tsserver messages, supported locales you can find here:
     -- https://github.com/microsoft/TypeScript/blob/3c221fc086be52b19801f6e8d82596d04607ede6/src/compiler/utilitiesPublic.ts#L620
     tsserver_locale = "en",
     -- mirror of VSCode's `typescript.suggest.completeFunctionCalls`
     complete_function_calls = false,
     include_completions_with_insert_text = true,
+    import_module_specifier = "non-relative",
     -- CodeLens
     -- WARNING: Experimental feature also in VSCode, because it might hit performance of server.
     -- possible values: ("off"|"all"|"implementations_only"|"references_only")

@@ -1,4 +1,5 @@
 return {
+  clangd = true,
   graphql = require("rielj.lsp.servers.graphql"),
   rust_analyzer = require("rielj.lsp.servers.rust_analyzer"),
   gopls = require("rielj.lsp.servers.gopls"),
@@ -9,7 +10,8 @@ return {
   jsonls = require("rielj.lsp.servers.jsonls"),
   yamlls = require("rielj.lsp.servers.yamlls"),
   cmake = (1 == vim.fn.executable("cmake-language-server")),
-  solidity_ls_nomicfoundation = true,
+  solidity_ls_nomicfoundation = require("rielj.lsp.servers.solidity"),
+  -- solidity = true,
   tflint = true,
   terraformls = true,
   bashls = true,

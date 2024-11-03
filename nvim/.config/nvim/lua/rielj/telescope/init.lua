@@ -429,6 +429,18 @@ function M.vim_options()
   })
 end
 
+function M.media_files()
+  require('telescope').extensions.media.media({
+    find_command = {
+      "rg",
+      "--files",
+      "--glob",
+      "*.{png,jpg,gif,webm}",
+      "."
+    }
+  })
+end
+
 return setmetatable({}, {
   __index = function(_, k)
     reloader()
