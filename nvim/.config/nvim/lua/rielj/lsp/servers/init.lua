@@ -19,6 +19,7 @@ return {
   -- eslintls = false,
   -- eslint = true,
   eslint = require("rielj.lsp.servers.eslint"),
+  biome = true,
   -- eslintls = require("rielj.lsp.servers.eslint"),
   -- svelte = true,
   svelte = require("rielj.lsp.servers.svelte"),

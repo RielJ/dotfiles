@@ -257,11 +257,9 @@ return {
     fmt(
       [[
       {types}
-      const {fn} = ({typesAuto}) => {{
+      export function {fn} ({typesAuto}) {{
         return {content}
       }}
-
-      export {{ {fn} }}
     ]],
       {
         fn = f(function(_, snip)

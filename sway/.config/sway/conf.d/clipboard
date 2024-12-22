@@ -4,7 +4,7 @@ exec wl-paste --watch cliphist store
 
 # bindsym $mod+Shift+f exec clipman pick -t wofi --err-on-no-selection && wtype -M ctrl -M shift v 
 
-bindsym $mod+Shift+f exec cliphist list | wofi -dmenu | cliphist decode | wl-copy
+bindsym $mod+Shift+f exec cliphist list | wofi -S dmenu | cliphist decode | wl-copy
 
 
 # bindsym $mod+Period exec ~/.config/sway/scripts/emoji.sh

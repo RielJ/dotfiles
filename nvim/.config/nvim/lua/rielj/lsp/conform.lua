@@ -1,5 +1,29 @@
 require("conform").setup({
+  format_on_save = function(bufnr)
+    -- Disable autoformat on certain filetypes
+    local ignore_filetypes = { "java" }
+    if vim.tbl_contains(ignore_filetypes, vim.bo[bufnr].filetype) then
+      return
+    end
+    -- Disable with a global or buffer-local variable
+    if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+      return
+    end
+    -- Disable autoformat for files in a certain path
+    local bufname = vim.api.nvim_buf_get_name(bufnr)
+    if bufname:match("/node_modules/") then
+      return
+    end
+    -- ...additional logic...
+    return { timeout_ms = 4000, lsp_format = "fallback", stop_after_first = true }
+  end,
+  formatters = {
+    sql_formatter = {
+      args = { "-l", "postgresql" },
+    }
+  },
   formatters_by_ft = {
+    sql = { "sql_formatter" },
     lua = { "stylua" },
 
     c = { "clang-format" },
@@ -18,13 +42,5 @@ require("conform").setup({
 
 
     go = { "gofumpt", "goimports_reviser", "golines" },
-  },
-
-  -- enable format on save
-  format_on_save = {
-    -- These options will be passed to conform.format()
-    timeout_ms = 4000,
-    stop_after_first = true,
-    lsp_format = "fallback"
   },
 })
