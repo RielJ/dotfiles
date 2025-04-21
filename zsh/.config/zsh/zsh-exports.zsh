@@ -9,6 +9,7 @@ export MANPAGER='nvim +Man!'
 export MANWIDTH=999
 export PATH=$HOME/.cargo/bin:$PATH
 export PATH=$HOME/.local/share/gem/ruby/3.0.0/bin:$PATH
+export PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH
 export EDITOR=nvim
 export VISUAL=nvim
 export LD_PRELOAD=/usr/lib/libv4l/v4l2convert.so
