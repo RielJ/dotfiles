@@ -1,3 +1,5 @@
+local util = require("conform.util")
+
 require("conform").setup({
   format_on_save = function(bufnr)
     -- Disable autoformat on certain filetypes
@@ -20,7 +22,10 @@ require("conform").setup({
   formatters = {
     sql_formatter = {
       args = { "-l", "postgresql" },
-    }
+    },
+    biome = {
+      require_cwd = true
+    },
   },
   formatters_by_ft = {
     sql = { "sql_formatter" },

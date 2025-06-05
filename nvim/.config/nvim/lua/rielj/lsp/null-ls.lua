@@ -22,7 +22,7 @@ M.setup = function()
       -- }),
       require("null-ls").builtins.formatting.prettier.with({
         condition = function(utils)
-          return not utils.root_has_file({ ".eslintrc*" })
+          return not utils.root_has_file({ ".prettier*" })
         end,
         prefer_local = "node_modules/.bin",
       }),
