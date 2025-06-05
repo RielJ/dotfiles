@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
 WORK="/home/rielj/work"
-INTERSEED="~/work/interseed"
-TIMESHEET_CLIENT="~/work/timesheet_quasar"
-TIMESHEET_SERVER="~/work/claimclock_api"
-DOTFILES="~/personal/dotfiles"
+DOTFILES="~/dotfiles"
 
 createWindow() {
 	session=$1
