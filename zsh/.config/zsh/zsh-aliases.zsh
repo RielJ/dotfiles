@@ -55,8 +55,8 @@ alias gpg-retrieve="gpg2 --keyserver-options auto-key-retrieve --receive-keys"
 # systemd
 alias list_systemctl="systemctl list-unit-files --state=enabled"
 
-alias ls="exa --icons --group-directories-first"
-alias ll="exa -l -g --icons"
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -l -g --icons"
 alias lla="ll -a"
 
 # COLORS
@@ -103,3 +103,4 @@ alias bluetooth_send="/usr/lib/bluetooth/obexd -n"
 alias video_screenshare="sudo modprobe -r v4l2loopback && sudo modprobe v4l2loopback exclusive_caps=1 card_label=VirtualVideoDevice && wf-recorder --muxer=v4l2 --codec=rawvideo --file=/dev/video2 -x yuv420p"
 alias reflector-fast="reflector --sort rate --save /etc/pacman.d/mirrorlist -a 6 -c 'Hong Kong,Singapore,Japan' --verbose --download-timeout 10"
 alias hbrnt="sudo systemctl hibernate"
+alias compressvideo='ffmpeg -i "$1" -vf "scale=1280:-2" -c:v libx264 -preset fast -crf 28 -c:a aac -b:a 128k -movflags +faststart "$1-compressed.mp4"'

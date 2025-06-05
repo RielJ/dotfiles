@@ -59,7 +59,7 @@ zstyle ':completion:*' menu select
 zmodload zsh/complist
 compinit
 
-source <(kubectl completion zsh)
+# source <(kubectl completion zsh)
 
 # Source
 plug "$HOME/.config/zsh/zsh-aliases.zsh"
@@ -73,7 +73,9 @@ plug "$HOME/.config/zsh/zsh-prompt.zsh"
 autoload edit-command-line; zle -N edit-command-line
 # bindkey '^e' edit-command-line
 
-pfetch
+# pfetch
 
-# <<< fnm
-eval "$(fnm env --use-on-cd)"
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
+# eval "$(fnm env --use-on-cd --shell zsh)"
+eval "$(zoxide init zsh)"

@@ -58,5 +58,8 @@ require("typescript-tools").setup({
     -- by default code lenses are displayed on all referencable values and for some of you it can
     -- be too much this option reduce count of them by removing member references from lenses
     disable_member_code_lens = true,
+    capabilities = {
+      offsetEncoding = "utf-8",
+    }
   },
 })
