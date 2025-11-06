@@ -6,6 +6,7 @@ local icons = {
   }
 }
 
+
 require("lualine").setup {
   options = {
     theme = "auto",
@@ -18,6 +19,7 @@ require("lualine").setup {
       "branch",
       {
         "diff",
+        "diagnostics",
         symbols = {
           added = icons.git.added,
           modified = icons.git.modified,

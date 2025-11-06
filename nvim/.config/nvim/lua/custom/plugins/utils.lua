@@ -1,10 +1,10 @@
 return {
   {
     -- Presence
-    {
-      "andweeb/presence.nvim",
-      enabled = true,
-    },
+    -- {
+    --   "andweeb/presence.nvim",
+    --   enabled = true,
+    -- },
     {
       "AckslD/nvim-neoclip.lua",
       opts = {},
@@ -42,9 +42,8 @@ return {
     -- Code Shot
     {
       "niuiic/code-shot.nvim",
-      dependencies = "niuiic/core.nvim",
-    }
+      dependencies = { "niuiic/core.nvim", "Aloxaf/silicon" },
+      version = "v1",
+    },
   },
-
-
 }

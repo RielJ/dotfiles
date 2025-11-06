@@ -1,10 +1,7 @@
 local opts = { noremap = true, silent = true }
 
-local term_opts = { silent = true }
-
 -- Shorten function name
 local keymap = vim.api.nvim_set_keymap
-
 
 require("typescript-tools").setup({
   on_attach = function(client, bufnr)
@@ -20,7 +17,7 @@ require("typescript-tools").setup({
   end,
   settings = {
     -- spawn additional tsserver instance to calculate diagnostics on it
-    separate_diagnostic_server = true,
+    separate_diagnostic_server = false,
     -- "change"|"insert_leave" determine when the client asks the server about diagnostic
     publish_diagnostic_on = "insert_leave",
     -- array of strings("fix_all"|"add_missing_imports"|"remove_unused"|
@@ -36,13 +33,18 @@ require("typescript-tools").setup({
     tsserver_plugins = {},
     -- this value is passed to: https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-megabytes
     -- memory limit in megabytes or "auto"(basically no limit)
-    tsserver_max_memory = "auto",
+    tsserver_max_memory = 4096,
     -- described below
     tsserver_format_options = {},
     tsserver_file_preferences = {
-      importModuleSpecifierEnding = 'non-relative',
-      importModuleSpecifierPreference = 'non-relative',
-      importModuleSpecifier = 'non-relative',
+      importModuleSpecifierEnding = "non-relative",
+      importModuleSpecifierPreference = "non-relative",
+      importModuleSpecifier = "non-relative",
+      preferTypeOnlyAutoImports = true,
+      autoImportFileExcludePatterns = {
+        "@radix-ui",
+        "react-day-picker",
+      },
     },
     -- locale of all tsserver messages, supported locales you can find here:
     -- https://github.com/microsoft/TypeScript/blob/3c221fc086be52b19801f6e8d82596d04607ede6/src/compiler/utilitiesPublic.ts#L620
@@ -60,6 +62,6 @@ require("typescript-tools").setup({
     disable_member_code_lens = true,
     capabilities = {
       offsetEncoding = "utf-8",
-    }
+    },
   },
 })

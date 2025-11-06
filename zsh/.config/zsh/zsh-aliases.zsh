@@ -1,13 +1,6 @@
 #!/bin/sh
 alias j='z'
 alias f='zi'
-alias zsh-update-plugins="find "$ZDOTDIR/plugins" -type d -exec test -e '{}/.git' ';' -print0 | xargs -I {} -0 git -C {} pull -q"
-
-# get fastest mirrors
-# alias mirror="sudo reflector -f 30 -l 30 --number 10 --verbose --save /etc/pacman.d/mirrorlist"
-# alias mirrord="sudo reflector --latest 50 --number 20 --sort delay --save /etc/pacman.d/mirrorlist"
-# alias mirrors="sudo reflector --latest 50 --number 20 --sort score --save /etc/pacman.d/mirrorlist"
-# alias mirrora="sudo reflector --latest 50 --number 20 --sort age --save /etc/pacman.d/mirrorlist"
 
 # Colorize grep output (good for log files)
 alias grep='grep --color=auto'
@@ -72,6 +65,11 @@ alias yta-flac-chill="yt-dlp --paths ~/Music/ --extract-audio --audio-format fla
 alias yta-mp3="yt-dlp --paths ~/Videos/ --extract-audio --audio-format mp3 "
 alias ytv-best="yt-dlp --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 --write-subs --write-auto-subs"
 alias ytv-playlist="yt-dlp -o '%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' --paths ~/Videos/ -f 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio' --merge-output-format mp4 --write-subs --write-auto-subs "
+alias ytv-playlist-mp3='yt-dlp -o '"'"'%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s'"'"' \
+--paths ~/Music/ \
+-f bestaudio \
+--extract-audio --audio-format mp3 --audio-quality 0 \
+--write-subs --write-auto-subs'
 
 alias ram='rate-mirrors --allow-root arch | sudo tee /etc/pacman.d/mirrorlist'
 alias ua-drop-caches='sudo paccache -rk3; yay -Sc --aur --noconfirm'
@@ -98,9 +96,29 @@ alias vim="nvim"
 # alias realvim="vim"
 # it
 
+alias pn="pnpm"
 alias nvm='echo "(╯°□°)╯︵ɯʌu, did you mean fnm?"'
 alias bluetooth_send="/usr/lib/bluetooth/obexd -n"
 alias video_screenshare="sudo modprobe -r v4l2loopback && sudo modprobe v4l2loopback exclusive_caps=1 card_label=VirtualVideoDevice && wf-recorder --muxer=v4l2 --codec=rawvideo --file=/dev/video2 -x yuv420p"
 alias reflector-fast="reflector --sort rate --save /etc/pacman.d/mirrorlist -a 6 -c 'Hong Kong,Singapore,Japan' --verbose --download-timeout 10"
 alias hbrnt="sudo systemctl hibernate"
 alias compressvideo='ffmpeg -i "$1" -vf "scale=1280:-2" -c:v libx264 -preset fast -crf 28 -c:a aac -b:a 128k -movflags +faststart "$1-compressed.mp4"'
+
+# compressvideo() {
+#   input="$1"
+#   output="${input%.*}-compressed.mp4"
+#   ffmpeg -i "$input" \
+#     -vf "scale='min(1280,iw)':'-2'" \
+#     -c:v libx264 -profile:v high -level:v 4.0 -preset fast -crf 28 \
+#     -pix_fmt yuv420p \
+#     -c:a aac -b:a 256k -ac 2 -profile:a aac_low \
+#     -movflags +faststart \
+#     "$output"
+# }
+
+alias cd="z"
+
+# git
+alias gcdp="git checkout dev && git pull"
+
+alias kill_nvims="pkill -SIGTERM nvim"

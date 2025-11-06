@@ -16,7 +16,6 @@ require("code-shot").setup({
       select_area.start_line,
       "--theme",
       "DarkNeon",
-
     }
   end,
 })
@@ -26,5 +25,9 @@ require("code-shot").setup({
 --   { noremap = true, silent = true })
 
 -- set keymap visual mode
-vim.api.nvim_set_keymap("v", "<leader>ss", "<cmd>lua require('code-shot').shot()<CR>",
-  { noremap = true, silent = true })
+vim.api.nvim_set_keymap(
+  "v",
+  "<leader>ss",
+  "<cmd>lua require('code-shot').shot()<CR>",
+  { noremap = true, silent = true }
+)

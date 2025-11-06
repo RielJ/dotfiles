@@ -1,5 +1,3 @@
-local _, lspconfig = pcall(require, "lspconfig")
-
 local rust_analyzer, rust_analyzer_cmd = nil, { "rustup", "run", "stable", "rust-analyzer" }
 rust_analyzer = {
   cmd = rust_analyzer_cmd,
@@ -16,7 +14,6 @@ rust_analyzer = {
       -- },
     },
   },
-  root_dir = lspconfig.util.root_pattern("Cargo.toml"),
   filetypes = { "rust" },
 }
 -- end

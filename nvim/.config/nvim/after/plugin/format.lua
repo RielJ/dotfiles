@@ -1,3 +1,5 @@
+local conform = require("conform")
+
 vim.api.nvim_create_user_command("Format", function(args)
   local range = nil
   if args.count ~= -1 then
@@ -7,10 +9,12 @@ vim.api.nvim_create_user_command("Format", function(args)
       ["end"] = { args.line2, end_line:len() },
     }
   end
-  require("conform").format({ timeout_ms = 4000, lsp_format = "fallback", range = range, stop_after_first = true })
+  conform.format({ range = range })
 end, { range = true })
 
--- vim.api.nvim_create_autocmd({ "BufWritePre" }, {
---   pattern = "*",
---   callback = vim.cmd("Format")
--- })
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*",
+  callback = function(args)
+    conform.format({ bufnr = args.buf })
+  end,
+})

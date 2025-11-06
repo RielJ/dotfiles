@@ -18,7 +18,7 @@ return {
           vim.o.laststatus = 0
         end
       end,
-
+      dependencies = { "nvim-tree/nvim-web-devicons", opt = true },
     }
   },
 }

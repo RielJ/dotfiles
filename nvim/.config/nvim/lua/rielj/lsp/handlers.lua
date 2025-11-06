@@ -18,7 +18,13 @@ M.setup = function()
     virtual_text = false,
     -- show signs
     signs = {
-      active = signs,
+      -- active = signs,
+      text = {
+        [vim.diagnostic.severity.ERROR] = "",
+        [vim.diagnostic.severity.WARN] = "",
+        [vim.diagnostic.severity.INFO] = "",
+        [vim.diagnostic.severity.HINT] = "",
+      }
     },
     update_in_insert = true,
     underline = true,

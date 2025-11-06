@@ -24,14 +24,11 @@ require("tokyonight").setup({
   end,
 })
 
-require("colorizer").setup({ "*" }, {
-  RGB = true, -- #RGB hex codes
-  RRGGBB = true, -- #RRGGBB hex codes
-  RRGGBBAA = true, -- #RRGGBBAA hex codes
-  rgb_fn = true, -- CSS rgb() and rgba() functions
-  hsl_fn = true, -- CSS hsl() and hsla() functions
-  css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
-  css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
+-- Ensure termguicolors is enabled if not already
+vim.opt.termguicolors = true
+
+require("nvim-highlight-colors").setup({
+  enable_tailwind = true,
 })
 
 require("rielj.theme").tokyonight()

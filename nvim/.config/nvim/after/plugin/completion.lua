@@ -35,7 +35,7 @@ cmp.setup({
     -- disable completion in comments
     local context = require("cmp.config.context")
     -- keep command mode completion enabled when cursor is in a comment
-    if vim.bo.buftype == 'prompt' or (vim.fn.reg_recording() ~= '') or (vim.fn.reg_executing() ~= '') then
+    if vim.bo.buftype == "prompt" or (vim.fn.reg_recording() ~= "") or (vim.fn.reg_executing() ~= "") then
       return false
     end
     if vim.api.nvim_get_mode().mode == "c" then
@@ -118,7 +118,7 @@ cmp.setup({
         emoji = "[Emoji]",
         path = "[Path]",
         calc = "[Calc]",
-        cmp_tabnine = "[Tabnine]",
+        -- cmp_tabnine = "[Tabnine]",
         luasnip = "[Snippet]",
         buffer = "[Buffer]",
       }
@@ -132,7 +132,8 @@ cmp.setup({
       vim_item.kind = kind_icons[vim_item.kind]
       vim_item.menu = source_names[entry.source.name]
       vim_item.dup = duplicates[entry.source.name] or duplicates_default
-      return vim_item
+
+      return require("nvim-highlight-colors").format(entry, vim_item)
     end,
   },
   snippet = {
@@ -148,7 +149,7 @@ cmp.setup({
   sources = {
     { name = "nvim_lsp" },
     { name = "path" },
-    { name = "cmp_tabnine" },
+    -- { name = "cmp_tabnine" },
     { name = "luasnip" },
     { name = "nvim_lua" },
     { name = "buffer" },
@@ -261,18 +262,18 @@ cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
 --   max_num_results = 10,
 --   sort = true,
 -- })
-local tabnine = require("cmp_tabnine.config")
+-- local tabnine = require("cmp_tabnine.config")
 
-tabnine:setup({
-  max_lines = 1000,
-  max_num_results = 20,
-  sort = true,
-  run_on_every_keystroke = true,
-  snippet_placeholder = "..",
-  ignored_file_types = {
-    -- default is not to ignore
-    -- uncomment to ignore in lua:
-    -- lua = true
-  },
-  show_prediction_strength = false,
-})
+-- tabnine:setup({
+--   max_lines = 1000,
+--   max_num_results = 20,
+--   sort = true,
+--   run_on_every_keystroke = true,
+--   snippet_placeholder = "..",
+--   ignored_file_types = {
+--     -- default is not to ignore
+--     -- uncomment to ignore in lua:
+--     -- lua = true
+--   },
+--   show_prediction_strength = false,
+-- })

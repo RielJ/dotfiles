@@ -1,6 +1,6 @@
 return {
   cmd = {
-    "vscode-json-languageserver",
+    "vscode-json-language-server",
     "--stdio",
   },
   settings = {

@@ -1,4 +1,16 @@
-local util = require("conform.util")
+local function javascript(bufnr)
+  if require("conform").get_formatter_info("biome", bufnr).available then
+    return { "biome", "biome-organize-imports" }
+  end
+  return { "prettierd", "prettier", stop_after_first = true }
+end
+
+local function javascriptreact(bufnr)
+  if require("conform").get_formatter_info("biome", bufnr).available then
+    return { "biome", "biome-organize-imports", "rustywind" }
+  end
+  return { "prettierd", "prettier", stop_after_first = true }
+end
 
 require("conform").setup({
   format_on_save = function(bufnr)
@@ -17,14 +29,17 @@ require("conform").setup({
       return
     end
     -- ...additional logic...
-    return { timeout_ms = 4000, lsp_format = "fallback", stop_after_first = true }
+    return { timeout_ms = 4000, lsp_format = "fallback" }
   end,
   formatters = {
     sql_formatter = {
       args = { "-l", "postgresql" },
     },
     biome = {
-      require_cwd = true
+      require_cwd = true,
+    },
+    rustywind = {
+      append_args = { "--config", "rustywind.toml" },
     },
   },
   formatters_by_ft = {
@@ -32,19 +47,18 @@ require("conform").setup({
     lua = { "stylua" },
 
     c = { "clang-format" },
-    -- Conform will run the first available formatter
-    javascript = { "biome", "prettierd", "prettier", stop_after_first = true },
-    javascriptreact = { "biome", "prettierd", "prettier", stop_after_first = true },
-    typescript = { "biome", "prettierd", "prettier", stop_after_first = true },
-    typescriptreact = { "biome", "prettierd", "prettier", stop_after_first = true },
+    javascript = javascript,
+    javascriptreact = javascriptreact,
+    typescript = javascript,
+    typescriptreact = javascriptreact,
     -- svelte = { "prettierd", "prettier", stop_after_first = true },
-    html = { "prettierd", "prettier", stop_after_first = true },
-    css = { "prettierd", "prettier", stop_after_first = true },
-    json = { "prettierd", "prettier", stop_after_first = true },
+    html = { "biome", "biome-organize-imports" },
+    css = { "biome", "biome-organize-imports" },
+    json = { "biome", "biome-organize-imports" },
+    jsonc = { "biome", "biome-organize-imports" },
 
     sol = { "forge_fmt" },
     solidity = { "forge_fmt" },
-
 
     go = { "gofumpt", "goimports_reviser", "golines" },
   },

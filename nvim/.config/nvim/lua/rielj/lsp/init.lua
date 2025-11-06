@@ -1,9 +1,7 @@
-local _, neodev = pcall(require, "neodev")
-if neodev then
-  neodev.setup({})
-end
-
-local _, lspconfig = pcall(require, "lspconfig")
+-- local _, neodev = pcall(require, "neodev")
+-- if neodev then
+--   neodev.setup({})
+-- end
 
 -- LSP SETUP
 require("rielj.lsp.handlers").setup()
@@ -40,10 +38,10 @@ local setup_server = function(server, config)
     },
   }, config)
 
-  lspconfig[server].setup(config)
+  vim.lsp.config(server, config)
 end
 
-require("lspconfig").lua_ls.setup({
+vim.lsp.config("lua_ls", {
   on_init = custom_init,
   on_attach = custom_attach,
   capabilities = updated_capabilities,
@@ -60,6 +58,7 @@ require("rielj.typescript")
 
 for server, config in pairs(servers) do
   setup_server(server, config)
+  vim.lsp.enable(server)
 end
 
 -- CONFORM

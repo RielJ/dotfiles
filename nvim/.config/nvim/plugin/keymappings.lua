@@ -29,11 +29,21 @@ keymap("n", "<leader>lk", "<cmd>lua vim.diagnostic.goto_prev({float=true})<CR>",
 keymap("n", "<leader>ll", "<cmd>TroubleToggle<CR>", opts)
 
 -- TROUBLE
-vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end)
-vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end)
-vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end)
-vim.keymap.set("n", "<leader>xq", function() require("trouble").toggle("quickfix") end)
-vim.keymap.set("n", "<leader>xl", function() require("trouble").toggle("loclist") end)
+vim.keymap.set("n", "<leader>xx", function()
+  require("trouble").toggle()
+end)
+vim.keymap.set("n", "<leader>xw", function()
+  require("trouble").toggle("workspace_diagnostics")
+end)
+vim.keymap.set("n", "<leader>xd", function()
+  require("trouble").toggle("document_diagnostics")
+end)
+vim.keymap.set("n", "<leader>xq", function()
+  require("trouble").toggle("quickfix")
+end)
+vim.keymap.set("n", "<leader>xl", function()
+  require("trouble").toggle("loclist")
+end)
 -- vim.keymap.set("n", "<Leader>ll", function()
 --   vim.diagnostic.setloclist({ open = false }) -- don't open and focus
 --   local window = vim.api.nvim_get_current_win()
@@ -173,3 +183,6 @@ keymap("n", "<expr>", 'h (v:count > 5 ? "m\'" . v:count : "" . \'j\'', opts)
 -- #5
 keymap("v", "J", ">+1<CR>gv=gv", opts)
 keymap("v", "K", "<-2<CR>gv=gv", opts)
+
+-- vim dadbod
+keymap("n", "<leader>db", ":DBUIToggle<CR>", opts)
