@@ -30,14 +30,14 @@ local app_colors = {
 }
 
 -- Play/pause icons
-local play_icon = "\u{f04b}" -- 
-local pause_icon = "\u{f04c}" -- 
-local prev_icon = "\u{f048}" -- 
-local next_icon = "\u{f051}" -- 
+local play_icon = "\u{f04b}" --
+local pause_icon = "\u{f04c}" --
+local prev_icon = "\u{f048}" --
+local next_icon = "\u{f051}" --
 
 local popup_width = 250
 
--- Media widget
+-- Media widget (anchor)
 local media = sbar.add("item", "widgets.media", {
 	position = "q",
 	drawing = false,
@@ -68,34 +68,12 @@ local media = sbar.add("item", "widgets.media", {
 		scroll_duration = 200,
 	},
 	popup = {
+		horizontal = false,
 		align = "center",
-		height = 40,
 	},
 })
 
--- Popup: Artwork
-local popup_artwork = sbar.add("item", {
-	position = "popup." .. media.name,
-	icon = {
-		drawing = true,
-		string = " ",
-		padding_left = 0,
-		padding_right = 0,
-	},
-	label = { drawing = false },
-	background = {
-		drawing = true,
-		image = {
-			string = "media.artwork",
-			scale = 0.6,
-			drawing = true,
-		},
-		color = 0x00000000,
-	},
-	width = popup_width,
-})
-
--- Popup: Title
+-- Popup: Title (row 1)
 local popup_title = sbar.add("item", {
 	position = "popup." .. media.name,
 	icon = { drawing = false },
@@ -107,14 +85,13 @@ local popup_title = sbar.add("item", {
 			size = 13.0,
 		},
 		color = colors.active.text,
-		max_chars = 28,
-		width = popup_width,
-		align = "center",
+		max_chars = 30,
 	},
 	width = popup_width,
+	align = "center",
 })
 
--- Popup: Artist
+-- Popup: Artist (row 2)
 local popup_artist = sbar.add("item", {
 	position = "popup." .. media.name,
 	icon = { drawing = false },
@@ -126,81 +103,48 @@ local popup_artist = sbar.add("item", {
 			size = 11.0,
 		},
 		color = colors.active.overlay1,
-		max_chars = 32,
-		width = popup_width,
-		align = "center",
+		max_chars = 35,
 	},
 	width = popup_width,
+	align = "center",
 })
 
--- Popup: Spacer/divider
-local popup_divider = sbar.add("item", {
+-- Popup: Cover art (row 3)
+local popup_cover = sbar.add("item", {
 	position = "popup." .. media.name,
 	icon = { drawing = false },
 	label = { drawing = false },
 	width = popup_width,
-	height = 10,
+	align = "center",
+	background = {
+		drawing = true,
+		height = 10,
+		corner_radius = 8,
+		image = {
+			padding_left = 61,
+			string = "/tmp/media_artwork.jpg",
+			scale = 1,
+			drawing = true,
+		},
+		color = 0x00000000,
+	},
 })
 
--- Popup: Controls - using a single item with icon and label for layout
-local popup_prev = sbar.add("item", {
+-- Popup: Controls (row 4) - fused prev | play | next in one item
+local popup_controls = sbar.add("item", {
 	position = "popup." .. media.name,
 	icon = {
-		string = prev_icon,
+		string = prev_icon .. "       " .. play_icon .. "       " .. next_icon,
 		font = {
 			family = fonts.font_icon.text,
 			style = fonts.font_icon.style_map["Regular"],
-			size = 20.0,
+			size = 18.0,
 		},
 		color = colors.active.text,
-		width = popup_width / 3,
-		align = "center",
 	},
 	label = { drawing = false },
-	width = popup_width / 3,
-})
-
-local popup_play = sbar.add("item", {
-	position = "popup." .. media.name,
-	icon = {
-		string = play_icon,
-		font = {
-			family = fonts.font_icon.text,
-			style = fonts.font_icon.style_map["Regular"],
-			size = 26.0,
-		},
-		color = colors.active.mauve,
-		width = popup_width / 3,
-		align = "center",
-	},
-	label = { drawing = false },
-	width = popup_width / 3,
-})
-
-local popup_next = sbar.add("item", {
-	position = "popup." .. media.name,
-	icon = {
-		string = next_icon,
-		font = {
-			family = fonts.font_icon.text,
-			style = fonts.font_icon.style_map["Regular"],
-			size = 20.0,
-		},
-		color = colors.active.text,
-		width = popup_width / 3,
-		align = "center",
-	},
-	label = { drawing = false },
-	width = popup_width / 3,
-})
-
--- Bracket the controls to put them on the same row
-sbar.add("bracket", "widgets.media.controls", {
-	popup_prev.name,
-	popup_play.name,
-	popup_next.name,
-}, {
-	background = { drawing = false },
+	width = popup_width,
+	align = "center",
 })
 
 -- Track current state
@@ -208,26 +152,23 @@ local current_state = {
 	playing = false,
 	title = "",
 	artist = "",
+	album = "",
 	bundle_id = "",
 }
 
 -- Helper to update popup content
 local function update_popup()
-	local app_color = app_colors[current_state.bundle_id] or app_colors["default"]
 	local play_pause_icon = current_state.playing and pause_icon or play_icon
 
 	popup_title:set({ label = { string = current_state.title } })
 	popup_artist:set({ label = { string = current_state.artist } })
-	popup_play:set({
-		icon = {
-			string = play_pause_icon,
-			color = app_color,
-		},
+	popup_controls:set({
+		icon = { string = prev_icon .. "       " .. play_pause_icon .. "       " .. next_icon },
 	})
 end
 
 -- Helper to set media display
-local function set_media(bundle_id, title, artist, is_playing)
+local function set_media(bundle_id, title, artist, album, is_playing)
 	local app_icon = app_icons[bundle_id] or app_icons["default"]
 	local app_color = app_colors[bundle_id] or app_colors["default"]
 
@@ -247,6 +188,7 @@ local function set_media(bundle_id, title, artist, is_playing)
 	current_state.playing = is_playing
 	current_state.title = title or ""
 	current_state.artist = artist or ""
+	current_state.album = album or ""
 	current_state.bundle_id = bundle_id or ""
 
 	media:set({
@@ -266,9 +208,9 @@ end
 
 -- Main update using media-control
 local function update_media()
-	-- Use jq to extract only the fields we need, avoiding massive artworkData
+	-- Extract artwork and save to file, then get other fields
 	sbar.exec(
-		"media-control get 2>/dev/null | jq -r '[.playing // false, .title // \"\", .artist // \"\", .bundleIdentifier // \"\"] | @tsv' 2>/dev/null",
+		[[media-control get 2>/dev/null | jq -r '.artworkData // empty' | base64 -d | magick jpg:- -resize 128x128 jpg:/tmp/media_artwork.jpg 2>/dev/null; media-control get 2>/dev/null | jq -r '[.playing // false, .title // "", .artist // "", .album // "", .bundleIdentifier // ""] | @tsv' 2>/dev/null]],
 		function(result)
 			result = result:gsub("^%s*(.-)%s*$", "%1") -- trim
 
@@ -278,12 +220,25 @@ local function update_media()
 				return
 			end
 
-			-- Parse tab-separated values: playing, title, artist, bundleIdentifier
-			local playing, title, artist, bundle_id = result:match("([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)")
+			-- Parse tab-separated values
+			local playing, title, artist, album, bundle_id =
+				result:match("([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)")
 
 			-- Show media if there's a title (regardless of playing state)
 			if title and title ~= "" then
-				set_media(bundle_id, title, artist, playing == "true")
+				set_media(bundle_id, title, artist, album, playing == "true")
+				-- Refresh the cover image
+				popup_cover:set({
+					background = {
+						height = 10,
+						corner_radius = 8,
+						image = {
+							padding_left = 61,
+							string = "/tmp/media_artwork.jpg",
+							scale = 1,
+						},
+					},
+				})
 			else
 				hide_media()
 			end
@@ -335,18 +290,24 @@ media:subscribe("mouse.scrolled", function(env)
 	sbar.delay(0.5, update_media)
 end)
 
--- Popup control buttons
-popup_prev:subscribe("mouse.clicked", function()
-	sbar.exec("media-control previous 2>/dev/null")
+-- Controls click handler - detect which part was clicked (prev | play | next)
+popup_controls:subscribe("mouse.clicked", function(env)
+	local x = tonumber(env.X) or 0
+	local width = popup_width
+	if x < width / 3 then
+		sbar.exec("media-control previous 2>/dev/null")
+	elseif x > width * 2 / 3 then
+		sbar.exec("media-control next 2>/dev/null")
+	else
+		sbar.exec("media-control toggle-play-pause 2>/dev/null")
+	end
 	sbar.delay(0.5, update_media)
 end)
 
-popup_play:subscribe("mouse.clicked", function()
-	sbar.exec("media-control toggle-play-pause 2>/dev/null")
-	sbar.delay(0.5, update_media)
-end)
-
-popup_next:subscribe("mouse.clicked", function()
-	sbar.exec("media-control next 2>/dev/null")
-	sbar.delay(0.5, update_media)
+-- Cover click opens the app
+popup_cover:subscribe("mouse.clicked", function()
+	if current_state.bundle_id and current_state.bundle_id ~= "" then
+		sbar.exec("open -b " .. current_state.bundle_id)
+	end
+	hide_popup()
 end)
