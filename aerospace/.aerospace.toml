@@ -62,7 +62,7 @@ outer.right = 4
 # Terminal & Applications
 # Sway: $mod+Return exec $term
 # -----------------------------------------------------------------------------
-alt-enter = 'exec-and-forget open -a kitty'
+cmd-enter = 'exec-and-forget open -na kitty'
 
 # -----------------------------------------------------------------------------
 # Window Management
@@ -134,8 +134,8 @@ alt-shift-0 = 'move-node-to-workspace 10'
 # Workspace Navigation
 # Sway: $mod+Tab workspace next, $mod+Shift+Tab workspace prev
 # -----------------------------------------------------------------------------
-alt-tab = 'workspace next'
-alt-shift-tab = 'workspace prev'
+alt-tab = 'workspace --wrap-around next'
+alt-shift-tab = 'workspace --wrap-around prev'
 
 # -----------------------------------------------------------------------------
 # Layout Management

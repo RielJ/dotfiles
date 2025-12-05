@@ -295,9 +295,9 @@ popup_controls:subscribe("mouse.clicked", function(env)
 	local x = tonumber(env.X) or 0
 	local width = popup_width
 	if x < width / 3 then
-		sbar.exec("media-control previous 2>/dev/null")
+		sbar.exec("media-control previous-track 2>/dev/null")
 	elseif x > width * 2 / 3 then
-		sbar.exec("media-control next 2>/dev/null")
+		sbar.exec("media-control next-track 2>/dev/null")
 	else
 		sbar.exec("media-control toggle-play-pause 2>/dev/null")
 	end

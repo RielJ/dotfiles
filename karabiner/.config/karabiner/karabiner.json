@@ -1071,9 +1071,28 @@
                         ]
                     },
                     {
-                        "description": "Disable Cmd+H (Hide Window)",
+                        "description": "Disable Cmd+Shift+Q (Log Out)",
                         "manipulators": [
                             {
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": { "mandatory": ["command", "shift"] }
+                                },
+                                "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable Cmd+H (Hide Window) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": { "mandatory": ["command"], "optional": ["any"] }
@@ -1092,6 +1111,19 @@
                                     "modifiers": { "mandatory": ["command"], "optional": ["any"] }
                                 },
                                 "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Option+Enter to open terminal (for AeroSpace)",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "return_or_enter",
+                                    "modifiers": { "mandatory": ["option"] }
+                                },
+                                "to": [{ "key_code": "return_or_enter", "modifiers": ["command"] }],
                                 "type": "basic"
                             }
                         ]
