@@ -42,14 +42,20 @@ on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
 # =============================================================================
 
 [gaps]
-inner.horizontal = 5
-inner.vertical = 5
-# Outer gaps increased to 4 to accommodate JankyBorders (2px width)
-# This prevents borders from being cut off on single windows
-outer.left = 4
-outer.bottom = 4
-outer.top = 4
-outer.right = 4
+# inner.horizontal = 5
+# inner.vertical = 5
+# # Outer gaps increased to 4 to accommodate JankyBorders (2px width)
+# # This prevents borders from being cut off on single windows
+# outer.left = 4
+# outer.bottom = 4
+# outer.top = 4
+# outer.right = 4
+inner.horizontal = 20
+inner.vertical =   20
+outer.left =       20
+outer.bottom =     20
+outer.top =        10
+outer.right =      20
 
 # =============================================================================
 # Main Mode Keybindings
@@ -69,6 +75,7 @@ cmd-enter = 'exec-and-forget open -na kitty'
 # Sway: $mod+Shift+q kill
 # -----------------------------------------------------------------------------
 alt-shift-q = 'close'
+cmd-shift-q = 'close'
 
 # -----------------------------------------------------------------------------
 # Focus Movement (Vim keys)
