@@ -3,3 +3,5 @@
 
 export PATH="$PATH:/home/rielj/.foundry/bin"
 . "$HOME/.cargo/env"
+
+

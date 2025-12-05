@@ -47,6 +47,9 @@ vim.lsp.config("lua_ls", {
   capabilities = updated_capabilities,
   settings = {
     Lua = {
+      hint = {
+        enable = true,
+      },
       workspace = { checkThirdParty = false },
       semantic = { enable = false },
       completion = { callSnippet = "Replace" },

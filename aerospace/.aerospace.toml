@@ -1,0 +1,312 @@
+# AeroSpace Configuration
+# Linux Sway-like keybindings for macOS
+# 
+# Modifier: Option (alt) = Super/Windows key equivalent
+# This matches the Sway config where $mod = Mod4 (Super key)
+#
+# Key mapping reference:
+#   macOS Control = Linux Control
+#   macOS Command = Linux Alt  
+#   macOS Option  = Linux Super (window manager modifier)
+
+# =============================================================================
+# General Settings
+# =============================================================================
+
+start-at-login = true
+
+# Normalisation settings (like Sway's default behavior)
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+# 'after-startup-command' is run after 'after-login-command'
+exec-on-workspace-change = [
+  "/bin/bash",
+  "-c",
+  "sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE",
+]
+
+# Accordion padding (for stacked/tabbed layouts)
+accordion-padding = 30
+
+# Default layout settings
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+# Mouse follows focus (like focus_follows_mouse in Sway, but inverse)
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+
+# =============================================================================
+# Gaps Configuration
+# Matching Sway: gaps inner 5, gaps outer 2
+# =============================================================================
+
+[gaps]
+inner.horizontal = 5
+inner.vertical = 5
+# Outer gaps increased to 4 to accommodate JankyBorders (2px width)
+# This prevents borders from being cut off on single windows
+outer.left = 4
+outer.bottom = 4
+outer.top = 4
+outer.right = 4
+
+# =============================================================================
+# Main Mode Keybindings
+# All keybindings use 'alt' (Option key) as the modifier
+# =============================================================================
+
+[mode.main.binding]
+
+# -----------------------------------------------------------------------------
+# Terminal & Applications
+# Sway: $mod+Return exec $term
+# -----------------------------------------------------------------------------
+alt-enter = 'exec-and-forget open -a kitty'
+
+# -----------------------------------------------------------------------------
+# Window Management
+# Sway: $mod+Shift+q kill
+# -----------------------------------------------------------------------------
+alt-shift-q = 'close'
+
+# -----------------------------------------------------------------------------
+# Focus Movement (Vim keys)
+# Sway: $mod+h/j/k/l focus left/down/up/right
+# -----------------------------------------------------------------------------
+alt-h = 'focus left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus right'
+
+# Arrow key alternatives
+alt-left = 'focus left'
+alt-down = 'focus down'
+alt-up = 'focus up'
+alt-right = 'focus right'
+
+# -----------------------------------------------------------------------------
+# Window Movement (Vim keys)
+# Sway: $mod+Shift+h/j/k/l move left/down/up/right
+# -----------------------------------------------------------------------------
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+
+# Arrow key alternatives
+alt-shift-left = 'move left'
+alt-shift-down = 'move down'
+alt-shift-up = 'move up'
+alt-shift-right = 'move right'
+
+# -----------------------------------------------------------------------------
+# Workspace Switching
+# Sway: $mod+1-0 workspace 1-10
+# -----------------------------------------------------------------------------
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8'
+alt-9 = 'workspace 9'
+alt-0 = 'workspace 10'
+
+# -----------------------------------------------------------------------------
+# Move Window to Workspace
+# Sway: $mod+Shift+1-0 move container to workspace 1-10
+# -----------------------------------------------------------------------------
+alt-shift-1 = 'move-node-to-workspace 1'
+alt-shift-2 = 'move-node-to-workspace 2'
+alt-shift-3 = 'move-node-to-workspace 3'
+alt-shift-4 = 'move-node-to-workspace 4'
+alt-shift-5 = 'move-node-to-workspace 5'
+alt-shift-6 = 'move-node-to-workspace 6'
+alt-shift-7 = 'move-node-to-workspace 7'
+alt-shift-8 = 'move-node-to-workspace 8'
+alt-shift-9 = 'move-node-to-workspace 9'
+alt-shift-0 = 'move-node-to-workspace 10'
+
+# -----------------------------------------------------------------------------
+# Workspace Navigation
+# Sway: $mod+Tab workspace next, $mod+Shift+Tab workspace prev
+# -----------------------------------------------------------------------------
+alt-tab = 'workspace next'
+alt-shift-tab = 'workspace prev'
+
+# -----------------------------------------------------------------------------
+# Layout Management
+# Sway: $mod+f fullscreen, $mod+Shift+space floating toggle
+# -----------------------------------------------------------------------------
+alt-f = 'fullscreen'
+alt-shift-space = 'layout floating tiling'
+
+# -----------------------------------------------------------------------------
+# Join Windows (replaces split command - works better with normalization)
+# Sway: $mod+b splith, $mod+v splitv
+# Note: With normalization enabled, use 'join-with' instead of 'split'
+# -----------------------------------------------------------------------------
+alt-b = 'join-with left'
+alt-v = 'join-with down'
+
+# -----------------------------------------------------------------------------
+# Layout Styles
+# Sway: $mod+s layout stacking, $mod+w layout tabbed, $mod+e layout toggle split
+# Note: AeroSpace uses 'accordion' for stacked/tabbed-like behavior
+# -----------------------------------------------------------------------------
+alt-s = 'layout accordion horizontal'
+alt-w = 'layout accordion vertical'
+alt-e = 'layout tiles horizontal vertical'
+
+# -----------------------------------------------------------------------------
+# Focus Back and Forth (alternative to focus parent)
+# Sway: $mod+a focus parent
+# Note: AeroSpace doesn't have 'focus parent', using focus-back-and-forth instead
+# -----------------------------------------------------------------------------
+alt-a = 'focus-back-and-forth'
+
+# -----------------------------------------------------------------------------
+# Resize Mode
+# Sway: $mod+r mode "resize"
+# -----------------------------------------------------------------------------
+alt-r = 'mode resize'
+
+# -----------------------------------------------------------------------------
+# Reload Configuration
+# Sway: $mod+Shift+c reload
+# -----------------------------------------------------------------------------
+alt-shift-c = 'reload-config'
+
+# -----------------------------------------------------------------------------
+# Balance window sizes
+# Note: AeroSpace doesn't have interactive gaps adjustment like Sway
+# Using balance-sizes instead for similar utility
+# -----------------------------------------------------------------------------
+alt-equal = 'balance-sizes'
+
+# -----------------------------------------------------------------------------
+# Additional Join Windows shortcuts
+# -----------------------------------------------------------------------------
+alt-shift-b = 'join-with right'
+alt-shift-v = 'join-with up'
+
+# =============================================================================
+# Resize Mode Keybindings
+# Sway: mode "resize" { h/j/k/l resize shrink/grow width/height 10px }
+# =============================================================================
+
+[mode.resize.binding]
+h = 'resize width -50'
+j = 'resize height +50'
+k = 'resize height -50'
+l = 'resize width +50'
+
+# Arrow key alternatives
+left = 'resize width -50'
+down = 'resize height +50'
+up = 'resize height -50'
+right = 'resize width +50'
+
+# Exit resize mode
+# Sway: Return mode "default", Escape mode "default", $mod+r mode "default"
+enter = 'mode main'
+esc = 'mode main'
+alt-r = 'mode main'
+
+# =============================================================================
+# Window Rules (Floating Windows)
+# Matching Sway's for_window rules
+# =============================================================================
+
+# System Preferences / Settings
+[[on-window-detected]]
+if.app-id = 'com.apple.systempreferences'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.SystemPreferences'
+run = 'layout floating'
+
+# Calculator
+[[on-window-detected]]
+if.app-id = 'com.apple.calculator'
+run = 'layout floating'
+
+# Preview (like eog in Sway)
+[[on-window-detected]]
+if.app-id = 'com.apple.Preview'
+run = 'layout floating'
+
+# Finder (like Nautilus/Thunar in Sway)
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = 'layout floating'
+
+# Activity Monitor (like system monitors)
+[[on-window-detected]]
+if.app-id = 'com.apple.ActivityMonitor'
+run = 'layout floating'
+
+# Archive Utility
+[[on-window-detected]]
+if.app-id = 'com.apple.archiveutility'
+run = 'layout floating'
+
+# Font Book
+[[on-window-detected]]
+if.app-id = 'com.apple.FontBook'
+run = 'layout floating'
+
+# Disk Utility
+[[on-window-detected]]
+if.app-id = 'com.apple.DiskUtility'
+run = 'layout floating'
+
+# Keychain Access
+[[on-window-detected]]
+if.app-id = 'com.apple.keychainaccess'
+run = 'layout floating'
+
+# App Store
+[[on-window-detected]]
+if.app-id = 'com.apple.AppStore'
+run = 'layout floating'
+
+# Raycast
+[[on-window-detected]]
+if.app-id = 'com.raycast.macos'
+run = 'layout floating'
+
+# 1Password and similar
+[[on-window-detected]]
+if.app-id = 'com.1password.1password'
+run = 'layout floating'
+
+# Zoom (like in Sway config)
+[[on-window-detected]]
+if.app-id = 'us.zoom.xos'
+run = 'layout floating'
+
+# VLC / Media players (like mpv in Sway)
+[[on-window-detected]]
+if.app-id = 'org.videolan.vlc'
+run = 'layout floating'
+
+# Picture in Picture windows
+[[on-window-detected]]
+if.window-title-regex-substring = 'Picture in Picture'
+run = 'layout floating'
+
+# JetBrains IDE popups (like in Sway config)
+[[on-window-detected]]
+if.app-name-regex-substring = 'JetBrains'
+if.window-title-regex-substring = 'Go to Line'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'JetBrains'
+if.window-title-regex-substring = 'Rename'
+run = 'layout floating'

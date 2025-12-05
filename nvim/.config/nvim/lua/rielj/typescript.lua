@@ -37,9 +37,28 @@ require("typescript-tools").setup({
     -- described below
     tsserver_format_options = {},
     tsserver_file_preferences = {
+      -- Inlay hints
+      -- interactiveInlayHints = true,
+      -- includeInlayParameterNameHints [string] Supported values: 'none', 'literals', 'all'. Default: 'none'
+      -- includeInlayParameterNameHintsWhenArgumentMatchesName [boolean] Default: false
+      -- includeInlayFunctionParameterTypeHints [boolean] Default: false
+      -- includeInlayVariableTypeHints [boolean] Default: false
+      -- includeInlayVariableTypeHintsWhenTypeMatchesName [boolean] When disabled then type hints on variables whose name is identical to the type name won't be shown. Since TypeScript 4.8.2. Default: false
+      -- includeInlayPropertyDeclarationTypeHints [boolean] Default: false
+      -- includeInlayFunctionLikeReturnTypeHints [boolean] Default: false
+      -- includeInlayEnumMemberValueHints [boolean] Default: false
+      includeInlayParameterNameHints = "all",
+      includeInlayParameterNameHintsWhenArgumentMatchesName = true,
+      includeInlayFunctionParameterTypeHints = true,
+      includeInlayVariableTypeHintsWhenTypeMatchesName = true,
+      includeInlayPropertyDeclarationTypeHints = true,
+      includeInlayFunctionLikeReturnTypeHints = false,
+      includeInlayEnumMemberValueHints = true,
+
       importModuleSpecifierEnding = "non-relative",
       importModuleSpecifierPreference = "non-relative",
       importModuleSpecifier = "non-relative",
+
       preferTypeOnlyAutoImports = true,
       autoImportFileExcludePatterns = {
         "@radix-ui",

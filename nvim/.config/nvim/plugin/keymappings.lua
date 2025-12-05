@@ -186,3 +186,17 @@ keymap("v", "K", "<-2<CR>gv=gv", opts)
 
 -- vim dadbod
 keymap("n", "<leader>db", ":DBUIToggle<CR>", opts)
+
+vim.keymap.set("n", "<leader>h", function()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+  vim.notify("LSP inlay hints " .. (vim.lsp.inlay_hint.is_enabled() and "enabled" or "disabled"))
+end)
+
+-- Copy file path with line number for OpenCode
+vim.keymap.set("n", "<leader>cs", function()
+  local filepath = vim.fn.expand("%:.")
+  local line = vim.fn.line(".")
+  local text = "@" .. filepath .. ":" .. line
+  vim.fn.setreg("+", text)
+  vim.notify("Copied: " .. text, vim.log.levels.INFO)
+end, { noremap = true, silent = true, desc = "Copy file path with line number for OpenCode" })
