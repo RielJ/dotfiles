@@ -70,6 +70,7 @@ local media = sbar.add("item", "widgets.media", {
 	popup = {
 		horizontal = false,
 		align = "center",
+		y_offset = 0, -- No gap between bar and popup
 	},
 })
 
@@ -130,8 +131,9 @@ local popup_cover = sbar.add("item", {
 	},
 })
 
--- Popup: Controls (row 4) - fused prev | play | next in one item
-local popup_controls = sbar.add("item", {
+-- Popup: Controls (row 4) - single item with all controls
+-- Left click = play/pause, Right click = next, Scroll = prev/next
+local popup_controls = sbar.add("item", "media.controls", {
 	position = "popup." .. media.name,
 	icon = {
 		string = prev_icon .. "       " .. play_icon .. "       " .. next_icon,
@@ -246,9 +248,27 @@ local function update_media()
 	)
 end
 
--- Popup toggle
+-- Popup toggle with delayed hide to handle gap between bar and popup
+local hide_timer = nil
+local popup_hovered = false
+
 local function hide_popup()
 	media:set({ popup = { drawing = false } })
+	popup_hovered = false
+end
+
+local function schedule_hide()
+	-- Reset hover state and schedule hide after short delay
+	popup_hovered = false
+	sbar.delay(0.15, function()
+		if not popup_hovered then
+			hide_popup()
+		end
+	end)
+end
+
+local function cancel_hide()
+	popup_hovered = true
 end
 
 local function toggle_popup()
@@ -276,8 +296,11 @@ media:subscribe("mouse.clicked", function(env)
 	end
 end)
 
--- Hide popup when mouse leaves
-media:subscribe("mouse.exited.global", hide_popup)
+-- Cancel hide when entering media item
+media:subscribe("mouse.entered", cancel_hide)
+
+-- Schedule hide when mouse leaves (with delay to allow reaching popup)
+media:subscribe("mouse.exited.global", schedule_hide)
 
 -- Scroll to skip tracks
 media:subscribe("mouse.scrolled", function(env)
@@ -290,20 +313,6 @@ media:subscribe("mouse.scrolled", function(env)
 	sbar.delay(0.5, update_media)
 end)
 
--- Controls click handler - detect which part was clicked (prev | play | next)
-popup_controls:subscribe("mouse.clicked", function(env)
-	local x = tonumber(env.X) or 0
-	local width = popup_width
-	if x < width / 3 then
-		sbar.exec("media-control previous-track 2>/dev/null")
-	elseif x > width * 2 / 3 then
-		sbar.exec("media-control next-track 2>/dev/null")
-	else
-		sbar.exec("media-control toggle-play-pause 2>/dev/null")
-	end
-	sbar.delay(0.5, update_media)
-end)
-
 -- Cover click opens the app
 popup_cover:subscribe("mouse.clicked", function()
 	if current_state.bundle_id and current_state.bundle_id ~= "" then
@@ -311,3 +320,36 @@ popup_cover:subscribe("mouse.clicked", function()
 	end
 	hide_popup()
 end)
+
+-- Controls click: left = play/pause, right = next
+popup_controls:subscribe("mouse.clicked", function(env)
+	if env.BUTTON == "right" then
+		sbar.exec("media-control next 2>/dev/null")
+	else
+		sbar.exec("media-control toggle-play-pause 2>/dev/null")
+	end
+	sbar.delay(0.5, update_media)
+end)
+
+-- Controls scroll: up/right = next, down/left = previous
+popup_controls:subscribe("mouse.scrolled", function(env)
+	local delta = env.SCROLL_DELTA
+	if delta and delta > 0 then
+		sbar.exec("media-control next 2>/dev/null")
+	elseif delta and delta < 0 then
+		sbar.exec("media-control previous 2>/dev/null")
+	end
+	sbar.delay(0.5, update_media)
+end)
+
+-- Cancel hide when hovering popup items
+popup_title:subscribe("mouse.entered", cancel_hide)
+popup_artist:subscribe("mouse.entered", cancel_hide)
+popup_cover:subscribe("mouse.entered", cancel_hide)
+popup_controls:subscribe("mouse.entered", cancel_hide)
+
+-- Schedule hide when leaving popup items
+popup_title:subscribe("mouse.exited", schedule_hide)
+popup_artist:subscribe("mouse.exited", schedule_hide)
+popup_cover:subscribe("mouse.exited", schedule_hide)
+popup_controls:subscribe("mouse.exited", schedule_hide)

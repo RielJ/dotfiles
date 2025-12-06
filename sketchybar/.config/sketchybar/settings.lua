@@ -1,5 +1,5 @@
 return {
-	height = 37,  -- Match MacBook notch height
+	height = 33, -- Match MacBook notch height
 	paddings = 4,
 	group_paddings = 3,
 	padding = {

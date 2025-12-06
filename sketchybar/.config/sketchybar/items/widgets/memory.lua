@@ -6,7 +6,7 @@ local fonts = require("fonts")
 -- Memory widget:  {used}GB
 local memory = sbar.add("item", "widgets.memory", {
 	position = "right",
-	update_freq = 15,
+	update_freq = 2,
 	icon = {
 		string = icons.memory,
 		font = {
