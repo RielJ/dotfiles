@@ -1,6 +1,5 @@
-local settings = require("settings")
-local sbar = require("sketchybar")
 local fonts = require("fonts")
+local sbar = require("sketchybar")
 
 local M = {}
 
@@ -18,6 +17,8 @@ M.colors = {
 	magenta = 0xffb39df3,
 	grey = 0xff7f8490,
 	transparent = 0x00000000,
+
+	dnd = 0xFF1d1b2d,
 
 	bar = {
 		bg = 0x80000000,

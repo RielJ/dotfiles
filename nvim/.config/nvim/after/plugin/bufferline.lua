@@ -8,13 +8,13 @@ local bufferline = require("bufferline")
 local diagnostics_indicator = function(_, _, diag)
   local icons = {
     Error = " ",
-    Warn  = " ",
-    Hint  = " ",
-    Info  = " ",
+    Warn = " ",
+    Hint = " ",
+    Info = " ",
   }
   -- local icons = LazyVim.config.icons.diagnostics
   local ret = (diag.error and icons.Error .. diag.error .. " " or "")
-      .. (diag.warning and icons.Warn .. diag.warning or "")
+    .. (diag.warning and icons.Warn .. diag.warning or "")
   return vim.trim(ret)
 end
 -- local function diagnostics_indicator(_, _, diagnostics)
@@ -76,8 +76,8 @@ bufferline.setup({
     --   M.buf_kill("bd", bufnr, false)
     -- end,
     right_mouse_command = "vert sbuffer %d", -- can be a string | function, see "Mouse actions"
-    left_mouse_command = "buffer %d",        -- can be a string | function, see "Mouse actions"
-    middle_mouse_command = nil,              -- can be a string | function, see "Mouse actions"
+    left_mouse_command = "buffer %d", -- can be a string | function, see "Mouse actions"
+    middle_mouse_command = nil, -- can be a string | function, see "Mouse actions"
     -- indicator = {
     --   icon = lvim.icons.ui.BoldLineLeft, -- this should be omitted if indicator style is not 'icon'
     --   style = "icon", -- can also be 'underline'|'none',
@@ -93,13 +93,13 @@ bufferline.setup({
     --- some limitations that will *NOT* be fixed.
     name_formatter = function(buf) -- buf contains a "name", "path" and "bufnr"
       -- remove extension from markdown files for example
-      if buf.name:match "%.md" then
+      if buf.name:match("%.md") then
         return vim.fn.fnamemodify(buf.name, ":t:r")
       end
     end,
     max_name_length = 18,
     max_prefix_length = 15, -- prefix used when a buffer is de-duplicated
-    truncate_names = true,  -- whether or not tab names should be truncated
+    truncate_names = true, -- whether or not tab names should be truncated
     tab_size = 18,
     diagnostics = "nvim_lsp",
     diagnostics_update_in_insert = false,
@@ -186,7 +186,7 @@ bufferline.setup({
     -- name_formatter = function (buf)
     --
     -- end,
-    buffer_close_icon = "",
+    buffer_close_icon = "",
     modified_icon = "",
     close_icon = "",
     -- truncate_names = true,

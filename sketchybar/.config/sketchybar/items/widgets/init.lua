@@ -1,7 +1,8 @@
 -- Widgets loaded in order (rightmost first for sketchybar right positioning)
 -- Layout: ... | media | volume | cpu | memory | wifi | battery | calendar (rightmost)
 
-require("items.widgets.calendar") -- Clock (rightmost)
+require("items.widgets.date_time") -- Date/Time (leftmost)
+-- require("items.widgets.calendar") -- Clock (rightmost)
 require("items.widgets.battery") -- Battery
 require("items.widgets.wifi") -- WiFi
 require("items.widgets.memory") -- Memory

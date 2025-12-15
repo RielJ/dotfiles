@@ -1,7 +1,7 @@
 require("Comment").setup({
   -- ignores empty lines
   ignore = "^$",
-  pre_hook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook(),
+  pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
   -- pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
   sticky = true,
   padding = true,
@@ -41,27 +41,7 @@ require("Comment").setup({
 local comment_ft = require("Comment.ft")
 comment_ft.set("lua", { "--%s", "--[[%s]]" })
 
-local icons = {
-  FIX = "律",
-  TODO = " ",
-  HACK = " ",
-  WARN = "裂",
-  PERF = "龍",
-  NOTE = " ",
-  ERROR = " ",
-  REFS = "",
-}
 require("todo-comments").setup({
-  keywords = {
-    FIX = { icon = icons.FIX },
-    TODO = { icon = icons.TODO, alt = { "WIP" } },
-    HACK = { icon = icons.HACK, color = "hack" },
-    WARN = { icon = icons.WARN },
-    PERF = { icon = icons.PERF },
-    NOTE = { icon = icons.NOTE, alt = { "INFO", "NB" } },
-    ERROR = { icon = icons.ERROR, color = "error", alt = { "ERR" } },
-    REFS = { icon = icons.REFS },
-  },
   highlight = { max_line_len = 120 },
   colors = {
     error = { "DiagnosticError" },

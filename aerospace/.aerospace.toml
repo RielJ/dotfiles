@@ -27,8 +27,7 @@ enable-normalization-opposite-orientation-for-nested-containers = true
 # ]
   
 exec-on-workspace-change = ['/bin/bash', '-c',
-  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE',
-  'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=0'
+  'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE; ~/.config/borders/bordersrc'
 ]
 
 # Accordion padding (for stacked/tabbed layouts)
@@ -146,8 +145,12 @@ alt-shift-0 = 'move-node-to-workspace 10'
 # Workspace Navigation
 # Sway: $mod+Tab workspace next, $mod+Shift+Tab workspace prev
 # -----------------------------------------------------------------------------
-alt-tab = 'workspace --wrap-around next'
-alt-shift-tab = 'workspace --wrap-around prev'
+# alt-tab = 'workspace --wrap-around next'
+# alt-shift-tab = 'workspace --wrap-around prev'
+# alt-tab = 'exec-and-forget aerospace list-workspaces --monitor focused --empty no | aerospace workspace prev'
+# alt-shift-tab = 'exec-and-forget aerospace list-workspaces --monitor focused --empty no | aerospace workspace next'
+alt-tab = 'exec-and-forget ~/.config/aerospace/scripts/next-nonempty-workspace.sh'
+alt-shift-tab = 'exec-and-forget ~/.config/aerospace/scripts/prev-nonempty-workspace.sh'
 
 # -----------------------------------------------------------------------------
 # Layout Management
@@ -322,3 +325,9 @@ run = 'layout floating'
 if.app-name-regex-substring = 'JetBrains'
 if.window-title-regex-substring = 'Rename'
 run = 'layout floating'
+
+# =============================================================================
+# Update borders on any window detection
+# =============================================================================
+[[on-window-detected]]
+run = 'exec-and-forget ~/.config/borders/bordersrc'

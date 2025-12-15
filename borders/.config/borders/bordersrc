@@ -3,17 +3,48 @@
 # JankyBorders Configuration
 # Matching Sway window borders style
 
-# Colors from your Sway config:
-# focused_bgcolor = $c2 (#d79921)
-# inactive_bgcolor = $c5 (#342f73)
-# unfocused_bgcolor = $c4 (#333142)
+# Colors
+ACTIVE_COLOR="0xffc6a0f6"
+INACTIVE_COLOR="0xff333142"
+TRANSPARENT="0x00000000"
 
-options=(
-  style=round
-  width=2.0
-  hidpi=on
-  active_color=0xffd79921    # Focused: yellow/gold (#d79921) from Sway
-  inactive_color=0xff333142  # Unfocused: dark purple (#333142) from Sway
-)
+# Function to update border visibility based on window count
+update_borders() {
+  local focused_ws
+  focused_ws=$(aerospace list-workspaces --focused 2>/dev/null)
+  
+  if [ -n "$focused_ws" ]; then
+    # Count windows on the focused workspace
+    local window_count
+    window_count=$(aerospace list-windows --workspace "$focused_ws" 2>/dev/null | wc -l | tr -d ' ')
+    
+    if [ "$window_count" -le 1 ]; then
+      # Single window or no windows - transparent borders
+      borders active_color="$TRANSPARENT" inactive_color="$TRANSPARENT"
+    else
+      # Multiple windows - show borders
+      borders active_color="$ACTIVE_COLOR" inactive_color="$INACTIVE_COLOR"
+    fi
+  fi
+}
 
-borders "${options[@]}"
+# Check if borders is already running
+if pgrep -x borders > /dev/null; then
+  # Just update the borders based on current window count
+  update_borders
+else
+  # Initial borders setup
+  options=(
+    style=round
+    width=2.0
+    hidpi=on
+    active_color="$ACTIVE_COLOR"
+    inactive_color="$INACTIVE_COLOR"
+  )
+
+  borders "${options[@]}"
+  
+  # Small delay to ensure borders is running, then update
+  sleep 0.1
+  update_borders
+fi

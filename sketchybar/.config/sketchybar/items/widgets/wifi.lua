@@ -70,18 +70,11 @@ local wifi_bracket = sbar.add("bracket", "widgets.wifi.bracket", {
 	wifi_up.name,
 	wifi_down.name,
 }, {
-	background = { color = colors.bg1 },
 	popup = { align = "center", height = 30 },
 })
 
 local ssid = sbar.add("item", {
 	position = "popup." .. wifi_bracket.name,
-	icon = {
-		font = {
-			style = fonts.font.style_map["Bold"],
-		},
-		string = icons.wifi.router,
-	},
 	width = popup_width,
 	align = "center",
 	label = {
@@ -203,9 +196,14 @@ local function toggle_details()
 		sbar.exec("ipconfig getifaddr en0", function(result)
 			ip:set({ label = result })
 		end)
-		sbar.exec("ipconfig getsummary en0 | awk -F ' SSID : '  '/ SSID : / {print $2}'", function(result)
-			ssid:set({ label = result })
-		end)
+		sbar.exec(
+			"networksetup -listpreferredwirelessnetworks en0 | sed -n '2p' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'",
+			function(result)
+				ssid:set({
+					label = result,
+				})
+			end
+		)
 		sbar.exec("networksetup -getinfo Wi-Fi | awk -F 'Subnet mask: ' '/^Subnet mask: / {print $2}'", function(result)
 			mask:set({ label = result })
 		end)

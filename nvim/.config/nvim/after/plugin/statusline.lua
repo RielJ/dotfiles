@@ -1,13 +1,12 @@
 local icons = {
   git = {
-    added    = " ",
+    added = " ",
     modified = " ",
-    removed  = " ",
-  }
+    removed = " ",
+  },
 }
 
-
-require("lualine").setup {
+require("lualine").setup({
   options = {
     theme = "auto",
     globalstatus = vim.o.laststatus == 3,
@@ -39,7 +38,10 @@ require("lualine").setup {
     },
     lualine_c = {
       {
-        "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 }
+        "filetype",
+        icon_only = true,
+        separator = "",
+        padding = { left = 1, right = 0 },
       },
       { "filename", file_status = true, path = 1 },
       {
@@ -54,19 +56,19 @@ require("lualine").setup {
 
     lualine_y = {},
     lualine_x = {
-      "filetype"
+      "filetype",
     },
     lualine_z = {
       {
         "progress",
         separator = " ",
-        padding = { left = 1, right = 0 }
+        padding = { left = 1, right = 0 },
       },
       { "location", padding = { left = 0, right = 1 } },
     },
   },
   extensions = { "nvim-tree", "lazy" },
-}
+})
 
 -- do not add trouble symbols if aerial is enabled
 -- if vim.g.trouble_lualine and LazyVim.has("trouble.nvim") then

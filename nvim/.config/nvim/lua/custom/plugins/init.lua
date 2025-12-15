@@ -8,6 +8,12 @@ return {
       end,
     },
 
+    {
+      "nvim-tree/nvim-web-devicons",
+      lazy = true,
+      opts = {},
+    },
+
     "godlygeek/tabular", -- Quickly align text by pattern
     -- TPOPE
     "tpope/vim-abolish", -- Cool things with words!

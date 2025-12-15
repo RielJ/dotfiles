@@ -132,7 +132,6 @@ require("nvim-tree").setup({
       profile = false,
       watcher = false,
     },
-
   },
   system_open = {
     cmd = nil,
@@ -193,8 +192,8 @@ require("nvim-tree").setup({
           staged = "S",
           unmerged = "",
           renamed = "➜",
-          deleted = "",
-          untracked = "U",
+          deleted = "󰆴",
+          untracked = "★",
           ignored = "◌",
         },
         folder = {
