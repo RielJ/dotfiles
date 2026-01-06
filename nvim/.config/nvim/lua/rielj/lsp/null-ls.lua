@@ -4,7 +4,8 @@ local custom_attach = require("rielj.lsp.handlers").common_on_attach
 local updated_capabilities = require("rielj.lsp.handlers").common_capabilities()
 
 M.setup = function()
-  require("null-ls").setup({
+  local null_ls = require("null-ls")
+  null_ls.setup({
     debug = false,
     on_attach = custom_attach,
     capabilities = updated_capabilities,

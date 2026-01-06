@@ -10,7 +10,7 @@ require("lualine").setup({
   options = {
     theme = "auto",
     globalstatus = vim.o.laststatus == 3,
-    disabled_filetypes = { statusline = { "dashboard", "alpha", "ministarter" } },
+    disabled_filetypes = { statusline = { "dashboard", "alpha", "ministarter", "lazy" } },
   },
   sections = {
     lualine_a = { "mode" },

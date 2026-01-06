@@ -45,8 +45,8 @@ local function update_space_display(space, workspace_id, is_selected, has_front_
 
 	-- Space number / highlight: white if selected, otherwise grey
 	local icon_color = is_selected and colors.mocha.rosewater or colors.grey
-	-- App icons string: white if that space contains the front app, otherwise grey
-	local label_color = has_front_app and colors.mocha.rosewater or colors.grey
+	-- App icons: only highlight if this is the selected workspace
+	local label_color = is_selected and colors.mocha.rosewater or colors.grey
 
 	space:set({
 		drawing = should_draw,
@@ -156,9 +156,12 @@ for i = 1, 10 do
 			highlight_color = colors.white,
 			font = "sketchybar-app-font:Regular:11.0",
 		},
-		padding_right = 0,
-		padding_left = 0,
-		click_script = "aerospace workspace " .. ws,
+		padding_right = 1,
+		padding_left = 1,
+		background = {
+			color = 0x00000000,
+			height = 26,
+		},
 	})
 	spaces[ws] = space
 
@@ -166,12 +169,15 @@ for i = 1, 10 do
 		background = {
 			color = colors.transparent,
 			border_color = colors.transparent,
-			height = 20,
-			border_width = 1,
-			padding_right = -5,
-			padding_left = 5,
+			height = 26,
+			border_width = 0,
 		},
 	})
+
+	-- Subscribe bracket to click events too
+	space_bracket:subscribe("mouse.clicked", function(env)
+		sbar.exec("aerospace workspace " .. ws)
+	end)
 
 	local space_padding = sbar.add("item", "space.padding." .. ws, {
 		width = 2,

@@ -4,6 +4,7 @@ local lazygit = Terminal:new {
   cmd = "lazygit",
   hidden = true,
   direction = "float",
+  env = { NVIM = vim.v.servername },
   float_opts = {
     -- The border key is *almost* the same as 'nvim_win_open'
     -- see :h nvim_win_open for details on borders however

@@ -22,6 +22,7 @@ keymap("n", "<C-l>", "<C-w>l", term_opts)
 -- )
 keymap("n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 keymap("n", "<leader>lA", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
+keymap("n", "<leader>lt", "<cmd>lua require('rielj.lsp.handlers').apply_all_tailwind_actions()<CR>", opts)
 keymap("n", "<leader>ld", "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", opts)
 keymap("n", "<leader>lw", "<cmd>Telescope diagnostics<cr>", opts)
 keymap("n", "<leader>lj", "<cmd>lua vim.diagnostic.goto_next({float=true})<CR>", opts)
@@ -200,3 +201,40 @@ vim.keymap.set("n", "<leader>cs", function()
   vim.fn.setreg("+", text)
   vim.notify("Copied: " .. text, vim.log.levels.INFO)
 end, { noremap = true, silent = true, desc = "Copy file path with line number for OpenCode" })
+
+-- Restart Neovim and reopen current buffer
+local restart_file_path = vim.fn.stdpath("cache") .. "/restart_session.txt"
+
+vim.keymap.set("n", "<leader>R", function()
+  local file = vim.fn.expand("%:p")
+  local line = vim.fn.line(".")
+  vim.cmd("silent! wa") -- save all files
+  -- Store file info in a temp file
+  local f = io.open(restart_file_path, "w")
+  if f then
+    f:write(file .. "\n" .. line)
+    f:close()
+  end
+  vim.cmd("restart")
+end, { noremap = true, silent = true, desc = "Restart Neovim and reopen buffer" })
+
+-- Reopen file after restart (checked on VimEnter)
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    local f = io.open(restart_file_path, "r")
+    if f then
+      local content = f:read("*all")
+      f:close()
+      os.remove(restart_file_path)
+      local lines = vim.split(content, "\n")
+      local file = lines[1]
+      local line = tonumber(lines[2]) or 1
+      if file and file ~= "" and vim.fn.filereadable(file) == 1 then
+        vim.schedule(function()
+          vim.cmd("edit " .. vim.fn.fnameescape(file))
+          vim.api.nvim_win_set_cursor(0, { line, 0 })
+        end)
+      end
+    end
+  end,
+})

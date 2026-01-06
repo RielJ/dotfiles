@@ -1115,19 +1115,6 @@
                             }
                         ]
                     },
-                    //{
-                    //    "description": "Disable Cmd+Tab (App Switcher) - AeroSpace handles window management",
-                    //    "manipulators": [
-                    //        {
-                    //            "from": {
-                    //                "key_code": "tab",
-                    //                "modifiers": { "mandatory": ["command"], "optional": ["shift"] }
-                    //            },
-                    //            "to": [{ "key_code": "vk_none" }],
-                    //            "type": "basic"
-                    //        }
-                    //    ]
-                    //},
                     {
                         "description": "Disable Cmd+Option+H/M (Hide others/Minimize all)",
                         "manipulators": [
@@ -1152,8 +1139,581 @@
                 ]
             },
             "name": "Linux Keybinding",
-            "selected": true,
+            "selected": false,
             "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        },
+        {
+            "complex_modifications": {
+                "rules": [
+                    {
+                        "description": "CapsLock as ESC, without delay",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "escape",
+                                        "lazy": false
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+C/V/X (Copy/Paste/Cut) - except kitty terminal",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                },
+                                "to": [{ "key_code": "c", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                },
+                                "to": [{ "key_code": "v", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "x",
+                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                },
+                                "to": [{ "key_code": "x", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+Shift+C/V in kitty terminal",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                },
+                                "to": [{ "key_code": "c", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                },
+                                "to": [{ "key_code": "v", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+A (Select All) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "a",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "a", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+Z/Shift+Z (Undo/Redo) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "z",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "z", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "z",
+                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                },
+                                "to": [{ "key_code": "z", "modifiers": ["command", "shift"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+S (Save) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "s",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "s", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+W (Close Tab) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "w",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "w", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+T/Shift+T (New Tab/Reopen Tab) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "t",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "t", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "t",
+                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                },
+                                "to": [{ "key_code": "t", "modifiers": ["command", "shift"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+N (New Window) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "n",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "n", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+F (Find) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "f",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "f", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+G/Shift+G (Find Next/Prev) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "g",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "g", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "g",
+                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                },
+                                "to": [{ "key_code": "g", "modifiers": ["command", "shift"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+Q (Quit App)",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "q", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+R (Reload) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "r",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "r", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+L (Address Bar) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "l",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "l", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+P (Print) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "p",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "p", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+O (Open) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "o",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "o", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+K (App-specific) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "k",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "k", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+B/I/U (Bold/Italic/Underline) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "b",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "b", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "i",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "i", "modifiers": ["command"] }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "u",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "u", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Linux-style Ctrl+/ (Comment in IDEs) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "slash",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [{ "key_code": "slash", "modifiers": ["command"] }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable Cmd+Shift+Q (Log Out)",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": { "mandatory": ["command", "shift"] }
+                                },
+                                "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable Cmd+H (Hide Window) - except kitty",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "h",
+                                    "modifiers": { "mandatory": ["command"], "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable Cmd+M (Minimize Window)",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "m",
+                                    "modifiers": { "mandatory": ["command"], "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable Cmd+Option+H/M (Hide others/Minimize all)",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "h",
+                                    "modifiers": { "mandatory": ["command", "option"], "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "m",
+                                    "modifiers": { "mandatory": ["command", "option"], "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "vk_none" }],
+                                "type": "basic"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "name": "CIDOO V65",
+            "selected": true,
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" },
+            "devices": [
+                {
+                    "identifiers": {
+                        "vendor_id": 7847,
+                        "product_id": 30583,
+                        "is_keyboard": true
+                    },
+                    "ignore": false,
+                    "simple_modifications": [
+                        {
+                            "from": { "key_code": "escape" },
+                            "to": [{ "key_code": "grave_accent_and_tilde" }]
+                        },
+                        {
+                            "from": { "key_code": "left_option" },
+                            "to": [{ "key_code": "left_command" }]
+                        },
+                        {
+                            "from": { "key_code": "left_command" },
+                            "to": [{ "key_code": "left_option" }]
+                        },
+                        {
+                            "from": { "key_code": "right_option" },
+                            "to": [{ "key_code": "right_command" }]
+                        },
+                        {
+                            "from": { "key_code": "right_command" },
+                            "to": [{ "key_code": "right_option" }]
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

@@ -213,4 +213,58 @@ function M.get_common_opts()
   }
 end
 
+-- Apply all Tailwind CSS "Replace with" actions on current line
+function M.apply_all_tailwind_actions()
+  local bufnr = vim.api.nvim_get_current_buf()
+
+  -- Use the same method as vim.lsp.buf.code_action to get params
+  local context = {
+    diagnostics = vim.lsp.diagnostic.get_line_diagnostics(bufnr),
+    triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked,
+  }
+
+  -- Request from all clients, then filter tailwindcss results
+  local params = vim.lsp.util.make_range_params(0, "utf-16")
+  params.context = context
+
+  vim.lsp.buf_request_all(bufnr, "textDocument/codeAction", params, function(results)
+    local replace_actions = {}
+    local tailwind_client = nil
+
+    for client_id, result in pairs(results) do
+      local client = vim.lsp.get_client_by_id(client_id)
+      if client and client.name == "tailwindcss" and result.result then
+        tailwind_client = client
+        for _, action in ipairs(result.result) do
+          if action.title and action.title:match("^Replace with") then
+            table.insert(replace_actions, action)
+          end
+        end
+      end
+    end
+
+    if not tailwind_client then
+      vim.notify("Tailwind CSS LSP not attached", vim.log.levels.WARN)
+      return
+    end
+
+    if #replace_actions == 0 then
+      vim.notify("No Tailwind CSS 'Replace with' actions available", vim.log.levels.INFO)
+      return
+    end
+
+    vim.notify(string.format("Applying %d Tailwind CSS actions...", #replace_actions), vim.log.levels.INFO)
+
+    for _, action in ipairs(replace_actions) do
+      if action.edit then
+        vim.lsp.util.apply_workspace_edit(action.edit, tailwind_client.offset_encoding)
+      end
+      if action.command then
+        local command = type(action.command) == "table" and action.command or action
+        tailwind_client.request("workspace/executeCommand", command, nil, bufnr)
+      end
+    end
+  end)
+end
+
 return M

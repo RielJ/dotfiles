@@ -121,4 +121,25 @@ alias cd="z"
 # git
 alias gcdp="git checkout dev && git pull"
 
+# Kill all neovim instances gracefully
 alias kill_nvims="pkill -SIGTERM nvim"
+# Force kill if graceful doesn't work
+alias kill_nvims!="pkill -SIGKILL nvim"
+
+# Kill all kitty instances
+alias kill_kitty="pkill -9 kitty"
+
+# Kill common development ports
+alias kdp='for port in 42069 3000 3001 3002 4000 5000 5173 5174 8000 8080 8787 8788 9000; do lsof -ti :$port 2>/dev/null | xargs kill -9 2>/dev/null && echo "Killed port $port"; done'
+
+# Kill specific port(s) - usage: kp 3000 or kp 3000 8080
+kp() {
+  for port in "$@"; do
+    local pids=$(lsof -ti :$port 2>/dev/null)
+    if [ -n "$pids" ]; then
+      echo "$pids" | xargs kill -9 2>/dev/null && echo "Killed port $port"
+    else
+      echo "Nothing on port $port"
+    fi
+  done
+}

@@ -48,12 +48,12 @@ zmodload zsh/complist
 compinit
 
 
-# Local plugins
-zinit snippet "$HOME/.config/zsh/zsh-aliases.zsh"
-zinit snippet "$HOME/.config/zsh/zsh-exports.zsh"
-zinit snippet "$HOME/.config/zsh/zsh-vim-mode.zsh"
-zinit snippet "$HOME/.config/zsh/zsh-binds.zsh"
-zinit snippet "$HOME/.config/zsh/zsh-prompt.zsh"
+# Local plugins (sourced directly to avoid zinit caching)
+source "$HOME/.config/zsh/zsh-exports.zsh"
+source "$HOME/.config/zsh/zsh-aliases.zsh"
+source "$HOME/.config/zsh/zsh-vim-mode.zsh"
+source "$HOME/.config/zsh/zsh-binds.zsh"
+source "$HOME/.config/zsh/zsh-prompt.zsh"
 
 zinit cdreplay -q
 

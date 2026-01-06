@@ -18,6 +18,19 @@ return {
           vim.o.laststatus = 0
         end
       end,
+      config = function()
+        -- Patch lualine's git_branch to handle nil package.loaded (happens during Lazy sync)
+        local ok, git_branch = pcall(require, "lualine.components.branch.git_branch")
+        if ok and git_branch then
+          local original_find_git_dir = git_branch.find_git_dir
+          git_branch.find_git_dir = function(dir_path)
+            if not package.loaded then
+              return nil
+            end
+            return original_find_git_dir(dir_path)
+          end
+        end
+      end,
       dependencies = { "nvim-tree/nvim-web-devicons", opt = true },
     }
   },

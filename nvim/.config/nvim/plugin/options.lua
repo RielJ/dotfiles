@@ -7,7 +7,10 @@ vim.opt.cmdheight = 2 -- more space in the neovim command line for displaying me
 vim.opt.colorcolumn = "99999" -- fixes indentline for now
 vim.opt.completeopt = { "menuone", "noselect", "menu" }
 vim.opt.conceallevel = 0 -- so that `` is visible in markdown files
-vim.opt.fileencoding = "utf-8" -- the encoding written to a file
+-- Set fileencoding only if buffer is modifiable (avoids errors during Lazy UI)
+if vim.bo.modifiable then
+  vim.opt.fileencoding = "utf-8" -- the encoding written to a file
+end
 vim.opt.foldmethod = "manual" -- folding set to "expr" for treesitter based folding
 vim.opt.foldexpr = "" -- set to "nvim_treesitter#foldexpr()" for treesitter based folding
 vim.opt.guifont = "monospace:h17" -- the font used in graphical neovim applications

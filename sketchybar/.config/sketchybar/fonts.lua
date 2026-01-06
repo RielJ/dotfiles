@@ -6,7 +6,7 @@ return {
 		-- Text font (labels, etc.)
 		text = "Hack Nerd Font Mono",
 		numbers = "Hack Nerd Font Mono",
-		size = 13.0,
+		size = 12.0,
 		style_map = {
 			["Regular"] = "Bold",
 			["Semibold"] = "Bold",
@@ -19,7 +19,7 @@ return {
 		-- Icon font - use non-Mono variant for better icon rendering
 		text = "Hack Nerd Font",
 		numbers = "Hack Nerd Font",
-		size = 16.0,
+		size = 13.0,
 		style_map = {
 			["Regular"] = "Regular",
 			["Semibold"] = "Regular",

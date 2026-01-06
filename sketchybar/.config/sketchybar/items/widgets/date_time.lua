@@ -31,7 +31,7 @@ local date = sbar.add("item", "date", {
 		color = colors.white,
 		font = {
 			family = fonts.font.text,
-			style = "Medium",
+			style = "Bold",
 			size = 8,
 		},
 	},
