@@ -61,5 +61,7 @@ require("conform").setup({
     solidity = { "forge_fmt" },
 
     go = { "gofumpt", "goimports_reviser", "golines" },
+
+    python = { "ruff_fix", "ruff_format", "ruff_organize_imports" },
   },
 })

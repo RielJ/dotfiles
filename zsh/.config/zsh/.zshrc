@@ -82,6 +82,8 @@ eval "$(zoxide init zsh)"
 # Bind ctrl-r but not up arrow
 eval "$(atuin init zsh --disable-up-arrow)"
 
+eval "$(direnv hook zsh)"
+
 pfetch
 
 ### End of Zinit's installer chunk

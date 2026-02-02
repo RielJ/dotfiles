@@ -30,4 +30,5 @@ return {
   -- vimls = true,
   lua_ls = true,
   -- tsgo = require("rielj.lsp.servers.tsgo"),
+  ty = require("rielj.lsp.servers.ty"),
 }

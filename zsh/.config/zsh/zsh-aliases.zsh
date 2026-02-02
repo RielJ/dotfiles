@@ -143,3 +143,5 @@ kp() {
     fi
   done
 }
+
+alias py='python'

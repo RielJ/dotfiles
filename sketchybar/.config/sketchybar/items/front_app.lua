@@ -25,7 +25,7 @@ local front_app = sbar.add("item", "front_app", {
 			size = 13.0,
 		},
 		color = colors.active.text,
-		padding_left = 8,
+		padding_left = 0,
 		padding_right = 8,
 	},
 	updates = true,
@@ -75,7 +75,7 @@ local app_icons = {
 front_app:subscribe("front_app_switched", function(env)
 	local app_name = env.INFO or ""
 	local app_icon = app_icons[app_name] or app_icons["default"]
-	front_app:set({ label = { string = app_name }, icon = { string = app_icon } })
+	front_app:set({ label = { string = app_name } })
 end)
 
 front_app:subscribe("mouse.clicked", function()
