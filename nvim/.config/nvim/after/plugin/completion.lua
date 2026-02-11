@@ -134,12 +134,7 @@ cmp.setup({
       vim_item.menu = source_names[entry.source.name]
       vim_item.dup = duplicates[entry.source.name] or duplicates_default
 
-      local formatted = require("nvim-highlight-colors").format(entry, vim_item)
-      -- Preserve our kind icon if nvim-highlight-colors didn't add a color swatch
-      if formatted.kind_hl_group == nil then
-        formatted.kind = vim_item.kind
-      end
-      return formatted
+      return vim_item
     end,
   },
   snippet = {

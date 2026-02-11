@@ -27,8 +27,12 @@ require("tokyonight").setup({
 -- Ensure termguicolors is enabled if not already
 vim.opt.termguicolors = true
 
-require("nvim-highlight-colors").setup({
-  enable_tailwind = true,
+require("colorizer").setup({
+  user_default_options = {
+    tailwind = true,
+    oklch_fn = true,
+    css_fn = true,
+  },
 })
 
 require("rielj.theme").tokyonight()
