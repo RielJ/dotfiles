@@ -4,26 +4,36 @@ local lazygit = Terminal:new {
   cmd = "lazygit",
   hidden = true,
   direction = "float",
+  close_on_exit = true,
   env = { NVIM = vim.v.servername },
   float_opts = {
-    -- The border key is *almost* the same as 'nvim_win_open'
-    -- see :h nvim_win_open for details on borders however
-    -- the 'curved' border is a custom border type
-    -- not natively supported but implemented in this plugin.
-    -- border = 'single' | 'double' | 'shadow' | 'curved' | ... other options supported by win open
     border = "curved",
-    -- width = 100000,
-    -- height = 100000,
     winblend = 0,
     highlights = {
       border = "Normal",
       background = "Normal",
     },
   },
-  on_open = function(_)
-    vim.cmd "startinsert!"
+  on_open = function(term)
+    vim.cmd("startinsert!")
+    -- Auto-close lazygit when a file is opened from it (via NVIM remote protocol)
+    vim.api.nvim_create_autocmd("BufEnter", {
+      group = vim.api.nvim_create_augroup("LazyGitClose", { clear = true }),
+      callback = function(ev)
+        if vim.bo[ev.buf].buftype == "" and term:is_open() then
+          vim.schedule(function()
+            term:close()
+            vim.cmd("stopinsert")
+          end)
+          return true -- removes the autocmd
+        end
+      end,
+    })
   end,
-  on_close = function(_) end,
+  on_close = function(_)
+    pcall(vim.api.nvim_del_augroup_by_name, "LazyGitClose")
+    vim.cmd("stopinsert")
+  end,
   count = 99,
 }
 
