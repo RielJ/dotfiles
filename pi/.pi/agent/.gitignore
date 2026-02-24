@@ -1,0 +1,15 @@
+# Secrets - OAuth tokens from /login
+auth.json
+
+# Sessions - conversation history (large, personal)
+sessions/
+
+# Installed pi packages
+git/
+npm/
+
+# Dependencies
+node_modules/
+
+# OS
+.DS_Store
