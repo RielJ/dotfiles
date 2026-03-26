@@ -6,9 +6,8 @@ local fonts = require("fonts")
 
 -- Execute the event provider binary which provides the event "network_update"
 -- for the network interface "en0", which is fired every 2.0 seconds.
-sbar.exec(
-	"killall network_load >/dev/null; $CONFIG_DIR/helpers/event_providers/network_load/bin/network_load en0 network_update 2.0"
-)
+local network_provider_cmd = "killall network_load >/dev/null; $CONFIG_DIR/helpers/event_providers/network_load/bin/network_load en0 network_update 2.0"
+sbar.exec(network_provider_cmd)
 
 local popup_width = 250
 
@@ -168,6 +167,10 @@ wifi_up:subscribe("network_update", function(env)
 			color = down_color,
 		},
 	})
+end)
+
+wifi:subscribe("system_woke", function()
+	sbar.exec(network_provider_cmd)
 end)
 
 wifi:subscribe({ "wifi_change", "system_woke" }, function()

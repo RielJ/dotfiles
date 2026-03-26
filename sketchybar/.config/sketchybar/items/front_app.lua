@@ -78,6 +78,14 @@ front_app:subscribe("front_app_switched", function(env)
 	front_app:set({ label = { string = app_name } })
 end)
 
+front_app:subscribe("system_woke", function()
+	sbar.exec("aerospace list-windows --focused --format '%{app-name}' 2>/dev/null | head -1", function(app_name)
+		app_name = app_name:match("^%s*(.-)%s*$") or ""
+		local app_icon = app_icons[app_name] or app_icons["default"]
+		front_app:set({ label = { string = app_name } })
+	end)
+end)
+
 front_app:subscribe("mouse.clicked", function()
 	sbar.exec("aerospace workspace next")
 end)
