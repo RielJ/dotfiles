@@ -31,4 +31,5 @@ return {
   lua_ls = true,
   -- tsgo = require("rielj.lsp.servers.tsgo"),
   ty = require("rielj.lsp.servers.ty"),
+  -- basedpyright = require("rielj.lsp.servers.basedpyright"),
 }
