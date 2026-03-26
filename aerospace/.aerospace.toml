@@ -190,6 +190,12 @@ alt-a = 'focus-back-and-forth'
 alt-r = 'mode resize'
 
 # -----------------------------------------------------------------------------
+# Wallpaper Picker — handled by Karabiner (Alt+Shift+Period)
+# Karabiner rule: "Alt+Shift+Period → Open wallpaper picker"
+# Command: wallpaperd pick
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Reload Configuration
 # Sway: $mod+Shift+c reload
 # -----------------------------------------------------------------------------
@@ -324,6 +330,16 @@ run = 'layout floating'
 [[on-window-detected]]
 if.app-name-regex-substring = 'JetBrains'
 if.window-title-regex-substring = 'Rename'
+run = 'layout floating'
+
+# Wallpaper Picker (floating thumbnail strip)
+[[on-window-detected]]
+if.app-id = 'com.rielj.wallpaperd-picker'
+run = 'layout floating'
+
+# Wallpaper Settings GUI
+[[on-window-detected]]
+if.app-id = 'com.rielj.wallpaperd-settings'
 run = 'layout floating'
 
 # =============================================================================

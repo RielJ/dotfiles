@@ -1,5 +1,7 @@
 {
-    "global": { "show_in_menu_bar": false },
+    "global": {
+        "show_in_menu_bar": false
+    },
     "profiles": [
         {
             "complex_modifications": {
@@ -9,7 +11,9 @@
                         "enabled": false,
                         "manipulators": [
                             {
-                                "from": { "key_code": "escape" },
+                                "from": {
+                                    "key_code": "escape"
+                                },
                                 "to": [
                                     {
                                         "key_code": "grave_accent_and_tilde",
@@ -27,25 +31,49 @@
                             {
                                 "from": {
                                     "key_code": "left_command",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "left_option" }],
+                                "to": [
+                                    {
+                                        "key_code": "left_option"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "from": {
                                     "key_code": "left_option",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "left_command" }],
+                                "to": [
+                                    {
+                                        "key_code": "left_command"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "from": {
                                     "key_code": "right_option",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "right_command" }],
+                                "to": [
+                                    {
+                                        "key_code": "right_command"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -57,12 +85,18 @@
                             {
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "t",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -70,12 +104,18 @@
                             {
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "t",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -83,12 +123,20 @@
                             {
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["right_control", "left_shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control",
+                                            "left_shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "t",
-                                        "modifiers": ["left_command", "left_shift"]
+                                        "modifiers": [
+                                            "left_command",
+                                            "left_shift"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -96,12 +144,20 @@
                             {
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["left_control", "left_shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control",
+                                            "left_shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "t",
-                                        "modifiers": ["left_command", "left_shift"]
+                                        "modifiers": [
+                                            "left_command",
+                                            "left_shift"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -109,12 +165,18 @@
                             {
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "w",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -122,12 +184,18 @@
                             {
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "w",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -135,12 +203,18 @@
                             {
                                 "from": {
                                     "key_code": "l",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "l",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -148,12 +222,18 @@
                             {
                                 "from": {
                                     "key_code": "l",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "l",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -161,12 +241,18 @@
                             {
                                 "from": {
                                     "key_code": "r",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "r",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -174,12 +260,18 @@
                             {
                                 "from": {
                                     "key_code": "r",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "r",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -187,12 +279,18 @@
                             {
                                 "from": {
                                     "key_code": "1",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "1",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -200,12 +298,18 @@
                             {
                                 "from": {
                                     "key_code": "2",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "2",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -213,12 +317,18 @@
                             {
                                 "from": {
                                     "key_code": "3",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "3",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -226,12 +336,18 @@
                             {
                                 "from": {
                                     "key_code": "4",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "4",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -239,12 +355,18 @@
                             {
                                 "from": {
                                     "key_code": "5",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "5",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -252,12 +374,18 @@
                             {
                                 "from": {
                                     "key_code": "6",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "6",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -265,12 +393,18 @@
                             {
                                 "from": {
                                     "key_code": "7",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "7",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -278,12 +412,18 @@
                             {
                                 "from": {
                                     "key_code": "8",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "8",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -291,12 +431,18 @@
                             {
                                 "from": {
                                     "key_code": "9",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "9",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -304,12 +450,18 @@
                             {
                                 "from": {
                                     "key_code": "0",
-                                    "modifiers": { "mandatory": ["left_option"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "0",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -333,12 +485,18 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "c",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -356,12 +514,18 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "c",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -379,12 +543,19 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["right_control", "left_shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control",
+                                            "left_shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "c",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -402,12 +573,19 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["left_control", "left_shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control",
+                                            "left_shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "c",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -425,12 +603,18 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "v",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -448,12 +632,18 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "v",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -471,12 +661,19 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["right_control", "left_shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control",
+                                            "left_shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "v",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -494,12 +691,19 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["left_control", "left_shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control",
+                                            "left_shift"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "v",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -507,12 +711,18 @@
                             {
                                 "from": {
                                     "key_code": "x",
-                                    "modifiers": { "mandatory": ["left_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "x",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -520,12 +730,18 @@
                             {
                                 "from": {
                                     "key_code": "x",
-                                    "modifiers": { "mandatory": ["right_control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "right_control"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
                                         "key_code": "x",
-                                        "modifiers": ["left_command"]
+                                        "modifiers": [
+                                            "left_command"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -539,14 +755,20 @@
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": {
-                                        "mandatory": ["command"],
-                                        "optional": ["any"]
+                                        "mandatory": [
+                                            "command"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
                                     }
                                 },
                                 "to": [
                                     {
                                         "key_code": "h",
-                                        "modifiers": ["option"]
+                                        "modifiers": [
+                                            "option"
+                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -559,7 +781,11 @@
                             {
                                 "from": {
                                     "key_code": "caps_lock",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
@@ -578,8 +804,13 @@
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": {
-                                        "mandatory": ["command", "option"],
-                                        "optional": ["any"]
+                                        "mandatory": [
+                                            "command",
+                                            "option"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
                                     }
                                 },
                                 "type": "basic"
@@ -588,18 +819,47 @@
                                 "from": {
                                     "key_code": "m",
                                     "modifiers": {
-                                        "mandatory": ["command", "option"],
-                                        "optional": ["any"]
+                                        "mandatory": [
+                                            "command",
+                                            "option"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
                                     }
                                 },
                                 "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Alt+Shift+Period \u2192 Open wallpaper picker",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "period",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option",
+                                            "left_shift"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "/Users/rielj/.local/bin/wallpaperd pick"
+                                    }
+                                ]
                             }
                         ]
                     }
                 ]
             },
             "name": "Default profile",
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+            "virtual_hid_keyboard": {
+                "keyboard_type_v2": "ansi"
+            }
         },
         {
             "complex_modifications": {
@@ -610,7 +870,11 @@
                             {
                                 "from": {
                                     "key_code": "caps_lock",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
@@ -628,43 +892,91 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ],
+                                        "optional": [
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "c", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ],
+                                        "optional": [
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "v", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "v",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "x",
-                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ],
+                                        "optional": [
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "x", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "x",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -675,29 +987,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_if"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "c", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_if"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "v", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "v",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -708,15 +1048,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "a",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "a", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "a",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -727,29 +1080,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "z",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "z", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "z",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "z",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "z", "modifiers": ["command", "shift"] }],
+                                "to": [
+                                    {
+                                        "key_code": "z",
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -760,15 +1141,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "s",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "s", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "s",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -779,15 +1173,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "w", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "w",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -798,29 +1205,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "t", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "t",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "t", "modifiers": ["command", "shift"] }],
+                                "to": [
+                                    {
+                                        "key_code": "t",
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -831,15 +1266,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "n",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "n", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "n",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -850,15 +1298,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "f",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "f", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "f",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -869,29 +1330,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "g",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "g", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "g",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "g",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "g", "modifiers": ["command", "shift"] }],
+                                "to": [
+                                    {
+                                        "key_code": "g",
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -902,9 +1391,20 @@
                             {
                                 "from": {
                                     "key_code": "q",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "q", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "q",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -915,15 +1415,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "r",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "r", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "r",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -934,15 +1447,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "l",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "l", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "l",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -953,15 +1479,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "p",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "p", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "p",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -972,15 +1511,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "o",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "o", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "o",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -991,15 +1543,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "k",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "k", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "k",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1010,43 +1575,82 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "b",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "b", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "b",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "i",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "i", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "i",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "u",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "u", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "u",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1057,15 +1661,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "slash",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "slash", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "slash",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1076,9 +1693,18 @@
                             {
                                 "from": {
                                     "key_code": "q",
-                                    "modifiers": { "mandatory": ["command", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1089,15 +1715,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "h",
-                                    "modifiers": { "mandatory": ["command"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1108,9 +1747,20 @@
                             {
                                 "from": {
                                     "key_code": "m",
-                                    "modifiers": { "mandatory": ["command"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1121,18 +1771,64 @@
                             {
                                 "from": {
                                     "key_code": "h",
-                                    "modifiers": { "mandatory": ["command", "option"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "option"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "from": {
                                     "key_code": "m",
-                                    "modifiers": { "mandatory": ["command", "option"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "option"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Alt+Shift+Period \u2192 Open wallpaper picker",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "period",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option",
+                                            "left_shift"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "/Users/rielj/.local/bin/wallpaperd pick"
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -1140,7 +1836,9 @@
             },
             "name": "Linux Keybinding",
             "selected": false,
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+            "virtual_hid_keyboard": {
+                "keyboard_type_v2": "ansi"
+            }
         },
         {
             "complex_modifications": {
@@ -1151,7 +1849,11 @@
                             {
                                 "from": {
                                     "key_code": "caps_lock",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
@@ -1169,43 +1871,91 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ],
+                                        "optional": [
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "c", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ],
+                                        "optional": [
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "v", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "v",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "x",
-                                    "modifiers": { "mandatory": ["control"], "optional": ["shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ],
+                                        "optional": [
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "x", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "x",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1216,29 +1966,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_if"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "c", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_if"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "v", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "v",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1249,15 +2027,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "a",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "a", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "a",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1268,29 +2059,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "z",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "z", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "z",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "z",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "z", "modifiers": ["command", "shift"] }],
+                                "to": [
+                                    {
+                                        "key_code": "z",
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1301,15 +2120,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "s",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "s", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "s",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1320,15 +2152,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "w", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "w",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1339,29 +2184,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "t", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "t",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "t",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "t", "modifiers": ["command", "shift"] }],
+                                "to": [
+                                    {
+                                        "key_code": "t",
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1372,15 +2245,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "n",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "n", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "n",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1391,15 +2277,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "f",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "f", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "f",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1410,29 +2309,57 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "g",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "g", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "g",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "g",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "g", "modifiers": ["command", "shift"] }],
+                                "to": [
+                                    {
+                                        "key_code": "g",
+                                        "modifiers": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1443,9 +2370,20 @@
                             {
                                 "from": {
                                     "key_code": "q",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "q", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "q",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1456,15 +2394,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "r",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "r", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "r",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1475,15 +2426,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "l",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "l", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "l",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1494,15 +2458,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "p",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "p", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "p",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1513,15 +2490,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "o",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "o", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "o",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1532,15 +2522,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "k",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "k", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "k",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1551,43 +2554,82 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "b",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "b", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "b",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "i",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "i", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "i",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "u",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "u", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "u",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1598,15 +2640,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "slash",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "control"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "slash", "modifiers": ["command"] }],
+                                "to": [
+                                    {
+                                        "key_code": "slash",
+                                        "modifiers": [
+                                            "command"
+                                        ]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1617,9 +2672,18 @@
                             {
                                 "from": {
                                     "key_code": "q",
-                                    "modifiers": { "mandatory": ["command", "shift"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "shift"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1630,15 +2694,28 @@
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": ["^net\\.kovidgoyal\\.kitty$"],
+                                        "bundle_identifiers": [
+                                            "^net\\.kovidgoyal\\.kitty$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
                                 "from": {
                                     "key_code": "h",
-                                    "modifiers": { "mandatory": ["command"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1649,9 +2726,20 @@
                             {
                                 "from": {
                                     "key_code": "m",
-                                    "modifiers": { "mandatory": ["command"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1662,18 +2750,64 @@
                             {
                                 "from": {
                                     "key_code": "h",
-                                    "modifiers": { "mandatory": ["command", "option"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "option"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "from": {
                                     "key_code": "m",
-                                    "modifiers": { "mandatory": ["command", "option"], "optional": ["any"] }
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command",
+                                            "option"
+                                        ],
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "vk_none" }],
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
+                                    }
+                                ],
                                 "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Alt+Shift+Period \u2192 Open wallpaper picker",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "period",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_option",
+                                            "left_shift"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "/Users/rielj/.local/bin/wallpaperd pick"
+                                    }
+                                ]
                             }
                         ]
                     }
@@ -1681,7 +2815,9 @@
             },
             "name": "CIDOO V65",
             "selected": true,
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" },
+            "virtual_hid_keyboard": {
+                "keyboard_type_v2": "ansi"
+            },
             "devices": [
                 {
                     "identifiers": {
@@ -1692,24 +2828,54 @@
                     "ignore": false,
                     "simple_modifications": [
                         {
-                            "from": { "key_code": "escape" },
-                            "to": [{ "key_code": "grave_accent_and_tilde" }]
+                            "from": {
+                                "key_code": "escape"
+                            },
+                            "to": [
+                                {
+                                    "key_code": "grave_accent_and_tilde"
+                                }
+                            ]
                         },
                         {
-                            "from": { "key_code": "left_option" },
-                            "to": [{ "key_code": "left_command" }]
+                            "from": {
+                                "key_code": "left_option"
+                            },
+                            "to": [
+                                {
+                                    "key_code": "left_command"
+                                }
+                            ]
                         },
                         {
-                            "from": { "key_code": "left_command" },
-                            "to": [{ "key_code": "left_option" }]
+                            "from": {
+                                "key_code": "left_command"
+                            },
+                            "to": [
+                                {
+                                    "key_code": "left_option"
+                                }
+                            ]
                         },
                         {
-                            "from": { "key_code": "right_option" },
-                            "to": [{ "key_code": "right_command" }]
+                            "from": {
+                                "key_code": "right_option"
+                            },
+                            "to": [
+                                {
+                                    "key_code": "right_command"
+                                }
+                            ]
                         },
                         {
-                            "from": { "key_code": "right_command" },
-                            "to": [{ "key_code": "right_option" }]
+                            "from": {
+                                "key_code": "right_command"
+                            },
+                            "to": [
+                                {
+                                    "key_code": "right_option"
+                                }
+                            ]
                         }
                     ]
                 }
