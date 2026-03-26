@@ -13,10 +13,8 @@ usage-log.json
 cache/
 image-preview.bak/
 
-# Installed from pi packages (reinstalls from settings.json)
-skills/
+# Auto-generated pi internal agents
 agents/pi-pi/
-extensions/superpowers/
 
 # Dependencies
 node_modules/
