@@ -8,6 +8,16 @@ sessions/
 git/
 npm/
 
+# Runtime / auto-generated
+usage-log.json
+cache/
+image-preview.bak/
+
+# Installed from pi packages (reinstalls from settings.json)
+skills/
+agents/pi-pi/
+extensions/superpowers/
+
 # Dependencies
 node_modules/
 

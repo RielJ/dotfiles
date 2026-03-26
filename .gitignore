@@ -1,4 +1,7 @@
 zsh/.config/zsh/plugins/*
+zsh/.config/zsh/.zcompcache/
 .env
 .zcompdump
 *.zsh_history
+.dmux/
+/.pi/
