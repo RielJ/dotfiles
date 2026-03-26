@@ -1,6 +1,30 @@
 {
-  "lastChangelogVersion": "0.54.2",
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.1",
-  "defaultThinkingLevel": "high"
+  "lastChangelogVersion": "0.62.0",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-6",
+  "defaultThinkingLevel": "high",
+  "superpowers": {
+    "enabled": {
+      "planner": true,
+      "executor": true,
+      "web-search": true,
+      "dual-review": true,
+      "qmd": true
+    }
+  },
+  "theme": "dracula",
+  "usage": {
+    "plan": "max20x"
+  },
+  "packages": [
+    "https://github.com/davebcn87/pi-autoresearch",
+    "npm:pi-token-burden",
+    "npm:pi-promptsmith",
+    "npm:@marckrenn/pi-sub-bar",
+    "https://github.com/tintinweb/pi-subagents",
+    "npm:@tintinweb/pi-tasks",
+    "npm:pi-skills-sh",
+    "npm:pi-skill-toggle",
+    "npm:pi-vim"
+  ]
 }

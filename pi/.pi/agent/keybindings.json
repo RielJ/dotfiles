@@ -1,0 +1,59 @@
+{
+  "tui.editor.cursorUp": [
+    "up",
+    "ctrl+p"
+  ],
+  "tui.editor.cursorDown": [
+    "down",
+    "ctrl+n"
+  ],
+  "tui.editor.cursorLeft": [
+    "left",
+    "ctrl+b"
+  ],
+  "tui.editor.cursorRight": [
+    "right",
+    "ctrl+f"
+  ],
+  "tui.editor.cursorWordLeft": [
+    "alt+left",
+    "alt+b"
+  ],
+  "tui.editor.cursorWordRight": [
+    "alt+right",
+    "alt+w"
+  ],
+  "tui.editor.cursorLineStart": [
+    "home",
+    "ctrl+a"
+  ],
+  "tui.editor.cursorLineEnd": [
+    "end",
+    "ctrl+e"
+  ],
+  "tui.editor.pageUp": [
+    "pageUp",
+    "alt+k"
+  ],
+  "tui.editor.pageDown": [
+    "pageDown",
+    "alt+j"
+  ],
+  "tui.editor.deleteWordBackward": [
+    "ctrl+w",
+    "alt+backspace"
+  ],
+  "tui.editor.deleteToLineStart": [
+    "ctrl+u"
+  ],
+  "tui.editor.deleteToLineEnd": [
+    "ctrl+k"
+  ],
+  "tui.input.newLine": [
+    "shift+enter",
+    "ctrl+j"
+  ],
+  "app.editor.external": [
+    "ctrl+g"
+  ]
+}
