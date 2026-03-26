@@ -13,9 +13,6 @@ usage-log.json
 cache/
 image-preview.bak/
 
-# Auto-generated pi internal agents
-agents/pi-pi/
-
 # Dependencies
 node_modules/
 
