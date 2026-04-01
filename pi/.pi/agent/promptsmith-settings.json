@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "enabled": true,
+  "shortcutEnabled": true,
+  "shortcutKey": "alt+p",
+  "targetFamilyMode": "auto",
+  "fallbackFamily": "gpt",
+  "exactModelOverrides": [],
+  "familyOverrides": [],
+  "enhancerModelMode": "active",
+  "includeRecentConversation": false,
+  "includeProjectMetadata": false,
+  "statusBarEnabled": false,
+  "rewriteStrength": "balanced",
+  "rewriteMode": "auto",
+  "previewBeforeReplace": true,
+  "autoSendEnhancedPrompt": false,
+  "autoSendBusyBehavior": "steer",
+  "preserveCodeBlocks": true,
+  "enhancementTimeoutMs": 45000
+}

@@ -102,19 +102,17 @@ alias bluetooth_send="/usr/lib/bluetooth/obexd -n"
 alias video_screenshare="sudo modprobe -r v4l2loopback && sudo modprobe v4l2loopback exclusive_caps=1 card_label=VirtualVideoDevice && wf-recorder --muxer=v4l2 --codec=rawvideo --file=/dev/video2 -x yuv420p"
 alias reflector-fast="reflector --sort rate --save /etc/pacman.d/mirrorlist -a 6 -c 'Hong Kong,Singapore,Japan' --verbose --download-timeout 10"
 alias hbrnt="sudo systemctl hibernate"
-alias compressvideo='ffmpeg -i "$1" -vf "scale=1280:-2" -c:v libx264 -preset fast -crf 28 -c:a aac -b:a 128k -movflags +faststart "$1-compressed.mp4"'
-
-# compressvideo() {
-#   input="$1"
-#   output="${input%.*}-compressed.mp4"
-#   ffmpeg -i "$input" \
-#     -vf "scale='min(1280,iw)':'-2'" \
-#     -c:v libx264 -profile:v high -level:v 4.0 -preset fast -crf 28 \
-#     -pix_fmt yuv420p \
-#     -c:a aac -b:a 256k -ac 2 -profile:a aac_low \
-#     -movflags +faststart \
-#     "$output"
-# }
+compressvideo() {
+  input="$1"
+  output="${input%.*}-compressed.mp4"
+  ffmpeg -i "$input" \
+    -vf "scale='min(1280,iw)':'-2'" \
+    -c:v libx264 -profile:v high -level:v 4.0 -preset fast -crf 28 \
+    -pix_fmt yuv420p \
+    -c:a aac -b:a 256k -ac 2 -profile:a aac_low \
+    -movflags +faststart \
+    "$output"
+}
 
 alias cd="z"
 
