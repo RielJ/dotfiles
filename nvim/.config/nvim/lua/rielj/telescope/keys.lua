@@ -12,7 +12,7 @@ map_tele("<space>gw", "grep_string", {
   only_sort_text = true,
   layout_strategy = "vertical",
 })
-map_tele("<space>st", "live_grep")
+-- map_tele("<space>st", "live_grep") -- replaced by fff.nvim
 
 map_tele("<space>f/", "grep_last_search", {
   layout_strategy = "vertical",
@@ -25,7 +25,7 @@ map_tele("<space>fn", "neoclip")
 map_tele("<space>ft", "git_files")
 map_tele("<space>fg", "multi_rg")
 map_tele("<space>fo", "oldfiles")
-map_tele("<space>fd", "find_files")
+-- map_tele("<space>fd", "find_files") -- replaced by fff.nvim
 map_tele("<space>fs", "fs")
 map_tele("<space>pp", "project_search")
 map_tele("<space>fv", "find_nvim_source")
