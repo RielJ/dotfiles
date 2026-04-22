@@ -74,15 +74,24 @@ local app_icons = {
 -- Update on front app switch
 front_app:subscribe("front_app_switched", function(env)
 	local app_name = env.INFO or ""
+	-- Ignore the loginwindow pseudo-app (appears during sleep/lock/re-login)
+	if app_name == "" or app_name == "loginwindow" then return end
 	local app_icon = app_icons[app_name] or app_icons["default"]
 	front_app:set({ label = { string = app_name } })
 end)
 
 front_app:subscribe("system_woke", function()
-	sbar.exec("aerospace list-windows --focused --format '%{app-name}' 2>/dev/null | head -1", function(app_name)
-		app_name = app_name:match("^%s*(.-)%s*$") or ""
-		local app_icon = app_icons[app_name] or app_icons["default"]
-		front_app:set({ label = { string = app_name } })
+	-- Delay slightly so aerospace has time to re-initialise after wake
+	sbar.delay(0.5, function()
+		sbar.exec("aerospace list-windows --focused --format '%{app-name}' 2>/dev/null | head -1", function(app_name)
+			app_name = app_name:match("^%s*(.-)%s*$") or ""
+			-- Ignore stale loginwindow result; keep last-known-good label
+			if app_name == "" or app_name == "loginwindow" then
+				return
+			end
+			local app_icon = app_icons[app_name] or app_icons["default"]
+			front_app:set({ label = { string = app_name } })
+		end)
 	end)
 end)
 

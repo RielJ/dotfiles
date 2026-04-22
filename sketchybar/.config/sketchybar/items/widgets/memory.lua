@@ -32,16 +32,11 @@ local memory = sbar.add("item", "widgets.memory", {
 })
 
 memory:subscribe({ "routine", "system_woke" }, function()
-	sbar.exec("memory_pressure | grep 'System-wide memory free percentage' | awk '{print 100-$5}'", function(used_pct)
-		-- Get memory in GB
-		sbar.exec("sysctl -n hw.memsize", function(total_bytes)
-			local total_gb = tonumber(total_bytes) / (1024 * 1024 * 1024)
-			local used_percent = tonumber(used_pct) or 0
-			local used_gb = (total_gb * used_percent) / 100
-			memory:set({
-				label = { string = string.format("%.1fGB", used_gb) },
-			})
-		end)
+	sbar.exec("vm_stat | awk '/Pages (active|inactive|speculative|wired|occupied by compressor)/ {sum+=$NF} END {printf \"%.1f\", sum*4096/1073741824}'", function(used_gb_str)
+		local used_gb = tonumber(used_gb_str) or 0
+		memory:set({
+			label = { string = string.format("%.1fGB", used_gb) },
+		})
 	end)
 end)
 

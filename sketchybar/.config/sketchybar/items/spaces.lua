@@ -68,71 +68,148 @@ local function update_space_display(space, workspace_id, is_selected, has_front_
 	end
 end
 
--- Query aerospace for windows and update all workspaces
-local function update_windows()
-	local get_windows = "aerospace list-windows --monitor all --format '%{workspace}%{app-name}' --json"
-	local get_focused_workspace = "aerospace list-workspaces --focused"
+-- ── Aerospace query with loginwindow protection ────────────────────
+--
+-- Problem: during sleep / lock-screen / re-login, aerospace reports
+-- every window under a pseudo-workspace called "loginwindow".  If we
+-- process that we wipe real workspace state.  Worse, if multiple
+-- events fire at once each calling update_windows(), the resulting
+-- storm of async `sbar.exec` calls (each spawning an aerospace
+-- process that may hang) can stall sketchybar's event queue and
+-- freeze the entire bar — including the clock.
+--
+-- Defence layers:
+--   1. Debounce: only one update_windows() in-flight at a time.
+--   2. Type guards: validate data from sbar.exec before using it.
+--   3. loginwindow filter: skip entries and retry when detected.
+--   4. pcall: catch any unexpected error so the event loop survives.
 
-	sbar.exec(get_windows, function(windows_json)
-		-- Reset all workspace app data
-		for ws, _ in pairs(spaces) do
-			space_app_icons[ws] = "—"
-			space_app_names[ws] = {}
-			space_contains_front_app[ws] = false
-			space_has_windows[ws] = false
-		end
+local MAX_WAKE_RETRIES = 6
+local RETRY_INTERVAL   = 1.0 -- seconds between retries
+local update_in_flight = false -- debounce flag
 
-		-- Build app icons and names per workspace
-		local workspace_apps = {}
-		for _, entry in ipairs(windows_json) do
-			local ws = entry.workspace
-			local app = entry["app-name"]
-
-			if workspace_apps[ws] == nil then
-				workspace_apps[ws] = {}
-			end
-
-			-- Only add each app once per workspace
-			if not workspace_apps[ws][app] then
-				workspace_apps[ws][app] = true
-			end
-		end
-
-		-- Convert to icon strings
-		for ws, apps in pairs(workspace_apps) do
-			local icon_line = ""
-			local appset = {}
-
-			for app, _ in pairs(apps) do
-				local lookup = app_icons[app] or app_icons["Default"]
-				icon_line = icon_line .. lookup
-				appset[app] = true
-			end
-
-			if icon_line == "" then
-				icon_line = "—"
-			end
-
-			space_app_icons[ws] = icon_line
-			space_app_names[ws] = appset
-			space_has_windows[ws] = true -- This workspace has windows
-
-			-- Check if this workspace contains the current front app
-			if current_front_app and appset[current_front_app] then
-				space_contains_front_app[ws] = true
-			end
-		end
-
-		-- Get focused workspace and update displays
-		sbar.exec(get_focused_workspace, function(focused_ws)
-			focused_ws = focused_ws:match("^%s*(.-)%s*$") -- trim whitespace
-
-			for ws, space in pairs(spaces) do
-				local is_selected = (ws == focused_ws)
-				space_selected[ws] = is_selected
-				update_space_display(space, ws, is_selected, space_contains_front_app[ws], space_has_windows[ws])
-			end
+local function schedule_retry(retry_count)
+	if retry_count < MAX_WAKE_RETRIES then
+		sbar.delay(RETRY_INTERVAL, function()
+			update_in_flight = false -- allow the retry to run
+			update_windows(retry_count + 1)
 		end)
+	else
+		update_in_flight = false
+	end
+end
+
+function update_windows(retry_count)
+	retry_count = retry_count or 0
+
+	-- Debounce: if an update is already in-flight, skip this call.
+	if update_in_flight and retry_count == 0 then return end
+	update_in_flight = true
+
+	local get_windows = "aerospace list-windows --monitor all --format '%{workspace}%{app-name}' --json 2>/dev/null"
+	local get_focused_workspace = "aerospace list-workspaces --focused 2>/dev/null"
+
+	sbar.exec(get_windows, function(windows_result)
+		local ok, err = pcall(function()
+			-- Type guard: sbar.exec returns a table for valid JSON,
+			-- a string for non-JSON output, or nil on failure.
+			if type(windows_result) ~= "table" then
+				schedule_retry(retry_count)
+				return
+			end
+
+			-- Detect stale "loginwindow" data
+			if #windows_result > 0 then
+				local lw_count = 0
+				for _, entry in ipairs(windows_result) do
+					if type(entry) == "table" and entry.workspace == "loginwindow" then
+						lw_count = lw_count + 1
+					end
+				end
+				if lw_count == #windows_result then
+					-- ALL windows are loginwindow → aerospace not ready
+					schedule_retry(retry_count)
+					return
+				end
+			end
+
+			-- ── Normal processing ──────────────────────────────
+			for ws, _ in pairs(spaces) do
+				space_app_icons[ws] = "—"
+				space_app_names[ws] = {}
+				space_contains_front_app[ws] = false
+				space_has_windows[ws] = false
+			end
+
+			local workspace_apps = {}
+			for _, entry in ipairs(windows_result) do
+				if type(entry) ~= "table" then goto continue end
+				local ws  = entry.workspace
+				local app = entry["app-name"]
+				if not ws or not app or ws == "loginwindow" then goto continue end
+
+				if workspace_apps[ws] == nil then
+					workspace_apps[ws] = {}
+				end
+				workspace_apps[ws][app] = true
+
+				::continue::
+			end
+
+			for ws, apps in pairs(workspace_apps) do
+				local icon_line = ""
+				local appset = {}
+				for app, _ in pairs(apps) do
+					local lookup = app_icons[app] or app_icons["Default"]
+					icon_line = icon_line .. lookup
+					appset[app] = true
+				end
+				if icon_line == "" then icon_line = "—" end
+
+				space_app_icons[ws] = icon_line
+				space_app_names[ws] = appset
+				space_has_windows[ws] = true
+
+				if current_front_app and appset[current_front_app] then
+					space_contains_front_app[ws] = true
+				end
+			end
+
+			-- Get focused workspace and update displays
+			sbar.exec(get_focused_workspace, function(focused_raw)
+				local ok2, err2 = pcall(function()
+					-- Type guard: focused_raw could be nil if the command failed
+					local focused_ws = ""
+					if type(focused_raw) == "string" then
+						focused_ws = focused_raw:match("^%s*(.-)%s*$") or ""
+					end
+
+					if focused_ws == "" or focused_ws == "loginwindow" then
+						-- Aerospace not ready — keep previous selection, retry
+						for ws, space in pairs(spaces) do
+							update_space_display(space, ws, space_selected[ws],
+								space_contains_front_app[ws], space_has_windows[ws])
+						end
+						schedule_retry(retry_count)
+						return
+					end
+
+					for ws, space in pairs(spaces) do
+						local is_selected = (ws == focused_ws)
+						space_selected[ws] = is_selected
+						update_space_display(space, ws, is_selected,
+							space_contains_front_app[ws], space_has_windows[ws])
+					end
+					update_in_flight = false
+				end)
+				if not ok2 then
+					update_in_flight = false
+				end
+			end)
+		end)
+		if not ok then
+			update_in_flight = false
+		end
 	end)
 end
 
@@ -239,7 +316,11 @@ end
 -- Listen for front app changes
 local front_app_listener = sbar.add("item", { drawing = false })
 front_app_listener:subscribe("front_app_switched", function(env)
-	current_front_app = env.INFO
+	local app = env.INFO
+	-- Ignore the loginwindow pseudo-app entirely
+	if not app or app == "loginwindow" or app == "" then return end
+
+	current_front_app = app
 
 	-- Re-evaluate which spaces contain that front app
 	for ws, appset in pairs(space_app_names) do
@@ -279,7 +360,12 @@ root:subscribe("display_change", function()
 end)
 
 root:subscribe("system_woke", function()
-	update_windows()
+	-- Give aerospace a moment to re-initialise after wake.
+	-- Clear the debounce flag so the delayed call will run.
+	update_in_flight = false
+	sbar.delay(1.0, function()
+		update_windows(0)
+	end)
 end)
 
 -- Initial update
