@@ -1,18 +1,16 @@
 /**
- * Dual Review — Two models review code in parallel
+ * Dual Review — Phase 0 exploration + two models review in parallel
  *
- * /review [context] spawns two reviewers in parallel (Opus 4.6 + GPT 5.4),
- * each writes their full review to a temp file, then feeds BOTH to the
- * main agent for synthesis. Same pattern as /plan.
+ * /review <context>       — review a specific area, file, or concept
+ * /review-changes         — auto-detect git changes and review them
+ * /review-changes --pr    — review current branch as PR
  *
- * Accepts free-form context just like /plan:
- *   /review                           — auto-detect changes, review everything
- *   /review only the chat feature     — focus review on the chat feature
- *   /review --pr                      — PR mode (branch vs main/master)
- *   /review --pr focus on auth logic  — PR mode with focus
+ * Pipeline:
+ *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
+ *   Phase 1: Opus 4.6 + GPT 5.4 review in parallel (both get Phase 0 output)
+ *   Main agent synthesizes both reviews.
  */
 
-import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -22,6 +20,7 @@ import type {
 } from "@mariozechner/pi-coding-agent";
 import { Text, truncateToWidth } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
+import { runAgent, runExploration, resolveTaskContext, extractConversationContext, MODELS } from "./_shared.js";
 
 // ── Module Metadata ─────────────────────────────────────────────────
 
@@ -31,43 +30,101 @@ export const module = {
   description:
     "Two models review code in parallel, main agent synthesizes findings",
   systemPromptWhenEnabled: `### Dual Review
-Use /review [context] to run two code reviewers in parallel:
-- Claude Opus 4.6 reviews for bugs, security, performance, quality
+Use /review <context> to run a targeted dual code review:
+- Opus 4.6 reviews for bugs, security, performance, quality
 - GPT 5.4 reviews for architecture, patterns, maintainability
-Both reviews are written to files, then synthesized with a comparison.
+Both reviews are synthesized with a comparison.
 
 Usage:
-  /review                         — auto-detect changes, review everything
-  /review only the chat feature   — focus on a specific area
-  /review --pr                    — review current branch as PR
-  /review --pr the auth changes   — PR mode with focus context
+  /review the auth middleware        — review a specific area
+  /review src/api/users.ts           — review a specific file
+  /review the database schema design — review a concept/design
+
+Use /review-changes to review git changes:
+  /review-changes                    — auto-detect changes, review everything
+  /review-changes --pr               — review current branch as PR
+  /review-changes --pr the auth logic — PR mode with focus context
+  /review-changes only the API layer — focus on a specific area of changes
 
 You can also use the review_dual tool programmatically.`,
 };
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const MODEL_A = "anthropic/claude-opus-4-6";
+const MODEL_A = MODELS.plan;
 const MODEL_A_LABEL = "Opus 4.6";
-const MODEL_B = "openai/gpt-5.4";
+const MODEL_B = MODELS.diversity;
 const MODEL_B_LABEL = "GPT 5.4";
 
-const REVIEWER_PROMPT = `You are a senior code reviewer. You have access to tools to read files, search code, and run read-only commands.
+const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
+const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for review
 
-## Review Strategy
-1. Understand what changed (git diff, git status, etc.)
-2. Read the modified/relevant files for full context
-3. Use grep/find to check for related patterns across the codebase
-4. Analyze thoroughly and produce a structured review
+// Phase 1 prompts — reviewers get Phase 0 context, do targeted verification, write review
+
+const REVIEWER_PROMPT_A = `You are an expert code reviewer with the rigor of a senior staff engineer.
+You receive codebase exploration findings from a prior analysis. Use them as your primary context.
+
+## Workflow
+1. Review the exploration findings — they contain changed files, impact analysis, and test coverage.
+2. If something critical is missing, use read/grep to verify (max 5 tool calls).
+3. Write a thorough code review.
+
+Evaluate against these criteria:
+- **Correctness** — Does it work? Are edge cases handled?
+- **Architecture** — Does it fit the codebase patterns? Right abstraction level?
+- **Performance** — Any N+1 queries, unnecessary allocations, missing optimizations?
+- **Security** — Input validation, auth checks, injection risks, exposed secrets?
+- **Testing** — Are changes tested? Are tests meaningful?
+- **Maintainability** — Clear naming, no magic numbers, good documentation?
 
 ## Output Format
-Write your review as clean markdown with these sections:
 
 ### 🚨 Critical Issues (must fix)
-- \`file:line\` — Description and impact
+- \`file:line\` — Description, impact, and suggested fix
 
 ### ⚠️ Warnings (should fix)
-- \`file:line\` — Description
+- \`file:line\` — Description and recommendation
+
+### 💡 Suggestions (nice to have)
+- \`file:line\` — Improvement idea
+
+### ✅ What Looks Good
+- Positive observations about well-written code, good patterns, etc.
+
+### 📊 Summary
+2-3 sentence overall assessment. Include an explicit verdict:
+APPROVE / REQUEST CHANGES / NEEDS DISCUSSION
+
+Be specific with file paths and line numbers. Suggest concrete fixes, not just "this is wrong".
+
+## CRITICAL OUTPUT INSTRUCTION
+Your task will specify an output file path. After completing your review,
+you MUST write your complete review to that file using the write tool.
+Do NOT modify any repository files — only write to the output file.`;
+
+const REVIEWER_PROMPT_B = `You are an expert code reviewer with the rigor of a senior staff engineer.
+You receive codebase exploration findings from a prior analysis. Use them as your primary context.
+
+## Workflow
+1. Review the exploration findings — they contain changed files, impact analysis, and context.
+2. If needed, verify or explore further (max 5 tool calls).
+3. Write a thorough code review.
+
+Evaluate against these criteria:
+- **Correctness** — Does it work? Are edge cases handled?
+- **Architecture** — Does it fit the codebase patterns? Right abstraction level?
+- **Performance** — Any N+1 queries, unnecessary allocations, missing optimizations?
+- **Security** — Input validation, auth checks, injection risks, exposed secrets?
+- **Testing** — Are changes tested? Are tests meaningful?
+- **Maintainability** — Clear naming, no magic numbers, good documentation?
+
+## Output Format
+
+### 🚨 Critical Issues (must fix)
+- \`file:line\` — Description, impact, and suggested fix
+
+### ⚠️ Warnings (should fix)
+- \`file:line\` — Description and recommendation
 
 ### 💡 Suggestions (nice to have)
 - \`file:line\` — Improvement idea
@@ -76,193 +133,12 @@ Write your review as clean markdown with these sections:
 - Positive observations
 
 ### 📊 Summary
-2-3 sentence overall assessment.
-
-Be specific with file paths and line numbers. Focus on actionable feedback.
+2-3 sentence overall assessment. Verdict: APPROVE / REQUEST CHANGES / NEEDS DISCUSSION
 
 ## CRITICAL OUTPUT INSTRUCTION
 Your task will specify an output file path. After completing your review,
 you MUST write your complete review to that file using the write tool.
-This is how your review gets passed to the synthesis step.`;
-
-// ── Subagent Runner ─────────────────────────────────────────────────
-
-type ActivityCallback = (activity: string) => void;
-
-function runReviewAgent(
-  cwd: string,
-  model: string,
-  task: string,
-  signal?: AbortSignal,
-  onActivity?: ActivityCallback,
-): Promise<{ output: string; exitCode: number }> {
-  return new Promise((resolve) => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-review-agent-"));
-    const promptFile = path.join(tmpDir, "prompt.md");
-    fs.writeFileSync(promptFile, REVIEWER_PROMPT, "utf-8");
-
-    const args = [
-      "--mode",
-      "json",
-      "-p",
-      "--no-session",
-      "--no-extensions",
-      "--model",
-      model,
-      "--tools",
-      "read,write,grep,find,ls,bash",
-      "--append-system-prompt",
-      promptFile,
-      task,
-    ];
-
-    const proc = spawn("pi", args, {
-      cwd,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    const chunks: string[] = [];
-    let buffer = "";
-    let textLen = 0;
-    let toolCount = 0;
-    let stderrBuf = "";
-
-    function processLine(line: string) {
-      if (!line.trim()) return;
-      try {
-        const ev = JSON.parse(line);
-        const t = ev.type;
-
-        if (onActivity) {
-          if (t === "message_update") {
-            const ae = ev.assistantMessageEvent;
-            if (ae?.type === "thinking_start") onActivity("thinking...");
-            else if (ae?.type === "text_start") onActivity("writing...");
-            else if (ae?.type === "text_delta") {
-              textLen += (ae.delta || "").length;
-              const kb = (textLen / 1024).toFixed(1);
-              onActivity(`writing... ${kb}k`);
-            }
-          } else if (t === "tool_execution_start") {
-            toolCount++;
-            const name = ev.toolName || "tool";
-            onActivity(`${name} (${toolCount} calls)`);
-          } else if (t === "turn_start") {
-            onActivity("processing...");
-          }
-        }
-
-        if (t === "message_end" && ev.message?.role === "assistant") {
-          for (const part of ev.message.content) {
-            if (part.type === "text") chunks.push(part.text);
-          }
-        }
-      } catch {}
-    }
-
-    proc.stdout!.setEncoding("utf-8");
-    proc.stdout!.on("data", (chunk: string) => {
-      buffer += chunk;
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) processLine(line);
-    });
-
-    proc.stderr!.setEncoding("utf-8");
-    proc.stderr!.on("data", (chunk: string) => {
-      stderrBuf += chunk;
-    });
-
-    proc.on("close", (code) => {
-      if (buffer.trim()) processLine(buffer);
-      try {
-        fs.unlinkSync(promptFile);
-      } catch {}
-      try {
-        fs.rmdirSync(tmpDir);
-      } catch {}
-      const output = chunks.join("\n");
-      if (!output && stderrBuf.trim()) {
-        resolve({
-          output: `(stderr: ${stderrBuf.trim().slice(0, 200)})`,
-          exitCode: code ?? 1,
-        });
-      } else {
-        resolve({ output, exitCode: code ?? 1 });
-      }
-    });
-
-    proc.on("error", (err) => {
-      try {
-        fs.unlinkSync(promptFile);
-      } catch {}
-      try {
-        fs.rmdirSync(tmpDir);
-      } catch {}
-      resolve({ output: `Error: ${err.message}`, exitCode: 1 });
-    });
-
-    if (signal) {
-      const kill = () => proc.kill("SIGTERM");
-      if (signal.aborted) kill();
-      else signal.addEventListener("abort", kill, { once: true });
-    }
-  });
-}
-
-// ── Context Extraction ──────────────────────────────────────────────
-
-function extractConversationContext(
-  ctx: ExtensionContext,
-  maxChars = 4000,
-): string {
-  try {
-    const entries = ctx.sessionManager.getBranch();
-    const parts: string[] = [];
-    let totalLen = 0;
-
-    for (let i = entries.length - 1; i >= 0; i--) {
-      const entry = entries[i] as any;
-      if (entry.type !== "message") continue;
-      const msg = entry.message;
-      if (!msg) continue;
-
-      let text = "";
-      const role = msg.role;
-
-      if (role === "user") {
-        if (typeof msg.content === "string") {
-          text = msg.content;
-        } else if (Array.isArray(msg.content)) {
-          text = msg.content
-            .filter((c: any) => c.type === "text")
-            .map((c: any) => c.text)
-            .join("\n");
-        }
-        if (text) text = `User: ${text}`;
-      } else if (role === "assistant") {
-        if (Array.isArray(msg.content)) {
-          text = msg.content
-            .filter((c: any) => c.type === "text")
-            .map((c: any) => c.text)
-            .join("\n");
-        }
-        if (text) text = `Assistant: ${text}`;
-      } else if (role === "compactionSummary") {
-        text = `[Previous context summary]: ${typeof msg.content === "string" ? msg.content : ""}`;
-      }
-
-      if (!text) continue;
-      if (text.length > 800) text = text.slice(0, 800) + "...";
-      if (totalLen + text.length > maxChars) break;
-      parts.unshift(text);
-      totalLen += text.length;
-    }
-
-    return parts.join("\n\n");
-  } catch {
-    return "";
-  }
-}
+Do NOT modify any repository files — only write to the output file.`;
 
 // ── Git Helpers ─────────────────────────────────────────────────────
 
@@ -273,21 +149,13 @@ async function detectReviewTarget(
   const gitCheck = await pi.exec("git", ["rev-parse", "--git-dir"]);
   if (gitCheck.code !== 0) return { target: "", error: "Not a git repository" };
 
-  const { stdout: branch } = await pi.exec("git", [
-    "branch",
-    "--show-current",
-  ]);
+  const { stdout: branch } = await pi.exec("git", ["branch", "--show-current"]);
   const branchName = branch.trim();
 
-  // Find base branch
   let base = "main";
   const mainCheck = await pi.exec("git", ["rev-parse", "--verify", "main"]);
   if (mainCheck.code !== 0) {
-    const masterCheck = await pi.exec("git", [
-      "rev-parse",
-      "--verify",
-      "master",
-    ]);
+    const masterCheck = await pi.exec("git", ["rev-parse", "--verify", "master"]);
     if (masterCheck.code === 0) base = "master";
   }
 
@@ -296,16 +164,8 @@ async function detectReviewTarget(
       return { target: "", error: "Switch to a feature branch for PR review" };
     }
 
-    const { stdout: diffStat } = await pi.exec("git", [
-      "diff",
-      "--stat",
-      `${base}...${branchName}`,
-    ]);
-    const { stdout: changedFiles } = await pi.exec("git", [
-      "diff",
-      "--name-only",
-      `${base}...${branchName}`,
-    ]);
+    const { stdout: diffStat } = await pi.exec("git", ["diff", "--stat", `${base}...${branchName}`]);
+    const { stdout: changedFiles } = await pi.exec("git", ["diff", "--name-only", `${base}...${branchName}`]);
 
     return {
       target: [
@@ -320,11 +180,7 @@ async function detectReviewTarget(
 
   // Auto-detect
   if (branchName && !["main", "master", "develop"].includes(branchName)) {
-    const { stdout: changedFiles } = await pi.exec("git", [
-      "diff",
-      "--name-only",
-      `${base}...${branchName}`,
-    ]);
+    const { stdout: changedFiles } = await pi.exec("git", ["diff", "--name-only", `${base}...${branchName}`]);
     if (changedFiles.trim()) {
       return {
         target: [
@@ -337,11 +193,7 @@ async function detectReviewTarget(
     }
   }
 
-  // Fall back to working directory changes
-  const { stdout: status } = await pi.exec("git", [
-    "status",
-    "--porcelain",
-  ]);
+  const { stdout: status } = await pi.exec("git", ["status", "--porcelain"]);
   if (!status.trim()) {
     return { target: "", error: "No changes to review" };
   }
@@ -367,11 +219,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   // ── Live widget state ───────────────────────────────────────────
   const agentState: Record<
     string,
-    {
-      status: "running" | "done" | "error";
-      activity: string;
-      elapsed: number;
-    }
+    { status: "running" | "done" | "error"; activity: string; elapsed: number }
   > = {};
   let widgetPhase = "";
   let startTime = 0;
@@ -400,10 +248,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
                   : theme.fg("warning", "●");
             const sec =
               state.status === "running"
-                ? theme.fg(
-                    "dim",
-                    ` ${((Date.now() - startTime) / 1000).toFixed(0)}s`,
-                  )
+                ? theme.fg("dim", ` ${((Date.now() - startTime) / 1000).toFixed(0)}s`)
                 : theme.fg("dim", ` ${(state.elapsed / 1000).toFixed(0)}s`);
             const activity = state.activity
               ? theme.fg("muted", `  ${state.activity}`)
@@ -434,10 +279,10 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     currentCtx?.ui.setWidget("dual-review", undefined);
   }
 
-  // ── Core: run both reviewers ────────────────────────────────────
+  // ── Core: run Phase 0 + both reviewers ──────────────────────────
 
   async function runDualReview(
-    reviewTarget: string,
+    inputReviewTarget: string,
     userContext: string,
     cwd: string,
     signal: AbortSignal | undefined,
@@ -452,8 +297,77 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     const opusFile = path.join(reviewDir, "review-opus.md");
     const gptFile = path.join(reviewDir, "review-gpt.md");
 
-    // Build enriched task
+    startTime = Date.now();
+
+    // ── Pre-Phase: Resolve external references ────────────────────
+    widgetPhase = "resolving references...";
+    updateWidget();
+
+    let reviewTarget = inputReviewTarget;
+    const { resolvedTask: resolvedTarget, references } = await resolveTaskContext(cwd, reviewTarget);
+    if (references.length > 0) {
+      reviewTarget = resolvedTarget;
+    }
+
+    // ── Phase 0: Exploration (Sonnet + gitnexus + code-review-graph) ──
+    widgetPhase = "Phase 0 — analyzing changes";
+    agentState["Explorer"] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
+    updateWidget();
+
+    if (currentCtx && !timerHandle) {
+      timerHandle = setInterval(() => updateWidget(), 1000);
+      if (timerHandle && typeof timerHandle === "object" && "unref" in timerHandle) {
+        (timerHandle as any).unref();
+      }
+    }
+
+    const explorationFindings = await runExploration({
+      cwd,
+      task: reviewTarget,
+      mode: "review",
+      preContext: userContext ? `Focus: ${userContext}` : undefined,
+      timeoutMs: PHASE_0_TIMEOUT_MS,
+      signal,
+      onActivity: (activity) => {
+        agentState["Explorer"].activity = activity;
+        updateWidget();
+      },
+    });
+
+    const phase0Elapsed = Date.now() - startTime;
+    agentState["Explorer"] = {
+      status: explorationFindings ? "done" : "error",
+      activity: explorationFindings
+        ? `✓ context gathered (${(explorationFindings.length / 1024).toFixed(1)}KB)`
+        : "✗ no results (reviewers will explore on their own)",
+      elapsed: phase0Elapsed,
+    };
+    updateWidget();
+
+    // ── Phase 1: Both reviewers in parallel ───────────────────────
+    widgetPhase = "Phase 1 — reviewing in parallel";
+    agentState[MODEL_A_LABEL] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
+    agentState[MODEL_B_LABEL] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
+    updateWidget();
+
+    // Build enriched task with Phase 0 findings
     let enrichedTask = `## What to Review\n${reviewTarget}`;
+
+    if (explorationFindings) {
+      enrichedTask += `\n\n## Codebase Exploration Findings (Phase 0)\n\n${explorationFindings}`;
+    }
 
     if (userContext) {
       enrichedTask += `\n\n## Focus / Extra Context\n${userContext}`;
@@ -466,56 +380,50 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       }
     }
 
-    // Reset widget
-    startTime = Date.now();
-    widgetPhase = "reviewing in parallel";
-    agentState[MODEL_A_LABEL] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    agentState[MODEL_B_LABEL] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    updateWidget();
-
-    if (currentCtx) {
-      timerHandle = setInterval(() => updateWidget(), 1000);
-      if (
-        timerHandle &&
-        typeof timerHandle === "object" &&
-        "unref" in timerHandle
-      ) {
-        (timerHandle as any).unref();
-      }
-    }
-
+    // Review A: Opus (gets Phase 0 context, can verify with targeted reads)
     const taskA = `${enrichedTask}\n\n## Output File\nWrite your FULL review to: ${opusFile}`;
-    const taskB = `${enrichedTask}\n\n## Output File\nWrite your FULL review to: ${gptFile}`;
-
-    // Stagger by 1s to avoid pi lock file conflict
-    const promiseA = runReviewAgent(cwd, MODEL_A, taskA, signal, (activity) => {
-      agentState[MODEL_A_LABEL].activity = activity;
-      updateWidget();
+    const promiseA = runAgent({
+      cwd,
+      model: MODEL_A,
+      systemPrompt: REVIEWER_PROMPT_A,
+      tools: "read,write,grep,find,ls,bash",
+      task: taskA,
+      timeoutMs: PHASE_1_TIMEOUT_MS,
+      signal,
+      onActivity: (activity) => {
+        agentState[MODEL_A_LABEL].activity = activity;
+        updateWidget();
+      },
     });
+
     await new Promise((r) => setTimeout(r, 1000));
-    const promiseB = runReviewAgent(cwd, MODEL_B, taskB, signal, (activity) => {
-      agentState[MODEL_B_LABEL].activity = activity;
-      updateWidget();
+
+    // Review B: GPT (gets same Phase 0 context, different perspective)
+    const taskB = `${enrichedTask}\n\n## Output File\nWrite your FULL review to: ${gptFile}`;
+    const promiseB = runAgent({
+      cwd,
+      model: MODEL_B,
+      systemPrompt: REVIEWER_PROMPT_B,
+      tools: "read,write,grep,find,ls,bash",
+      task: taskB,
+      timeoutMs: PHASE_1_TIMEOUT_MS,
+      signal,
+      onActivity: (activity) => {
+        agentState[MODEL_B_LABEL].activity = activity;
+        updateWidget();
+      },
     });
 
     const [resultA, resultB] = await Promise.all([promiseA, promiseB]);
 
     agentState[MODEL_A_LABEL] = {
       status: resultA.exitCode === 0 ? "done" : "error",
-      activity: resultA.exitCode === 0 ? "review ready" : "failed",
+      activity: resultA.exitCode === 0 ? `✓ review ready` : "✗ failed",
       elapsed: Date.now() - startTime,
     };
     agentState[MODEL_B_LABEL] = {
       status: resultB.exitCode === 0 ? "done" : "error",
-      activity: resultB.exitCode === 0 ? "review ready" : "failed",
+      activity: resultB.exitCode === 0 ? `✓ review ready` : "✗ failed",
       elapsed: Date.now() - startTime,
     };
     widgetPhase = "done — synthesizing";
@@ -525,7 +433,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       clearInterval(timerHandle);
       timerHandle = undefined;
     }
-    const t = setTimeout(() => clearWidget(), 3000);
+    const t = setTimeout(() => clearWidget(), 8000);
     if (t && typeof t === "object" && "unref" in t) (t as any).unref();
 
     return {
@@ -553,7 +461,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       parts.push(`**Focus:** ${userContext}\n`);
     }
     parts.push(
-      `Two models reviewed the code independently. Read both full reviews and synthesize.\n`,
+      `Two models reviewed the code independently using shared exploration context. Read both full reviews and synthesize.\n`,
     );
 
     if (result.statusA === "done") {
@@ -575,12 +483,8 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     parts.push(`---\n`);
     parts.push(`**Synthesize both reviews:**`);
     parts.push(`1. Read both review files above using the read tool`);
-    parts.push(
-      `2. 🔴 **Both agree** — Issues found by BOTH reviewers (high confidence)`,
-    );
-    parts.push(
-      `3. 🟡 **One found** — Issues found by only ONE reviewer (investigate)`,
-    );
+    parts.push(`2. 🔴 **Both agree** — Issues found by BOTH reviewers (high confidence)`);
+    parts.push(`3. 🟡 **One found** — Issues found by only ONE reviewer (investigate)`);
     parts.push(`4. 🟢 **Positives** — Good things noted by either reviewer`);
     parts.push(`5. 📋 **Final recommendation** — Synthesized action items`);
 
@@ -591,7 +495,36 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   pi.registerCommand("review", {
     description:
-      "Dual code review (Opus 4.6 + GPT 5.4): /review [focus context]",
+      "Dual code review (Opus 4.6 + GPT 5.4): /review <context to review>",
+    handler: async (args, ctx) => {
+      const trimmed = (args || "").trim();
+      if (!trimmed) {
+        ctx.ui.notify(
+          "Usage: /review <what to review>\n  e.g. /review the auth middleware\n  e.g. /review src/api/users.ts\n\nFor git changes use /review-changes",
+          "warning",
+        );
+        return;
+      }
+
+      const reviewTarget = `Review the following area/topic in the codebase: ${trimmed}\n\nRead the relevant files, understand the code, and produce a thorough review.`;
+
+      const result = await runDualReview(
+        reviewTarget,
+        trimmed,
+        ctx.cwd,
+        undefined,
+      );
+
+      const message = buildSynthesisMessage(trimmed, result);
+      pi.sendUserMessage(message);
+    },
+  });
+
+  // ── /review-changes command ─────────────────────────────────────
+
+  pi.registerCommand("review-changes", {
+    description:
+      "Dual review of git changes (Opus 4.6 + GPT 5.4): /review-changes [--pr] [focus]",
     handler: async (args, ctx) => {
       const trimmed = (args || "").trim();
       const isPR = trimmed.startsWith("--pr");
@@ -617,7 +550,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     },
   });
 
-  // ── review_dual tool (programmatic) ─────────────────────────────
+  // ── review_dual tool ────────────────────────────────────────────
 
   pi.registerTool({
     name: "review_dual",
@@ -627,22 +560,17 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     parameters: Type.Object({
       focus: Type.Optional(
         Type.String({
-          description:
-            "Optional focus area or extra context for the review",
+          description: "Optional focus area or extra context for the review",
         }),
       ),
       pr: Type.Optional(
         Type.Boolean({
-          description:
-            "If true, review current branch as PR against main/master",
+          description: "If true, review current branch as PR against main/master",
         }),
       ),
     }),
     async execute(_id, params, signal, _onUpdate, ctx) {
-      const { target, error } = await detectReviewTarget(
-        pi,
-        params.pr ?? false,
-      );
+      const { target, error } = await detectReviewTarget(pi, params.pr ?? false);
       if (error) throw new Error(error);
 
       const result = await runDualReview(
@@ -652,35 +580,26 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
         signal,
       );
       const message = buildSynthesisMessage(params.focus || "", result);
-      return { content: [{ type: "text", text: message }] };
+      return { content: [{ type: "text", text: message }], details: {} };
     },
     renderCall(args, theme) {
       const preview = (args.focus || "auto-detect changes").slice(0, 60);
       return new Text(
-        theme.fg("toolTitle", theme.bold("review_dual ")) +
-          theme.fg("dim", preview),
-        0,
-        0,
+        theme.fg("toolTitle", theme.bold("review_dual ")) + theme.fg("dim", preview),
+        0, 0,
       );
     },
     renderResult(result, _opts, theme) {
-      const text =
-        result.content[0]?.type === "text" ? result.content[0].text : "";
+      const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const hasA = text.includes("Review A");
       const hasB = text.includes("Review B");
-      const label =
-        hasA && hasB
-          ? "2 reviews ready"
-          : hasA
-            ? "1 review (A only)"
-            : hasB
-              ? "1 review (B only)"
-              : "reviews generated";
+      const label = hasA && hasB ? "2 reviews ready"
+        : hasA ? "1 review (A only)"
+        : hasB ? "1 review (B only)"
+        : "reviews generated";
       return new Text(
-        theme.fg("success", `✓ ${label}`) +
-          theme.fg("dim", " — synthesize below"),
-        0,
-        0,
+        theme.fg("success", `✓ ${label}`) + theme.fg("dim", " — synthesize below"),
+        0, 0,
       );
     },
   });
@@ -688,9 +607,9 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   // ── Ctrl+Shift+R shortcut ──────────────────────────────────────
 
   pi.registerShortcut("ctrl+shift+r", {
-    description: "Dual code review (Opus 4.6 + GPT 5.4)",
+    description: "Dual review of git changes (Opus 4.6 + GPT 5.4)",
     handler: async () => {
-      pi.sendUserMessage("/review", { deliverAs: "followUp" });
+      pi.sendUserMessage("/review-changes", { deliverAs: "followUp" });
     },
   });
 }

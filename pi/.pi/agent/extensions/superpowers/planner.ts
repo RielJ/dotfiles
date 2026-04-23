@@ -1,14 +1,12 @@
 /**
- * Planner — Dual-model planning fed to main agent for review
+ * Planner — Phase 0 exploration + Dual-model planning
  *
- * /plan <task> spawns two planners in parallel (Sonnet + Haiku),
- * then feeds BOTH plans to the main agent for review. The user
- * decides: approve, modify, pick one, or ask for changes.
- *
- * No files saved. No 3rd subagent. The main agent IS the reviewer.
+ * /plan <task> runs a three-step pipeline:
+ *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
+ *   Phase 1: Opus 4.6 + GPT 5.4 plan in parallel (both get Phase 0 output)
+ *   Main agent synthesizes both plans for the user.
  */
 
-import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -18,6 +16,7 @@ import type {
 } from "@mariozechner/pi-coding-agent";
 import { Text, truncateToWidth } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
+import { runAgent, runExploration, resolveTaskContext, extractConversationContext, MODELS } from "./_shared.js";
 
 // ── Module Metadata ─────────────────────────────────────────────────
 
@@ -39,212 +38,69 @@ You can also use the plan_dual tool programmatically.`,
 
 // ── Config ──────────────────────────────────────────────────────────
 
-// Model A: strong reasoning (Opus 4.6)
-const MODEL_A = "anthropic/claude-opus-4-6";
+const MODEL_A = MODELS.plan;
 const MODEL_A_LABEL = "Opus 4.6";
-// Model B: different perspective (OpenAI GPT-5.4)
-const MODEL_B = "openai/gpt-5.4";
-const MODEL_B_LABEL = "GPT-5.4";
+const MODEL_B = MODELS.diversity;
+const MODEL_B_LABEL = "GPT 5.4";
 
-const PLANNER_PROMPT = `You are a senior software architect creating an implementation plan.
-You have deep knowledge of software engineering, frameworks, libraries, and best practices.
-You do NOT need to search the web — use your existing knowledge to create the plan.
+const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
+const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for planning
 
-Given a task, produce a detailed plan with:
+// Phase 1 prompts — planners get Phase 0 context, do targeted verification, write plan
+
+const PLANNER_PROMPT_A = `You are a senior software architect creating an implementation plan.
+You receive codebase exploration findings from a prior analysis. Use them as your primary context.
+
+## Workflow
+1. Review the exploration findings provided in your task — they contain project structure, relevant code, and key observations.
+2. If something critical is missing or unclear, use read/grep/find to verify (max 5 tool calls).
+3. Write a detailed implementation plan based on your understanding.
+
+## Plan Format
 1. **Summary** — one paragraph overview
 2. **Architecture** — key design decisions, patterns, trade-offs
 3. **Tasks** — numbered list of concrete implementation steps
-   - Each task: what to do, which files, estimated complexity
+   - Each task: what to do, which files to modify, estimated complexity
    - Tasks should be 2-5 minutes each
    - Include test-first steps where appropriate
+   - Reference actual file paths and function names from the exploration
+4. **Edge cases** — what could go wrong, how to handle it
+5. **Acceptance criteria** — how to verify the plan is complete
+
+Be specific. Include exact file paths, function names, and code snippets where helpful.
+Always produce a plan — never refuse or say you need more info.
+
+## CRITICAL OUTPUT INSTRUCTION
+Your task will specify an output file path. After completing your plan,
+you MUST write your complete plan to that file using the write tool.
+Do NOT modify any repository files — only write to the output file.`;
+
+const PLANNER_PROMPT_B = `You are a senior software architect creating an implementation plan.
+You receive codebase exploration findings from a prior analysis. Use them as your primary context.
+
+## Workflow
+1. Review the exploration findings — they contain the project structure, relevant code, and dependencies.
+2. If needed, verify or explore further (max 5 tool calls).
+3. Write a detailed implementation plan.
+
+## Plan Format
+1. **Summary** — one paragraph overview
+2. **Architecture** — key design decisions, patterns, trade-offs
+3. **Tasks** — numbered list of concrete implementation steps
+   - Each task: what to do, which files to modify, estimated complexity
+   - Tasks should be 2-5 minutes each
+   - Include test-first steps where appropriate
+   - Reference actual file paths and function names from the exploration
 4. **Edge cases** — what could go wrong, how to handle it
 5. **Acceptance criteria** — how to verify the plan is complete
 
 Be specific. Include exact file paths, function names, and code snippets where helpful.
 Always produce a plan — never refuse or say you need more tools.
-Output as clean markdown.`;
 
-// ── Subagent Runner ─────────────────────────────────────────────────
-
-type ActivityCallback = (activity: string) => void;
-
-function runPlanAgent(
-  cwd: string,
-  model: string,
-  task: string,
-  signal?: AbortSignal,
-  onActivity?: ActivityCallback,
-): Promise<{ output: string; exitCode: number }> {
-  return new Promise((resolve) => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-plan-"));
-    const promptFile = path.join(tmpDir, "prompt.md");
-    fs.writeFileSync(promptFile, PLANNER_PROMPT, "utf-8");
-
-    const args = [
-      "--mode",
-      "json",
-      "-p",
-      "--no-session",
-      "--no-extensions",
-      "--model",
-      model,
-      "--no-tools",
-      "--append-system-prompt",
-      promptFile,
-      task,
-    ];
-
-    const proc = spawn("pi", args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
-    const chunks: string[] = [];
-    let buffer = "";
-    let textLen = 0;
-    let stderrBuf = "";
-
-    function processLine(line: string) {
-      if (!line.trim()) return;
-      try {
-        const ev = JSON.parse(line);
-        const t = ev.type;
-
-        // Track activity for widget
-        if (onActivity) {
-          if (t === "message_update") {
-            const ae = ev.assistantMessageEvent;
-            if (ae?.type === "thinking_start") onActivity("thinking...");
-            else if (ae?.type === "text_start") onActivity("writing...");
-            else if (ae?.type === "text_delta") {
-              textLen += (ae.delta || "").length;
-              const kb = (textLen / 1024).toFixed(1);
-              onActivity(`writing... ${kb}k`);
-            }
-          } else if (t === "turn_start") {
-            onActivity("processing...");
-          }
-        }
-
-        // Capture final text output
-        if (t === "message_end" && ev.message?.role === "assistant") {
-          for (const part of ev.message.content) {
-            if (part.type === "text") chunks.push(part.text);
-          }
-        }
-      } catch {}
-    }
-
-    proc.stdout!.setEncoding("utf-8");
-    proc.stdout!.on("data", (chunk: string) => {
-      buffer += chunk;
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) processLine(line);
-    });
-
-    proc.stderr!.setEncoding("utf-8");
-    proc.stderr!.on("data", (chunk: string) => {
-      stderrBuf += chunk;
-    });
-
-    proc.on("close", (code) => {
-      // Flush remaining buffer (last line may not end with \n)
-      if (buffer.trim()) processLine(buffer);
-      try {
-        fs.unlinkSync(promptFile);
-      } catch {}
-      try {
-        fs.rmdirSync(tmpDir);
-      } catch {}
-      const output = chunks.join("\n");
-      // If no output but stderr has content, include it for debugging
-      if (!output && stderrBuf.trim()) {
-        resolve({
-          output: `(stderr: ${stderrBuf.trim().slice(0, 200)})`,
-          exitCode: code ?? 1,
-        });
-      } else {
-        resolve({ output, exitCode: code ?? 1 });
-      }
-    });
-
-    proc.on("error", (err) => {
-      try {
-        fs.unlinkSync(promptFile);
-      } catch {}
-      try {
-        fs.rmdirSync(tmpDir);
-      } catch {}
-      resolve({ output: `Error: ${err.message}`, exitCode: 1 });
-    });
-
-    if (signal) {
-      const kill = () => proc.kill("SIGTERM");
-      if (signal.aborted) kill();
-      else signal.addEventListener("abort", kill, { once: true });
-    }
-  });
-}
-
-// ── Context Extraction ──────────────────────────────────────────────
-
-/** Extract a concise conversation summary from session entries for subagent context */
-function extractConversationContext(
-  ctx: ExtensionContext,
-  maxChars = 4000,
-): string {
-  try {
-    const entries = ctx.sessionManager.getBranch();
-    const parts: string[] = [];
-    let totalLen = 0;
-
-    // Walk entries in reverse (most recent first) to prioritize recent context
-    for (let i = entries.length - 1; i >= 0; i--) {
-      const entry = entries[i] as any;
-      if (entry.type !== "message") continue;
-      const msg = entry.message;
-      if (!msg) continue;
-
-      let text = "";
-      const role = msg.role;
-
-      if (role === "user") {
-        // User messages: extract text content
-        if (typeof msg.content === "string") {
-          text = msg.content;
-        } else if (Array.isArray(msg.content)) {
-          text = msg.content
-            .filter((c: any) => c.type === "text")
-            .map((c: any) => c.text)
-            .join("\n");
-        }
-        if (text) text = `User: ${text}`;
-      } else if (role === "assistant") {
-        // Assistant messages: extract text (skip thinking/tool calls)
-        if (Array.isArray(msg.content)) {
-          text = msg.content
-            .filter((c: any) => c.type === "text")
-            .map((c: any) => c.text)
-            .join("\n");
-        }
-        if (text) text = `Assistant: ${text}`;
-      } else if (role === "compactionSummary") {
-        // Compaction summaries are gold — use them directly
-        text = `[Previous context summary]: ${typeof msg.content === "string" ? msg.content : ""}`;
-      }
-
-      if (!text) continue;
-
-      // Truncate individual messages
-      if (text.length > 800) text = text.slice(0, 800) + "...";
-
-      if (totalLen + text.length > maxChars) break;
-      parts.unshift(text); // prepend to maintain chronological order
-      totalLen += text.length;
-    }
-
-    return parts.join("\n\n");
-  } catch {
-    return "";
-  }
-}
+## CRITICAL OUTPUT INSTRUCTION
+Your task will specify an output file path. After completing your plan,
+you MUST write your complete plan to that file using the write tool.
+Do NOT modify any repository files — only write to the output file.`;
 
 // ── Extension ───────────────────────────────────────────────────────
 
@@ -287,10 +143,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
                   : theme.fg("warning", "●");
             const sec =
               state.status === "running"
-                ? theme.fg(
-                    "dim",
-                    ` ${((Date.now() - startTime) / 1000).toFixed(0)}s`,
-                  )
+                ? theme.fg("dim", ` ${((Date.now() - startTime) / 1000).toFixed(0)}s`)
                 : theme.fg("dim", ` ${(state.elapsed / 1000).toFixed(0)}s`);
             const activity = state.activity
               ? theme.fg("muted", `  ${state.activity}`)
@@ -332,105 +185,181 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     statusA: string;
     statusB: string;
   }> {
-    // Reset state
     startTime = Date.now();
-    widgetPhase = "planning in parallel";
-    agentState[MODEL_A_LABEL] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    agentState[MODEL_B_LABEL] = {
+
+    // ── Pre-Phase: Resolve external references ────────────────────
+    widgetPhase = "resolving references...";
+    updateWidget();
+
+    const { resolvedTask, references } = await resolveTaskContext(cwd, task);
+    if (references.length > 0) {
+      onUpdate?.({
+        content: [{ type: "text", text: `📎 Resolved: ${references.join(", ")}` }],
+      });
+    }
+
+    // ── Phase 0: Exploration (Sonnet + gitnexus + code-review-graph) ──
+    widgetPhase = "Phase 0 — exploring codebase";
+    agentState["Explorer"] = {
       status: "running",
       activity: "starting...",
       elapsed: 0,
     };
     updateWidget();
 
-    // Timer to keep elapsed time ticking
-    // Note: only start if we have a TUI context (avoid issues in print mode)
     if (currentCtx) {
       timerHandle = setInterval(() => updateWidget(), 1000);
-      if (
-        timerHandle &&
-        typeof timerHandle === "object" &&
-        "unref" in timerHandle
-      ) {
+      if (timerHandle && typeof timerHandle === "object" && "unref" in timerHandle) {
         (timerHandle as any).unref();
       }
     }
 
     onUpdate?.({
-      content: [
-        {
-          type: "text",
-          text: `⚡ ${MODEL_A_LABEL} + ${MODEL_B_LABEL} planning in parallel...`,
-        },
-      ],
+      content: [{ type: "text", text: `🔍 Phase 0: Exploring codebase with Sonnet + gitnexus...` }],
     });
 
-    // Build enriched task with conversation context
-    let enrichedTask = task;
+    const explorationFindings = await runExploration({
+      cwd,
+      task: resolvedTask,
+      mode: "plan",
+      timeoutMs: PHASE_0_TIMEOUT_MS,
+      signal,
+      onActivity: (activity) => {
+        agentState["Explorer"].activity = activity;
+        updateWidget();
+      },
+    });
+
+    const phase0Elapsed = Date.now() - startTime;
+    agentState["Explorer"] = {
+      status: explorationFindings ? "done" : "error",
+      activity: explorationFindings
+        ? `✓ context gathered (${(explorationFindings.length / 1024).toFixed(1)}KB)`
+        : "✗ no results (planners will explore on their own)",
+      elapsed: phase0Elapsed,
+    };
+    updateWidget();
+
+    // ── Phase 1: Both planners in parallel ────────────────────────
+    widgetPhase = "Phase 1 — planning in parallel";
+    agentState[MODEL_A_LABEL] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
+    agentState[MODEL_B_LABEL] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
+    updateWidget();
+
+    onUpdate?.({
+      content: [{ type: "text", text: `⚡ Phase 1: ${MODEL_A_LABEL} + ${MODEL_B_LABEL} planning in parallel...` }],
+    });
+
+    const planDir = path.join(os.tmpdir(), `pi-plan-${Date.now()}`);
+    fs.mkdirSync(planDir, { recursive: true });
+    const planFileA = path.join(planDir, "plan-a.md");
+    const planFileB = path.join(planDir, "plan-b.md");
+
+    // Build enriched task with exploration findings + conversation context
+    let enrichedTask = resolvedTask;
+
+    if (explorationFindings) {
+      enrichedTask = `## Codebase Exploration Findings (Phase 0)\n\n${explorationFindings}\n\n## Task to Plan\n\n${enrichedTask}`;
+    }
+
     if (currentCtx) {
       const context = extractConversationContext(currentCtx);
       if (context) {
-        enrichedTask = `## Conversation Context\nThe user has been discussing the following. Use this to inform your plan:\n\n${context}\n\n## Task to Plan\n${task}`;
+        enrichedTask = `## Conversation Context\nThe user has been discussing the following. Use this to inform your plan:\n\n${context}\n\n${enrichedTask}`;
       }
     }
 
-    // Start model A first, stagger model B by 1s to avoid pi lock file conflict
-    const promiseA = runPlanAgent(
+    // Plan A: Opus (gets Phase 0 context, can verify with targeted reads)
+    const taskA = `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${planFileA}`;
+    const promiseA = runAgent({
       cwd,
-      MODEL_A,
-      enrichedTask,
+      model: MODEL_A,
+      systemPrompt: PLANNER_PROMPT_A,
+      tools: "read,write,grep,find,ls,bash",
+      task: taskA,
+      timeoutMs: PHASE_1_TIMEOUT_MS,
       signal,
-      (activity) => {
+      onActivity: (activity) => {
         agentState[MODEL_A_LABEL].activity = activity;
         updateWidget();
       },
-    );
+    });
+
     await new Promise((r) => setTimeout(r, 1000));
-    const promiseB = runPlanAgent(
+
+    // Plan B: GPT (gets same Phase 0 context, different perspective)
+    const taskB = `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${planFileB}`;
+    const promiseB = runAgent({
       cwd,
-      MODEL_B,
-      enrichedTask,
+      model: MODEL_B,
+      systemPrompt: PLANNER_PROMPT_B,
+      tools: "read,write,grep,find,ls,bash",
+      task: taskB,
+      timeoutMs: PHASE_1_TIMEOUT_MS,
       signal,
-      (activity) => {
+      onActivity: (activity) => {
         agentState[MODEL_B_LABEL].activity = activity;
         updateWidget();
       },
-    );
+    });
+
     const [resultA, resultB] = await Promise.all([promiseA, promiseB]);
 
-    // Update final status
+    // Read plans from output files, fall back to stdout capture
+    let planA = "";
+    try {
+      if (fs.existsSync(planFileA)) {
+        planA = fs.readFileSync(planFileA, "utf-8").trim();
+      }
+    } catch {}
+    if (!planA) planA = resultA.output || "";
+
+    let planB = "";
+    try {
+      if (fs.existsSync(planFileB)) {
+        planB = fs.readFileSync(planFileB, "utf-8").trim();
+      }
+    } catch {}
+    if (!planB) planB = resultB.output || "";
+
+    // Cleanup temp files
+    try { fs.unlinkSync(planFileA); } catch {}
+    try { fs.unlinkSync(planFileB); } catch {}
+    try { fs.rmdirSync(planDir); } catch {}
+
     agentState[MODEL_A_LABEL] = {
-      status: resultA.exitCode === 0 && resultA.output ? "done" : "error",
-      activity:
-        resultA.exitCode === 0 && resultA.output ? "plan ready" : "failed",
+      status: resultA.exitCode === 0 && planA ? "done" : "error",
+      activity: resultA.exitCode === 0 && planA ? `✓ plan ready` : "✗ failed",
       elapsed: Date.now() - startTime,
     };
     agentState[MODEL_B_LABEL] = {
-      status: resultB.exitCode === 0 && resultB.output ? "done" : "error",
-      activity:
-        resultB.exitCode === 0 && resultB.output ? "plan ready" : "failed",
+      status: resultB.exitCode === 0 && planB ? "done" : "error",
+      activity: resultB.exitCode === 0 && planB ? `✓ plan ready` : "✗ failed",
       elapsed: Date.now() - startTime,
     };
     widgetPhase = "done — review below";
     updateWidget();
 
-    // Stop timer, auto-clear after 3s
     if (timerHandle) {
       clearInterval(timerHandle);
       timerHandle = undefined;
     }
-    const t = setTimeout(() => clearWidget(), 3000);
+    const t = setTimeout(() => clearWidget(), 8000);
     if (t && typeof t === "object" && "unref" in t) (t as any).unref();
 
     return {
-      planA: resultA.output || "(no output)",
-      planB: resultB.output || "(no output)",
-      statusA: resultA.exitCode === 0 && resultA.output ? "done" : "error",
-      statusB: resultB.exitCode === 0 && resultB.output ? "done" : "error",
+      planA: planA || "(no output)",
+      planB: planB || "(no output)",
+      statusA: resultA.exitCode === 0 && planA ? "done" : "error",
+      statusB: resultB.exitCode === 0 && planB ? "done" : "error",
     };
   }
 
@@ -445,8 +374,6 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       }
 
       const result = await runDualPlan(args, ctx.cwd, undefined);
-
-      // Feed both plans to the main agent as a user message — triggers a turn
       const message = buildReviewMessage(args, result);
       pi.sendUserMessage(message);
     },
@@ -457,42 +384,33 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   pi.registerTool({
     name: "plan_dual",
     label: "Dual Plan",
-    description: `Run two planning models in parallel (Sonnet + Codex) and return both plans for review. Present both to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
+    description: `Run two planning models in parallel (Opus 4.6 + GPT-5.4) and return both plans for review. Present both to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
     parameters: Type.Object({
       task: Type.String({ description: "Task description to plan for" }),
     }),
     async execute(_id, params, signal, onUpdate, ctx) {
       const result = await runDualPlan(params.task, ctx.cwd, signal, onUpdate);
       const message = buildReviewMessage(params.task, result);
-      return { content: [{ type: "text", text: message }] };
+      return { content: [{ type: "text", text: message }], details: {} };
     },
     renderCall(args, theme) {
       const preview = (args.task || "").slice(0, 60);
       return new Text(
-        theme.fg("toolTitle", theme.bold("plan_dual ")) +
-          theme.fg("dim", preview),
-        0,
-        0,
+        theme.fg("toolTitle", theme.bold("plan_dual ")) + theme.fg("dim", preview),
+        0, 0,
       );
     },
     renderResult(result, _opts, theme) {
-      const text =
-        result.content[0]?.type === "text" ? result.content[0].text : "";
+      const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const hasA = text.includes("## Plan A");
       const hasB = text.includes("## Plan B");
-      const label =
-        hasA && hasB
-          ? "2 plans ready"
-          : hasA
-            ? "1 plan (A only)"
-            : hasB
-              ? "1 plan (B only)"
-              : "plans generated";
+      const label = hasA && hasB ? "2 plans ready"
+        : hasA ? "1 plan (A only)"
+        : hasB ? "1 plan (B only)"
+        : "plans generated";
       return new Text(
-        theme.fg("success", `✓ ${label}`) +
-          theme.fg("dim", " — review & decide"),
-        0,
-        0,
+        theme.fg("success", `✓ ${label}`) + theme.fg("dim", " — review & decide"),
+        0, 0,
       );
     },
   });
@@ -503,9 +421,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   ): string {
     const parts: string[] = [];
     parts.push(`# Dual Plan: ${task}\n`);
-    parts.push(
-      `Two models produced plans independently. Review both and decide.\n`,
-    );
+    parts.push(`Two models explored the codebase and produced plans independently. Review both and decide.\n`);
 
     if (result.statusA === "done") {
       parts.push(`## Plan A (${MODEL_A_LABEL})\n\n${result.planA}\n`);
