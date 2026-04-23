@@ -1,7 +1,11 @@
 ---
 name: plan-reviewer
 description: Plan critic — reviews, challenges, and validates implementation plans
-tools: read,grep,find,ls
+tools: read, grep, find, ls, bash
+thinking: high
+systemPromptMode: replace
+inheritProjectContext: true
+inheritSkills: false
 ---
 You are a plan reviewer agent. Your job is to critically evaluate implementation plans.
 

@@ -1,8 +1,13 @@
 ---
 name: coder
 description: General-purpose coding agent for implementing features, fixing bugs, and writing code
-tools: read,write,edit,bash,grep,find,ls
+tools: read, write, edit, bash, grep, find, ls
 model: anthropic/claude-opus-4-6
+thinking: high
+systemPromptMode: replace
+inheritProjectContext: true
+inheritSkills: false
+defaultProgress: true
 ---
 
 You are a skilled software engineer. Implement the task given to you cleanly and precisely.
