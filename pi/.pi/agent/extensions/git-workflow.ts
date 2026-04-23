@@ -56,11 +56,23 @@ const PR_INSTRUCTIONS = (base: string, issue?: string, context?: string, dir?: s
 	prompt += `
 
 1. Run \`${gitCmd} log ${base}..HEAD --oneline\` and \`${gitCmd} diff ${base}..HEAD --stat\` to understand changes
-2. Generate a **clean PR title** using conventional format (feat, fix, chore, etc.)
-3. Generate a **concise PR body** summarizing what changed and why
-4. ${NO_AI_RULE}
-5. Push the current branch first if needed: \`${gitCmd} push -u origin HEAD\`
-6. **Show me the title and body first**, wait for confirmation, then run \`${ghCmd} pr create --base ${base} --title "..." --body "..."\``;
+2. Read the changed files to understand what was modified
+3. Generate a **clean PR title** using conventional format (feat, fix, chore, etc.)
+4. Generate a **concise PR body** with these sections:
+   - **What changed** — brief summary of the changes
+   - **Why** — motivation/context (if not obvious)
+   - **Test coverage** — a checklist of things to test, formatted as:
+     \`\`\`
+     ## Test Coverage
+     - [ ] Description of test scenario 1
+     - [ ] Description of test scenario 2
+     - [ ] Edge case to verify
+     \`\`\`
+     Include happy paths, edge cases, error scenarios, and any regressions to watch for.
+     Be specific — reference actual user flows, API endpoints, or UI interactions affected.
+5. ${NO_AI_RULE}
+6. Push the current branch first if needed: \`${gitCmd} push -u origin HEAD\`
+7. **Show me the title and body first**, wait for confirmation, then run \`${ghCmd} pr create --base ${base} --title "..." --body "..."\``;
 
 	if (issue) {
 		prompt += `\n7. Include \`Closes ${issue}\` at the end of the PR body`;
@@ -95,9 +107,20 @@ ${COMMIT_INSTRUCTIONS(context)}
 
 1. Push branch: \`${gitCmd} push -u origin HEAD\`
 2. Run \`${gitCmd} log ${base}..HEAD --oneline\` and \`${gitCmd} diff ${base}..HEAD --stat\`
-3. Generate a clean PR title (conventional format) and concise body
-4. ${NO_AI_RULE}
-5. **Show me the PR title and body**, wait for confirmation, then run \`${ghCmd} pr create --base ${base} --title "..." --body "..."\``;
+3. Read the changed files to understand what was modified
+4. Generate a clean PR title (conventional format) and concise body with these sections:
+   - **What changed** — brief summary
+   - **Why** — motivation/context
+   - **Test coverage** — a checklist of things to test:
+     \`\`\`
+     ## Test Coverage
+     - [ ] Test scenario description
+     - [ ] Edge case to verify
+     \`\`\`
+     Include happy paths, edge cases, error scenarios, and regressions to watch for.
+     Be specific — reference actual user flows, API endpoints, or UI interactions.
+5. ${NO_AI_RULE}
+6. **Show me the PR title and body**, wait for confirmation, then run \`${ghCmd} pr create --base ${base} --title "..." --body "..."\``;
 
 	if (issue) {
 		prompt += `\n6. Include \`Closes ${issue}\` at the end of the PR body`;
