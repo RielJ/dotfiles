@@ -12,9 +12,22 @@ npm/
 usage-log.json
 cache/
 image-preview.bak/
+fff/
+
+.pi
+.pi-lens
 
 # Dependencies
 node_modules/
+
+# Executor STATUS files (runtime)
+STATUS-*.md
+
+# Runtime data
+intercom/
+pi-vcc-config.json
+run-history.jsonl
+SYSTEM.md
 
 # OS
 .DS_Store
