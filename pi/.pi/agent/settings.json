@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.64.0",
+  "lastChangelogVersion": "0.69.0",
   "defaultProvider": "anthropic",
   "defaultModel": "claude-opus-4-6",
   "defaultThinkingLevel": "high",
@@ -20,11 +20,24 @@
     "https://github.com/davebcn87/pi-autoresearch",
     "npm:pi-token-burden",
     "npm:pi-promptsmith",
-    "npm:@marckrenn/pi-sub-bar",
-    "https://github.com/tintinweb/pi-subagents",
     "npm:@tintinweb/pi-tasks",
     "npm:pi-skills-sh",
     "npm:pi-skill-toggle",
-    "npm:pi-vim"
+    "npm:@sting8k/pi-vcc",
+    "npm:@tomooshi/condensed-milk-pi",
+    "https://github.com/tintinweb/pi-gitnexus",
+    "https://github.com/sodie2323/pi-resource-center",
+    "npm:@tomooshi/caveman-milk-pi",
+    "npm:pi-subagents",
+    "npm:pi-mcp-adapter",
+    "npm:pi-intercom",
+    "npm:@kaiserlich-dev/pi-session-search",
+    "npm:pi-vim",
+    "npm:@ogulcancelik/pi-minimal-footer",
+    "npm:@ff-labs/pi-fff",
+    "npm:@tmustier/pi-tab-status",
+    "npm:@tmustier/pi-code-actions",
+    "npm:pi-bash-bg",
+    "npm:pi-tool-display"
   ]
 }
