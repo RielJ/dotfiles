@@ -29,7 +29,7 @@ export const MODELS = {
 	/** For checking (tests, lint, type-check) — Sonnet catches issues Haiku misses */
 	check: "anthropic/claude-sonnet-4-6",
 	/** For second-opinion diversity (different provider) */
-	diversity: "openai-codex/gpt-5.4",
+	diversity: "openai-codex/gpt-5.5",
 } as const;
 
 // ── Task Context Resolution (Pre-Phase) ─────────────────────────────

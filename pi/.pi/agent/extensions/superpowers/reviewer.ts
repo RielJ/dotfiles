@@ -7,7 +7,7 @@
  *
  * Pipeline:
  *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
- *   Phase 1: Opus 4.6 + GPT 5.4 review in parallel (both get Phase 0 output)
+ *   Phase 1: Opus 4.6 + GPT 5.5 review in parallel (both get Phase 0 output)
  *   Main agent synthesizes both reviews.
  */
 
@@ -32,7 +32,7 @@ export const module = {
   systemPromptWhenEnabled: `### Dual Review
 Use /review <context> to run a targeted dual code review:
 - Opus 4.6 reviews for bugs, security, performance, quality
-- GPT 5.4 reviews for architecture, patterns, maintainability
+- GPT 5.5 reviews for architecture, patterns, maintainability
 Both reviews are synthesized with a comparison.
 
 Usage:
@@ -54,7 +54,7 @@ You can also use the review_dual tool programmatically.`,
 const MODEL_A = MODELS.plan;
 const MODEL_A_LABEL = "Opus 4.6";
 const MODEL_B = MODELS.diversity;
-const MODEL_B_LABEL = "GPT 5.4";
+const MODEL_B_LABEL = "GPT 5.5";
 
 const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
 const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for review
@@ -406,6 +406,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       systemPrompt: REVIEWER_PROMPT_B,
       tools: "read,write,grep,find,ls,bash",
       task: taskB,
+      thinking: "low",
       timeoutMs: PHASE_1_TIMEOUT_MS,
       signal,
       onActivity: (activity) => {
@@ -495,7 +496,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   pi.registerCommand("review", {
     description:
-      "Dual code review (Opus 4.6 + GPT 5.4): /review <context to review>",
+      "Dual code review (Opus 4.6 + GPT 5.5): /review <context to review>",
     handler: async (args, ctx) => {
       const trimmed = (args || "").trim();
       if (!trimmed) {
@@ -524,7 +525,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   pi.registerCommand("review-changes", {
     description:
-      "Dual review of git changes (Opus 4.6 + GPT 5.4): /review-changes [--pr] [focus]",
+      "Dual review of git changes (Opus 4.6 + GPT 5.5): /review-changes [--pr] [focus]",
     handler: async (args, ctx) => {
       const trimmed = (args || "").trim();
       const isPR = trimmed.startsWith("--pr");
@@ -556,7 +557,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     name: "review_dual",
     label: "Dual Review",
     description:
-      "Run two code reviewers in parallel (Opus 4.6 + GPT 5.4) and return both reviews for synthesis.",
+      "Run two code reviewers in parallel (Opus 4.6 + GPT 5.5) and return both reviews for synthesis.",
     parameters: Type.Object({
       focus: Type.Optional(
         Type.String({
@@ -607,7 +608,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   // ── Ctrl+Shift+R shortcut ──────────────────────────────────────
 
   pi.registerShortcut("ctrl+shift+r", {
-    description: "Dual review of git changes (Opus 4.6 + GPT 5.4)",
+    description: "Dual review of git changes (Opus 4.6 + GPT 5.5)",
     handler: async () => {
       pi.sendUserMessage("/review-changes", { deliverAs: "followUp" });
     },

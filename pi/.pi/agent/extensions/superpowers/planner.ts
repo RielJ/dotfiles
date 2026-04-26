@@ -3,7 +3,7 @@
  *
  * /plan <task> runs a three-step pipeline:
  *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
- *   Phase 1: Opus 4.6 + GPT 5.4 plan in parallel (both get Phase 0 output)
+ *   Phase 1: Opus 4.6 + GPT 5.5 plan in parallel (both get Phase 0 output)
  *   Main agent synthesizes both plans for the user.
  */
 
@@ -27,7 +27,7 @@ export const module = {
   systemPromptWhenEnabled: `### Dual Planner
 Use /plan <task> to generate plans from two models in parallel:
 - Opus 4.6 produces Plan A (Anthropic)
-- GPT-5.4 produces Plan B (OpenAI)
+- GPT-5.5 produces Plan B (OpenAI)
 Both plans are presented to the user for review. You then:
 - Compare both plans, highlight key differences
 - Pick one, merge them, or suggest modifications
@@ -41,7 +41,7 @@ You can also use the plan_dual tool programmatically.`,
 const MODEL_A = MODELS.plan;
 const MODEL_A_LABEL = "Opus 4.6";
 const MODEL_B = MODELS.diversity;
-const MODEL_B_LABEL = "GPT 5.4";
+const MODEL_B_LABEL = "GPT 5.5";
 
 const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
 const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for planning
@@ -303,6 +303,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       systemPrompt: PLANNER_PROMPT_B,
       tools: "read,write,grep,find,ls,bash",
       task: taskB,
+      thinking: "low",
       timeoutMs: PHASE_1_TIMEOUT_MS,
       signal,
       onActivity: (activity) => {
@@ -384,7 +385,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   pi.registerTool({
     name: "plan_dual",
     label: "Dual Plan",
-    description: `Run two planning models in parallel (Opus 4.6 + GPT-5.4) and return both plans for review. Present both to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
+    description: `Run two planning models in parallel (Opus 4.6 + GPT-5.5) and return both plans for review. Present both to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
     parameters: Type.Object({
       task: Type.String({ description: "Task description to plan for" }),
     }),
