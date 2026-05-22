@@ -16,7 +16,7 @@ return {
           },
         },
         "stevearc/conform.nvim",
-        "pmizio/typescript-tools.nvim",
+        -- "pmizio/typescript-tools.nvim", -- replaced by tsgo + tsgo-tools
         "axelvc/template-string.nvim",
       },
       config = function()
