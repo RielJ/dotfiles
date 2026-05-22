@@ -19,3 +19,7 @@ export VISUAL=nvim
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
+
+# fnm (Fast Node Manager) — must come AFTER homebrew PATH so fnm shims win
+eval "$(fnm env --use-on-cd --shell zsh)"
+fnm use default --silent-if-unchanged 2>/dev/null
