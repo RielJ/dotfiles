@@ -11,3 +11,8 @@
 - **NEVER run `git push` on your own.** Only push when the user explicitly asks (e.g. `/pr`, "push this", "please push").
 - You may stage files with `git add` while working, but do NOT commit or push without explicit user confirmation.
 - When work is done, tell the user what changed and let them decide when to commit/push.
+
+## Tool Usage — Prefer FFF over bash grep/find
+- **NEVER use `grep` or `find` via the `bash` tool.** Use `ffgrep` for content search and `fffind` for file/path search instead.
+- `ffgrep` and `fffind` are faster (Rust SIMD), frecency-ranked, git-aware, and context-window friendly.
+- Only fall back to `bash` grep/find if ffgrep/fffind are unavailable or the query needs shell pipes/complex processing.

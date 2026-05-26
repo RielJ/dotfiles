@@ -17,8 +17,8 @@ import * as path from "node:path";
 import type {
   ExtensionAPI,
   ExtensionContext,
-} from "@mariozechner/pi-coding-agent";
-import { Text, truncateToWidth } from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-coding-agent";
+import { Text, truncateToWidth } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { runAgent, runExploration, resolveTaskContext, extractConversationContext, MODELS } from "./_shared.js";
 
@@ -517,7 +517,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       );
 
       const message = buildSynthesisMessage(trimmed, result);
-      pi.sendUserMessage(message);
+      pi.sendUserMessage(message, { deliverAs: "followUp" });
     },
   });
 
@@ -547,7 +547,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       );
 
       const message = buildSynthesisMessage(userContext, result);
-      pi.sendUserMessage(message);
+      pi.sendUserMessage(message, { deliverAs: "followUp" });
     },
   });
 

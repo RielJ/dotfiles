@@ -23,10 +23,10 @@ import * as os from "node:os";
 import type {
   ExtensionAPI,
   ExtensionContext,
-} from "@mariozechner/pi-coding-agent";
-import { Text } from "@mariozechner/pi-tui";
+} from "@earendil-works/pi-coding-agent";
+import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { StringEnum } from "@mariozechner/pi-ai";
+import { StringEnum } from "@earendil-works/pi-ai";
 
 // ── Module Metadata ─────────────────────────────────────────────────
 
@@ -279,6 +279,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       // Send results to the LLM for summarization
       pi.sendUserMessage(
         `I searched my knowledge base for "${args.trim()}". Here are the results:\n\n${result.stdout}\n\nSummarize the relevant findings.`,
+        { deliverAs: "followUp" },
       );
     },
   });
@@ -318,6 +319,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
       pi.sendUserMessage(
         `I searched my knowledge base for "${args.trim()}" using hybrid search. Here are the results:\n\n${result.stdout}\n\nSummarize the relevant findings and answer my question.`,
+        { deliverAs: "followUp" },
       );
     },
   });

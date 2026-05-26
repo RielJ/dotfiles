@@ -28,6 +28,8 @@ intercom/
 pi-vcc-config.json
 run-history.jsonl
 SYSTEM.md
+mcp-cache.json
+mcp-npx-cache.json
 
 # OS
 .DS_Store

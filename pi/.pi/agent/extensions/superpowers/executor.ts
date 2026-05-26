@@ -11,8 +11,8 @@
  *   7. Write STATUS.md for resume on context reset
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
-import { Text, truncateToWidth } from "@mariozechner/pi-tui";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { Text, truncateToWidth } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -578,7 +578,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 			const planContent = fs.readFileSync(fullPath, "utf-8");
 			const summary = await executePlan(planContent, planPath, ctx.cwd, undefined);
 
-			pi.sendUserMessage(summary);
+			pi.sendUserMessage(summary, { deliverAs: "followUp" });
 		},
 	});
 

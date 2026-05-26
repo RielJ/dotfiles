@@ -6,7 +6,7 @@
  * Compaction is handled by pi-vcc (algorithmic, zero-cost, with vcc_recall search).
  */
 
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
 	// Make pi-vcc the default compactor for auto-compaction
