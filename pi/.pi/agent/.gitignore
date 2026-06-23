@@ -1,5 +1,6 @@
-# Secrets - OAuth tokens from /login
+# Secrets - OAuth tokens from /login and local API keys
 auth.json
+.env
 
 # Sessions - conversation history (large, personal)
 sessions/

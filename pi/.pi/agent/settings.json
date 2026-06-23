@@ -1,7 +1,7 @@
 {
-  "lastChangelogVersion": "0.74.1",
-  "defaultProvider": "anthropic",
-  "defaultModel": "claude-opus-4-6",
+  "lastChangelogVersion": "0.79.10",
+  "defaultProvider": "zai",
+  "defaultModel": "glm-5.2",
   "defaultThinkingLevel": "high",
   "superpowers": {
     "enabled": {
@@ -32,6 +32,7 @@
     "npm:pi-bash-bg",
     "npm:pi-tool-display",
     "npm:pi-vim",
-    "npm:pi-textbrowser"
+    "npm:pi-textbrowser",
+    "../../personal/projects/pi-image-preview"
   ]
 }
