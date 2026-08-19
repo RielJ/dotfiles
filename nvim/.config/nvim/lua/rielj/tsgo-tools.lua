@@ -3,6 +3,8 @@
 -- Requires tsgo to be installed: go install github.com/nicholashusnern/typescript-go/cmd/tsgo@latest
 -- Or via npm: npm install -g @anthropic/tsgo (check latest install method)
 
+local action = require("rielj.lsp.action")
+
 local M = {}
 
 --- Get the tsgo client attached to the current buffer
@@ -21,59 +23,11 @@ end
 ---@param bufnr? number
 local function apply_code_action(kind, bufnr)
 	bufnr = bufnr or vim.api.nvim_get_current_buf()
-	local client = get_tsgo_client(bufnr)
-	if not client then
+	if not get_tsgo_client(bufnr) then
 		vim.notify("tsgo LSP not attached", vim.log.levels.WARN)
 		return
 	end
-
-	-- Get the full buffer range
-	local line_count = vim.api.nvim_buf_line_count(bufnr)
-	local last_line = vim.api.nvim_buf_get_lines(bufnr, line_count - 1, line_count, false)
-	local last_col = last_line[1] and #last_line[1] or 0
-
-	-- vim.diagnostic.get() returns Neovim-shaped diagnostics (lnum/col/...), but the
-	-- LSP wire format requires `range`. tsgo (Go/lsproto) strictly validates and errors
-	-- out on the Neovim shape, so convert back to LSP diagnostics first.
-	local lsp_diagnostics = vim.lsp.diagnostic.from(vim.diagnostic.get(bufnr))
-
-	local params = {
-		textDocument = vim.lsp.util.make_text_document_params(bufnr),
-		range = {
-			start = { line = 0, character = 0 },
-			["end"] = { line = line_count - 1, character = last_col },
-		},
-		context = {
-			diagnostics = lsp_diagnostics,
-			only = { kind },
-			triggerKind = vim.lsp.protocol.CodeActionTriggerKind.Invoked,
-		},
-	}
-
-	client:request("textDocument/codeAction", params, function(err, result)
-		if err then
-			vim.notify("Code action error: " .. (err.message or vim.inspect(err)), vim.log.levels.ERROR)
-			return
-		end
-
-		if not result or #result == 0 then
-			vim.notify("No code actions available for: " .. kind, vim.log.levels.INFO)
-			return
-		end
-
-		-- Apply all matching actions
-		for _, action in ipairs(result) do
-			if action.edit then
-				vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding or "utf-16")
-			end
-			if action.command then
-				-- `action` may be a Command (command field is a string) or a CodeAction
-				-- (command field is a Command object).
-				local cmd = type(action.command) == "table" and action.command or action
-				client:exec_cmd(cmd, { bufnr = bufnr })
-			end
-		end
-	end, bufnr)
+	action.apply({ bufnr = bufnr, client = "tsgo", kind = kind, notify = true })
 end
 
 --- Remove unused imports
@@ -133,7 +87,7 @@ function M.rename_file()
 			},
 		}
 
-		client:request("workspace/willRenameFiles", will_rename_params, function(_err, result)
+		client:request("workspace/willRenameFiles", will_rename_params, function(_, result)
 			-- Apply workspace edits (import path updates) if provided
 			if result then
 				vim.lsp.util.apply_workspace_edit(result, client.offset_encoding or "utf-16")
