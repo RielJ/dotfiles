@@ -95,7 +95,7 @@ return {
   },
   "nvim-treesitter/nvim-treesitter-context",
   {
-    "narutoxy/dim.lua",
+    "0oAstro/dim.lua",
     dependencies = { "nvim-treesitter/nvim-treesitter", "neovim/nvim-lspconfig" },
     opts = {},
   },

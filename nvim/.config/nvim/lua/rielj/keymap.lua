@@ -109,10 +109,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
   once = true,
   callback = function()
     if #collisions > 0 then
-      vim.notify(
-        string.format("%d keymap collision(s) — :KeymapCollisions", #collisions),
-        vim.log.levels.WARN
-      )
+      vim.notify(string.format("%d keymap collision(s) — :KeymapCollisions", #collisions), vim.log.levels.WARN)
     end
   end,
 })

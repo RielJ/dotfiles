@@ -1,3 +1,6 @@
+-- Core Lua module cache (replaces impatient.nvim, archived since Nvim 0.9).
+vim.loader.enable()
+
 local map = require("rielj.keymap").map
 
 vim.g.mapleader = " "
@@ -37,5 +40,3 @@ require("lazy").setup("custom.plugins", {
     },
   },
 })
-
-vim.deprecate = function() end

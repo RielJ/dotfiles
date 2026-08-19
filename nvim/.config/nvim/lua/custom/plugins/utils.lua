@@ -1,11 +1,5 @@
 return {
   {
-    "AckslD/nvim-neoclip.lua",
-    opts = {},
-    dependencies = { "kkharji/sqlite.lua", module = "sqlite" },
-  },
-
-  {
     "kevinhwang91/nvim-hlslens",
     config = function()
       local _, hlslens = pcall(require, "hlslens")

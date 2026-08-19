@@ -16,12 +16,10 @@ return {
           {
             description = "kubernetes",
             fileMatch = { "k8s-*.yaml" },
-            url =
-            "https://github.com/yannh/kubernetes-json-schema",
+            url = "https://github.com/yannh/kubernetes-json-schema",
             name = "kubernetes",
-
-          }
-        }
+          },
+        },
       }),
       -- schemas = {
       --   kubernetes = "*.yaml",
@@ -64,6 +62,6 @@ return {
       --   ["https://raw.githubusercontent.com/argoproj/argo-workflows/master/api/jsonschema/schema.json"] =
       --   "*flow*.{yml,yaml}",
       -- },
-    }
+    },
   },
 }

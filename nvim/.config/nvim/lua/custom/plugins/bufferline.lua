@@ -1,5 +1,13 @@
 return {
-  "famiu/bufdelete.nvim",
+  -- Replaces famiu/bufdelete.nvim (archived 2024-02); keeps window layout on close.
+  {
+    "nvim-mini/mini.bufremove",
+    version = "*",
+    opts = {},
+    -- Loaded on demand: plugin/keymappings.lua's <leader>c requires the module,
+    -- which lazy.nvim intercepts. Keymap ownership stays in the rielj.keymap seam.
+    lazy = true,
+  },
   {
     "akinsho/bufferline.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },

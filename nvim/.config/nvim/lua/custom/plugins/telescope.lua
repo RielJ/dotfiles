@@ -1,7 +1,6 @@
 return {
   {
     -- Telescope
-    "nvim-lua/popup.nvim",
     "nvim-lua/plenary.nvim",
     {
       "nvim-telescope/telescope.nvim",
@@ -17,6 +16,5 @@ return {
       "nvim-telescope/telescope-fzf-native.nvim",
       build = "make",
     },
-    "dharmx/telescope-media.nvim",
   },
 }

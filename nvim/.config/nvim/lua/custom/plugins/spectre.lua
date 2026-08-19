@@ -1,6 +1,6 @@
 return {
   {
-    "windwp/nvim-spectre",
+    "nvim-pack/nvim-spectre",
     event = "BufRead",
     config = function()
       local sed_args = nil

@@ -5,10 +5,10 @@ local M = {
 }
 
 local function create_floating_file(location, opts)
-  vim.validate {
+  vim.validate({
     location = { location, "t" },
     opts = { opts, "t", true },
-  }
+  })
 
   -- Set some defaults
   opts = opts or {}
@@ -78,10 +78,10 @@ end
 
 function M.open_file()
   -- Get the file currently open in the floating window
-  local filepath = vim.fn.expand "%:."
+  local filepath = vim.fn.expand("%:.")
 
   if not filepath then
-    print "peek: Unable to open the file!"
+    print("peek: Unable to open the file!")
     return
   end
 
@@ -114,7 +114,7 @@ function M.Peek(what)
   if vim.tbl_contains(vim.api.nvim_list_wins(), M.floating_win) then
     local success_1, _ = pcall(vim.api.nvim_set_current_win, M.floating_win)
     if not success_1 then
-      print "peek: You cannot edit the current file in a preview!"
+      print("peek: You cannot edit the current file in a preview!")
       return
     end
 

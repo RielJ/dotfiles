@@ -57,7 +57,9 @@ end, { desc = "Toggle inlay hints" })
 
 -- Buffers --
 map("n", "<leader>bf", "<cmd>Telescope buffers<cr>", { desc = "Find buffer" })
-map("n", "<leader>c", "<cmd>Bdelete<CR>", { desc = "Close buffer" })
+map("n", "<leader>c", function()
+  require("mini.bufremove").delete(0, false)
+end, { desc = "Close buffer" })
 map("n", "]b", "<cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" })
 map("n", "[b", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous buffer" })
 map("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" })

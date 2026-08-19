@@ -16,7 +16,7 @@ local function resolve_ssh_auth_sock()
   return vim.env.SSH_AUTH_SOCK
 end
 
-local lazygit = Terminal:new {
+local lazygit = Terminal:new({
   cmd = "lazygit",
   hidden = true,
   direction = "float",
@@ -54,10 +54,10 @@ local lazygit = Terminal:new {
     vim.cmd("stopinsert")
   end,
   count = 99,
-}
+})
 
 M._exec_toggle = function(opts)
-  local term = Terminal:new { cmd = opts.cmd, count = opts.count, direction = opts.direction }
+  local term = Terminal:new({ cmd = opts.cmd, count = opts.count, direction = opts.direction })
   term:toggle(opts.size, opts.direction)
 end
 

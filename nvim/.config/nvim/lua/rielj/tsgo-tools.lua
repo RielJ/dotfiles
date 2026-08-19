@@ -10,143 +10,141 @@ local M = {}
 --- Get the tsgo client attached to the current buffer
 ---@return vim.lsp.Client|nil
 local function get_tsgo_client(bufnr)
-	bufnr = bufnr or vim.api.nvim_get_current_buf()
-	local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "tsgo" })
-	if #clients == 0 then
-		return nil
-	end
-	return clients[1]
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  local clients = vim.lsp.get_clients({ bufnr = bufnr, name = "tsgo" })
+  if #clients == 0 then
+    return nil
+  end
+  return clients[1]
 end
 
 --- Apply code actions of a specific kind automatically (no prompt)
 ---@param kind string LSP code action kind
 ---@param bufnr? number
 local function apply_code_action(kind, bufnr)
-	bufnr = bufnr or vim.api.nvim_get_current_buf()
-	if not get_tsgo_client(bufnr) then
-		vim.notify("tsgo LSP not attached", vim.log.levels.WARN)
-		return
-	end
-	action.apply({ bufnr = bufnr, client = "tsgo", kind = kind, notify = true })
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if not get_tsgo_client(bufnr) then
+    vim.notify("tsgo LSP not attached", vim.log.levels.WARN)
+    return
+  end
+  action.apply({ bufnr = bufnr, client = "tsgo", kind = kind, notify = true })
 end
 
 --- Remove unused imports
 function M.remove_unused_imports()
-	apply_code_action("source.removeUnusedImports", vim.api.nvim_get_current_buf())
+  apply_code_action("source.removeUnusedImports", vim.api.nvim_get_current_buf())
 end
 
 --- Remove all unused code
 function M.remove_unused()
-	-- Try source.removeUnused first, fall back to fixAll for unused
-	apply_code_action("source.removeUnused", vim.api.nvim_get_current_buf())
+  -- Try source.removeUnused first, fall back to fixAll for unused
+  apply_code_action("source.removeUnused", vim.api.nvim_get_current_buf())
 end
 
 --- Organize imports (sort + remove unused)
 function M.organize_imports()
-	apply_code_action("source.organizeImports", vim.api.nvim_get_current_buf())
+  apply_code_action("source.organizeImports", vim.api.nvim_get_current_buf())
 end
 
 --- Add missing imports
 function M.add_missing_imports()
-	apply_code_action("source.addMissingImports", vim.api.nvim_get_current_buf())
+  apply_code_action("source.addMissingImports", vim.api.nvim_get_current_buf())
 end
 
 --- Fix all auto-fixable issues
 function M.fix_all()
-	apply_code_action("source.fixAll", vim.api.nvim_get_current_buf())
+  apply_code_action("source.fixAll", vim.api.nvim_get_current_buf())
 end
 
 --- Rename file and update all imports
 function M.rename_file()
-	local bufnr = vim.api.nvim_get_current_buf()
-	local old_path = vim.api.nvim_buf_get_name(bufnr)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local old_path = vim.api.nvim_buf_get_name(bufnr)
 
-	if old_path == "" then
-		vim.notify("Buffer has no file path", vim.log.levels.WARN)
-		return
-	end
+  if old_path == "" then
+    vim.notify("Buffer has no file path", vim.log.levels.WARN)
+    return
+  end
 
-	vim.ui.input({ prompt = "New file path: ", default = old_path }, function(new_path)
-		if not new_path or new_path == "" or new_path == old_path then
-			return
-		end
+  vim.ui.input({ prompt = "New file path: ", default = old_path }, function(new_path)
+    if not new_path or new_path == "" or new_path == old_path then
+      return
+    end
 
-		local client = get_tsgo_client(bufnr)
-		if not client then
-			vim.notify("tsgo LSP not attached", vim.log.levels.WARN)
-			return
-		end
+    local client = get_tsgo_client(bufnr)
+    if not client then
+      vim.notify("tsgo LSP not attached", vim.log.levels.WARN)
+      return
+    end
 
-		-- Try willRenameFiles if the server supports it
-		local will_rename_params = {
-			files = {
-				{
-					oldUri = vim.uri_from_fname(old_path),
-					newUri = vim.uri_from_fname(new_path),
-				},
-			},
-		}
+    -- Try willRenameFiles if the server supports it
+    local will_rename_params = {
+      files = {
+        {
+          oldUri = vim.uri_from_fname(old_path),
+          newUri = vim.uri_from_fname(new_path),
+        },
+      },
+    }
 
-		client:request("workspace/willRenameFiles", will_rename_params, function(_, result)
-			-- Apply workspace edits (import path updates) if provided
-			if result then
-				vim.lsp.util.apply_workspace_edit(result, client.offset_encoding or "utf-16")
-			end
+    client:request("workspace/willRenameFiles", will_rename_params, function(_, result)
+      -- Apply workspace edits (import path updates) if provided
+      if result then
+        vim.lsp.util.apply_workspace_edit(result, client.offset_encoding or "utf-16")
+      end
 
-			-- Perform the actual file rename
-			local ok, rename_err = pcall(vim.fn.rename, old_path, new_path)
-			if not ok then
-				vim.notify("Failed to rename file: " .. tostring(rename_err), vim.log.levels.ERROR)
-				return
-			end
+      -- Perform the actual file rename
+      local ok, rename_err = pcall(vim.fn.rename, old_path, new_path)
+      if not ok then
+        vim.notify("Failed to rename file: " .. tostring(rename_err), vim.log.levels.ERROR)
+        return
+      end
 
-			-- Update the buffer to point to the new file
-			vim.api.nvim_buf_set_name(bufnr, new_path)
-			vim.cmd("write!")
+      -- Update the buffer to point to the new file
+      vim.api.nvim_buf_set_name(bufnr, new_path)
+      vim.cmd("write!")
 
-			-- Notify the LSP about the rename
-			if client:supports_method("workspace/didRenameFiles") then
-				client:notify("workspace/didRenameFiles", will_rename_params)
-			end
+      -- Notify the LSP about the rename
+      if client:supports_method("workspace/didRenameFiles") then
+        client:notify("workspace/didRenameFiles", will_rename_params)
+      end
 
-			vim.notify(
-				"Renamed: " .. vim.fn.fnamemodify(old_path, ":t") .. " → " .. vim.fn.fnamemodify(new_path, ":t")
-			)
-		end, bufnr)
-	end)
+      vim.notify("Renamed: " .. vim.fn.fnamemodify(old_path, ":t") .. " → " .. vim.fn.fnamemodify(new_path, ":t"))
+    end, bufnr)
+  end)
 end
 
 --- Sort imports (non-destructive, does not remove unused)
 function M.sort_imports()
-	apply_code_action("source.sortImports", vim.api.nvim_get_current_buf())
+  apply_code_action("source.sortImports", vim.api.nvim_get_current_buf())
 end
 
 --- Register user commands
 function M.register_commands()
-	vim.api.nvim_create_user_command("TsgoOrganizeImports", M.organize_imports, { desc = "Organize imports" })
-	vim.api.nvim_create_user_command(
-		"TsgoRemoveUnusedImports",
-		M.remove_unused_imports,
-		{ desc = "Remove unused imports" }
-	)
-	vim.api.nvim_create_user_command("TsgoRemoveUnused", M.remove_unused, { desc = "Remove unused code" })
-	vim.api.nvim_create_user_command("TsgoAddMissingImports", M.add_missing_imports, { desc = "Add missing imports" })
-	vim.api.nvim_create_user_command("TsgoFixAll", M.fix_all, { desc = "Fix all auto-fixable issues" })
-	vim.api.nvim_create_user_command("TsgoRenameFile", M.rename_file, { desc = "Rename file and update imports" })
-	vim.api.nvim_create_user_command("TsgoSortImports", M.sort_imports, { desc = "Sort imports (non-destructive)" })
+  vim.api.nvim_create_user_command("TsgoOrganizeImports", M.organize_imports, { desc = "Organize imports" })
+  vim.api.nvim_create_user_command(
+    "TsgoRemoveUnusedImports",
+    M.remove_unused_imports,
+    { desc = "Remove unused imports" }
+  )
+  vim.api.nvim_create_user_command("TsgoRemoveUnused", M.remove_unused, { desc = "Remove unused code" })
+  vim.api.nvim_create_user_command("TsgoAddMissingImports", M.add_missing_imports, { desc = "Add missing imports" })
+  vim.api.nvim_create_user_command("TsgoFixAll", M.fix_all, { desc = "Fix all auto-fixable issues" })
+  vim.api.nvim_create_user_command("TsgoRenameFile", M.rename_file, { desc = "Rename file and update imports" })
+  vim.api.nvim_create_user_command("TsgoSortImports", M.sort_imports, { desc = "Sort imports (non-destructive)" })
 end
 
 --- Setup keymaps (mirrors typescript-tools.nvim bindings)
 ---@param bufnr number
 function M.on_attach(bufnr)
-	local bufmap = require("rielj.keymap").bufmap
+  local bufmap = require("rielj.keymap").bufmap
 
-	bufmap(bufnr, "n", "gs", M.remove_unused_imports, { desc = "Remove unused imports" })
-	bufmap(bufnr, "n", "ge", M.remove_unused, { desc = "Remove unused" })
-	bufmap(bufnr, "n", "gS", M.organize_imports, { desc = "Organize imports" })
-	bufmap(bufnr, "n", "go", M.add_missing_imports, { desc = "Add missing imports" })
-	bufmap(bufnr, "n", "gA", M.fix_all, { desc = "Fix all" })
-	bufmap(bufnr, "n", "gR", M.rename_file, { desc = "Rename file" })
+  bufmap(bufnr, "n", "gs", M.remove_unused_imports, { desc = "Remove unused imports" })
+  bufmap(bufnr, "n", "ge", M.remove_unused, { desc = "Remove unused" })
+  bufmap(bufnr, "n", "gS", M.organize_imports, { desc = "Organize imports" })
+  bufmap(bufnr, "n", "go", M.add_missing_imports, { desc = "Add missing imports" })
+  bufmap(bufnr, "n", "gA", M.fix_all, { desc = "Fix all" })
+  bufmap(bufnr, "n", "gR", M.rename_file, { desc = "Rename file" })
 end
 
 -- Register commands on load

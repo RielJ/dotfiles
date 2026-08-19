@@ -1,8 +1,11 @@
 return {
+  -- Replaces iamcco/markdown-preview.nvim (unmaintained since 2024-07, npm build step).
   {
-    "iamcco/markdown-preview.nvim",
-    build = "cd app && npm install",
-    ft = "markdown",
+    "brianhuster/live-preview.nvim",
+    dependencies = { "nvim-telescope/telescope.nvim" },
+    cmd = { "LivePreview" },
+    ft = { "markdown", "html", "asciidoc", "svg" },
+    opts = {},
   },
   {
     "MeanderingProgrammer/render-markdown.nvim",

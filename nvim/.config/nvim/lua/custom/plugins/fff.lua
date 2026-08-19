@@ -1,7 +1,8 @@
 return {
   {
-    "dmtrKovalenko/fff.nvim",
-    version = "v0.10.1",
+    "dmtrKovalenko/fff",
+    name = "fff.nvim",
+    version = "v0.10.5",
     build = function()
       require("fff.download").download_or_build_binary()
     end,

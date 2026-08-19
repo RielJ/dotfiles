@@ -21,7 +21,6 @@ map_tele("<space>f/", "grep_last_search", {
 -- Files
 vim.api.nvim_set_keymap("n", "<leader>fr", "<cmd>Telescope oldfiles<CR>", { noremap = true, silent = true })
 -- map_tele("<space>ca", "lsp_code_actions") -- DEPRECATED
-map_tele("<space>fn", "neoclip")
 map_tele("<space>ft", "git_files")
 map_tele("<space>fg", "multi_rg")
 map_tele("<space>fo", "oldfiles")
@@ -32,7 +31,6 @@ map_tele("<space>fv", "find_nvim_source")
 map_tele("<space>fe", "file_browser")
 map_tele("<space>fz", "search_only_certain_files")
 map_tele("<space>fc", "colorscheme")
-map_tele("<space>fm", "media_files")
 
 -- Sourcegraph
 map_tele("<space>sf", "sourcegraph_find")

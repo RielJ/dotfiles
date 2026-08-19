@@ -4,7 +4,6 @@ end
 local previewers = require("telescope.previewers")
 local sorters = require("telescope.sorters")
 local actions = require("telescope.actions")
-local canned = require("telescope._extensions.media.lib.canned")
 
 require("telescope").setup({
   pickers = {
@@ -105,27 +104,16 @@ require("telescope").setup({
       },
       colorscheme = {
         enable_preview = true,
-      }
+      },
     },
   },
   extensions = {
     fzf = {
-      fuzzy = true,                   -- false will only do exact matching
+      fuzzy = true, -- false will only do exact matching
       override_generic_sorter = true, -- override the generic sorter
-      override_file_sorter = true,    -- override the file sorter
-      case_mode = "smart_case",       -- or "ignore_case" or "respect_case"
+      override_file_sorter = true, -- override the file sorter
+      case_mode = "smart_case", -- or "ignore_case" or "respect_case"
     },
-    media = {
-      backend = "viu", -- image/gif backend
-      flags = {
-        viu = {
-          move = true, -- GIF preview
-        },
-      },
-      on_confirm_single = canned.single.copy_path,
-      on_confirm_muliple = canned.multiple.bulk_copy,
-      cache_path = vim.fn.stdpath("cache") .. "/media"
-    }
   },
   file_previewer = previewers.vim_buffer_cat.new,
   grep_previewer = previewers.vim_buffer_vimgrep.new,
@@ -188,7 +176,6 @@ require("telescope").setup({
 
 _ = require("telescope").load_extension("fzf")
 _ = require("telescope").load_extension("file_browser")
-_ = require("telescope").load_extension("media")
 -- _ = require('telescope').load_extension('rielj.telescope.extensions.media_files')
 
 -- require('telescope').register_extension {
@@ -205,4 +192,3 @@ _ = require("telescope").load_extension("media")
 
 -- pcall(require("telescope").load_extension, "neoclip")
 -- pcall(require("telescope").load_extension, "frecency")
-pcall(require("telescope").load_extension, "smart_history")

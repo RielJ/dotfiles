@@ -5,11 +5,11 @@ return {
       dependencies = {
         "nvim-lua/plenary.nvim",
         "b0o/schemastore.nvim",
-        "williamboman/mason.nvim",
-        -- "williamboman/mason-lspconfig.nvim",
+        "mason-org/mason.nvim",
+        -- "mason-org/mason-lspconfig.nvim",
         {
           "j-hui/fidget.nvim",
-          tag = "legacy",
+          version = "v2.*",
           event = "LspAttach",
           opts = {
             -- options

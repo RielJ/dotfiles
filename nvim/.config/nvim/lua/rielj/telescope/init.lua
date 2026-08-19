@@ -416,28 +416,12 @@ function M.lsp_implementations()
   })
 end
 
-function M.neoclip()
-  require("telescope").extensions.neoclip.default()
-end
-
 function M.vim_options()
   require("telescope.builtin").vim_options({
     layout_config = {
       width = 0.5,
     },
     sorting_strategy = "ascending",
-  })
-end
-
-function M.media_files()
-  require('telescope').extensions.media.media({
-    find_command = {
-      "rg",
-      "--files",
-      "--glob",
-      "*.{png,jpg,gif,webm}",
-      "."
-    }
   })
 end
 
