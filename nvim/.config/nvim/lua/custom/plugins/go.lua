@@ -10,8 +10,8 @@ return {
         require("gopher").setup()
       end,
       build = {
-        vim.cmd [[silent! GoInstallDeps]]
-      }
+        vim.cmd([[silent! GoInstallDeps]]),
+      },
     },
   },
 }
