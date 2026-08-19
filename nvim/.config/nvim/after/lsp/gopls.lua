@@ -1,3 +1,7 @@
+-- cmd, filetypes and root markers come from nvim-lspconfig's `lsp/gopls.lua`
+-- (its filetypes list is already go/gomod/gowork/gotmpl, so the old copy here
+-- was redundant).
+---@type vim.lsp.Config
 return {
   settings = {
     gopls = {
@@ -13,9 +17,7 @@ return {
       },
     },
   },
-
   flags = {
     debounce_text_changes = 200,
   },
-  filetypes = { "go", "gomod", "gowork", "gotmpl" },
 }

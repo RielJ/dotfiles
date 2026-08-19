@@ -314,7 +314,7 @@ any project without one will fall back to that stale binary. `npm i -g typescrip
 
 ---
 
-## Tier 4 — Native LSP layout
+## Tier 4 — Native LSP layout ✅ DONE
 
 ### Where you already are
 
@@ -368,19 +368,72 @@ wrong — corrected after reading `handlers.lua` and the healthcheck output.)*
 
 ### Tasks
 
-- [ ] Fix the discarded `tbl_deep_extend` result so `cmp_nvim_lsp.default_capabilities()`
-      is actually merged into the capabilities you send.
-- [ ] Move shared settings into a single `vim.lsp.config('*', { capabilities = …, on_init = … })`
-      call in `init.lua`.
-- [ ] Convert per-server overrides from `lua/rielj/lsp/servers/<name>.lua` into
-      `after/lsp/<name>.lua`, letting the runtimepath merge do the work.
-- [ ] Replace the `servers/init.lua` registry and `setup_server` loop with a single
-      `vim.lsp.enable({ 'bashls', 'biome', 'cssls', 'gopls', 'jsonls', 'lua_ls', 'oxlint',
-      'rust_analyzer', 'tailwindcss', 'tsc', 'ty', 'yamlls' })`.
-- [ ] Replace the custom `on_attach` plumbing with a single `LspAttach` autocommand
-      (see [`:help lsp-attach`](https://neovim.io/doc/user/lsp.html#lsp-attach)).
-- [ ] Verify with `:checkhealth vim.lsp` — every server should appear under "Enabled
-      Configurations" with the expected `cmd` and root.
+- [x] Deleted the discarded `tbl_deep_extend` line (a no-op, as established above).
+- [x] Shared settings now live in one `vim.lsp.config('*', { capabilities, on_init })` call.
+- [x] Per-server overrides moved from `lua/rielj/lsp/servers/<name>.lua` to
+      `after/lsp/<name>.lua`; the `servers/` directory is gone.
+- [x] The registry table and `setup_server` loop are replaced by a single `vim.lsp.enable({…})`
+      call listing all twelve servers.
+- [x] Per-server `on_attach` plumbing replaced by one `LspAttach` autocommand.
+- [x] `:checkhealth vim.lsp` reports **0 errors, 0 warnings**.
+
+### Why LspAttach rather than a `'*'` on_attach
+
+Not a style preference. Config merge is `force`, so a per-server `on_attach` *replaces* the
+`'*'` one rather than running after it. Keeping the common keymaps in `'*'` would have
+silently disabled them in TypeScript buffers, where `after/lsp/tsc.lua` needs its own
+`on_attach` for the ts-tools mappings. With the common wiring in an autocommand, both run.
+
+### Two real bugs found while rewriting this
+
+**Document highlighting never worked.** `lsp_highlight_document` gated on
+`client.server_capabilities.document_highlight`, but the capability is
+`documentHighlightProvider` — no server sets the snake_case key, so the `CursorHold`
+autocommands were never created. Now gated on
+`client:supports_method("textDocument/documentHighlight", bufnr)`, and verified: 2 autocommands
+registered on a TypeScript buffer where there were previously 0.
+
+**`rename_filter` filtered out everything.** It called `client.supports_method(...)` with a
+dot, which passes the method name as `self` and throws; the surrounding `pcall` swallowed the
+error and returned false for every client. Same dot-vs-colon bug that was fixed in
+`tsgo-tools.lua` earlier. Fixed, and the now-pointless `pcall` and `null-ls` exclusion
+(null-ls is not installed) went with it.
+
+### Incidental cleanups
+
+- The `sign_define("DiagnosticSignError", …)` loop was pre-0.10; `vim.diagnostic.config({
+  signs = { text = … } })` in the same function already set the same glyphs.
+- The `vim.lsp.with()` wrappers for hover/signatureHelp only set `border = "rounded"`, which
+  `vim.o.winborder = "rounded"` in `plugin/options.lua` already applies to every float.
+- `float.source = "always"` is the old string form; it is a boolean now.
+- `get_common_opts()` was unreferenced, and passed `capabilities = M.common_capabilities` —
+  the function, not its result.
+- `jsonls` hardcoded a `cmd` identical to lspconfig's, plus a `setup.commands` table that was
+  a pre-native lspconfig extension point nothing reads any more.
+- `yamlls` had `completion`/`hover` keys as siblings of `yaml` rather than inside it, so they
+  were ignored; `ty` and `yamlls` both carried a made-up `enable`/`enabled` field.
+- `gopls` re-declared the exact `filetypes` list lspconfig already ships.
+
+### Verification
+
+Opened a real file per language and inspected the attached client's merged settings:
+
+| File | Client | Merged settings key |
+|---|---|---|
+| `main.ts` | `tsc` | `js/ts` |
+| `main.ts` | `tailwindcss` | `tailwindCSS` |
+| `init.lua` | `lua_ls` | `Lua`, `hint.enable = true` |
+| `main.go` | `gopls` | `gopls` |
+| `package.json` | `jsonls` | `json` |
+| `style.css` | `cssls` | `css`, `scss`, `less` |
+| `ci.yaml` | `yamlls` | `yaml`, schemas loaded |
+
+The `'*'` config reaches all of them (`flags.allow_incremental_sync = true`, cmp-shaped
+`completionList.itemDefaults`), and `gd`/`go` are both mapped on a TypeScript buffer —
+confirming the LspAttach hook and `after/lsp/tsc.lua`'s own `on_attach` coexist.
+
+`yaml-language-server` was not actually installed — `yamlls` had been enabled and silently
+failing to spawn. Installed via mason during this tier.
 
 Keep nvim-lspconfig. Post-migration it is a data package: ~350 maintained server definitions
 with correct `cmd`, `filetypes`, `root_markers` and quirk handling. Deleting it means owning

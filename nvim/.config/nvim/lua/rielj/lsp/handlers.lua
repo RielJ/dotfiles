@@ -1,24 +1,15 @@
 local M = {}
 
--- TODO: backfill this to template
+--- Diagnostic presentation, plus the single LspAttach hook that wires up every
+--- buffer a language server attaches to.
+---
+--- The sign_define() loop that stood here was the pre-0.10 way of setting sign
+--- text; the `signs.text` table below already does it, with the same glyphs.
 M.setup = function()
-  local signs = {
-    { name = "DiagnosticSignError", text = "" },
-    { name = "DiagnosticSignWarn", text = "" },
-    { name = "DiagnosticSignHint", text = "" },
-    { name = "DiagnosticSignInfo", text = "" },
-  }
-
-  for _, sign in ipairs(signs) do
-    vim.fn.sign_define(sign.name, { texthl = sign.name, text = sign.text, numhl = "" })
-  end
-
   local config = {
-    -- disable virtual text
+    -- Signs and the float carry the message; virtual text just adds noise.
     virtual_text = false,
-    -- show signs
     signs = {
-      -- active = signs,
       text = {
         [vim.diagnostic.severity.ERROR] = "",
         [vim.diagnostic.severity.WARN] = "",
@@ -32,8 +23,7 @@ M.setup = function()
     float = {
       focusable = false,
       style = "minimal",
-      border = "rounded",
-      source = "always",
+      source = true,
       header = "",
       prefix = "",
     },
@@ -41,21 +31,26 @@ M.setup = function()
 
   vim.diagnostic.config(config)
 
-  vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-    border = "rounded",
-  })
+  -- Float borders come from `vim.o.winborder` (set in plugin/options.lua), so
+  -- the old vim.lsp.with() hover/signatureHelp wrappers are not needed.
 
-  vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, {
-    border = "rounded",
+  vim.api.nvim_create_autocmd("LspAttach", {
+    group = vim.api.nvim_create_augroup("rielj-lsp-attach", { clear = true }),
+    callback = function(args)
+      local client = vim.lsp.get_client_by_id(args.data.client_id)
+      if client then
+        M.common_on_attach(client, args.buf)
+      end
+    end,
   })
-
-  M.common_capabilities()
 end
 
 local function lsp_highlight_document(client, bufnr)
-  -- Set autocommands conditional on server_capabilities
-  local augroup_highlight = vim.api.nvim_create_augroup("custom-lsp-references", { clear = true })
-  if client.server_capabilities.document_highlight then
+  local augroup_highlight = vim.api.nvim_create_augroup("custom-lsp-references", { clear = false })
+  -- The capability is `documentHighlightProvider`. This used to test
+  -- `document_highlight`, which no server ever sets, so the autocommands below
+  -- were never created and symbol highlighting never worked.
+  if client:supports_method("textDocument/documentHighlight", bufnr) then
     vim.api.nvim_clear_autocmds({ group = augroup_highlight, buffer = bufnr })
     vim.api.nvim_create_autocmd("CursorHold", {
       group = augroup_highlight,
@@ -104,12 +99,13 @@ function M.common_on_attach(client, bufnr)
   lsp_highlight_document(client, bufnr)
 end
 
+--- Only offer rename to clients that implement it.
+---
+--- Note the colon: `client.supports_method(...)` passes the method name as
+--- `self`, which throws and made the pcall below swallow every client.
 function M.rename_filter(clients)
   return vim.tbl_filter(function(client)
-    local status_ok, renaming_supportedd = pcall(function()
-      return client.supports_method("textDocument/rename")
-    end)
-    return status_ok and renaming_supportedd and client.name ~= "null-ls"
+    return client:supports_method("textDocument/rename")
   end, clients)
 end
 
@@ -133,13 +129,6 @@ function M.common_capabilities()
   end
 
   return capabilities
-end
-
-function M.get_common_opts()
-  return {
-    on_attach = M.common_on_attach,
-    capabilities = M.common_capabilities,
-  }
 end
 
 -- Tailwind's "Replace with" quickfixes, applied without a prompt. Everything
