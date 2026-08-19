@@ -7,6 +7,9 @@
 
 local map = require("rielj.keymap").map
 
+-- Commenting: core gc/gcc/gc-textobject, wrapped to skip blank lines.
+require("rielj.comment").setup()
+
 -- Window movement --
 map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
 map("n", "<C-j>", "<C-w>j", { desc = "Window down" })

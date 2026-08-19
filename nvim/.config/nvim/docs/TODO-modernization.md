@@ -536,20 +536,55 @@ Loaded state inspected in a headless session, per trigger:
   bufferline, smear-cursor, vim-surround loaded, lualine drawing a statusline;
 - after `:NvimTreeToggle`: nvim-tree loaded.
 
-## Tier 6 — Commenting (highest friction, do last)
+## Tier 6 — Commenting ✅ DONE
 
-- [ ] **Drop `Comment.nvim` for core commenting.**
-      Last push 2024-08-19. Neovim 0.10 added built-in commenting — *"Nvim now includes
-      |commenting| support"* — with `gcc`, `gc{motion}` and dot-repeat
-      ([news-0.10](https://neovim.io/doc/user/news-0.10.html)). Neovim 0.11 added
-      treesitter-driven `commentstring` resolution via capture metadata
-      ([news-0.11](https://neovim.io/doc/user/news-0.11.html)).
-      Your setup only configures `ignore`, `sticky`, `padding`, the standard `gc`/`gb`
-      mappings and a `ts_context_commentstring` pre-hook — all reproducible with core.
-      **Keep `nvim-ts-context-commentstring`**: it remains the practical way to get a correct
-      `commentstring` inside TSX ([plugin](https://github.com/JoosepAlviste/nvim-ts-context-commentstring)).
-      Verify `gc`/`gb` in a `.tsx` file before committing; this is the one item that can
-      silently degrade daily editing.
+Both plugins dropped. Startup is now **~80 ms**, down from 239 ms at the start of this work.
+
+### What core actually does
+
+Tested against a real `.tsx` file rather than trusting the release notes:
+
+| Case | Result with zero plugins |
+|---|---|
+| `const x = 1;` in a `.ts` file | `// const x = 1;` |
+| `<span>hi</span>` inside JSX | `{/* <span>hi</span> */}` |
+
+The JSX case is the important one. `vim._comment.get_commentstring` resolves 'commentstring'
+from treesitter capture metadata (`bo.commentstring`) and, failing that, walks the
+LanguageTree to the deepest injected language containing the cursor. That is exactly what
+**nvim-ts-context-commentstring** existed to provide, so it went too — the earlier plan had
+kept it.
+
+### The one real gap, and the fix
+
+Core comments blank lines inside a range: `gc` over a block leaves a bare `//` on every empty
+line. Comment.nvim's `ignore = "^$"` skipped them.
+
+`lua/rielj/comment.lua` wraps the core operator: record which lines in the range were blank,
+call `vim._comment.toggle_lines`, restore those lines to empty. Restoring afterwards rather
+than excluding up front is deliberate — core decides *whether* a range is currently commented
+by looking at non-blank lines only, so pre-filtering would change nothing but the edit itself.
+
+Everything else is core's, reused rather than reimplemented: the toggle, commentstring
+resolution, dot-repeat, and the `gc` textobject.
+
+### What is gone
+
+`gb`/`gbc` (block comments) and `gco`/`gcO`/`gcA` (comment above/below/end-of-line) have no
+core equivalent and were not reimplemented.
+
+### Verification
+
+On a `.tsx` file, driven through real keypresses:
+
+- `gcc` on a JSX line → `{/* … */}`;
+- `gc3j` over a range containing a blank line → all non-blank lines commented, the blank one
+  left empty;
+- the same `gc3j` again → clean round trip, no residue;
+- `.` after `gcc` → dot-repeat works, and repeating onto a blank line leaves it blank;
+- `Vjgc` → visual-mode toggle works.
+
+`:KeymapCollisions` reports none, so the three new mappings sit cleanly alongside the rest.
 
 ---
 
