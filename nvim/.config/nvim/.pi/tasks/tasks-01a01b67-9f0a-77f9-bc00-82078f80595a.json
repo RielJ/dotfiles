@@ -18,14 +18,14 @@
       "id": "2",
       "subject": "One writer for format-on-save",
       "description": "Remove duplicate BufWritePre writers. Delete after/plugin/format.lua autocmd (keep :Format command routed to conform), fold ftdetect/go.lua organizeImports into conform module as pre-hook using rielj.lsp.action. Conform's format_on_save stays the only gate.</description>\n<parameter name=\"activeForm\">Consolidating format-on-save",
-      "status": "in_progress",
+      "status": "completed",
       "metadata": {},
       "blocks": [],
       "blockedBy": [
         "1"
       ],
       "createdAt": 1787166902838,
-      "updatedAt": 1787167048315
+      "updatedAt": 1787167101395
     },
     {
       "id": "3",
@@ -53,12 +53,12 @@
       "id": "5",
       "subject": "Delete unreachable modules",
       "description": "Delete lua/rielj/typescript.lua, lua/rielj/codelens.lua, after/plugin/codelens.lua, lua/rielj/lsp/null-ls.lua, unreferenced servers (eslint, svelte, solidity, html, htmx, basedpyright as appropriate), and the nvim<0.8 M.format fallback in handlers.lua.</description>\n<parameter name=\"activeForm\">Deleting unreachable modules",
-      "status": "pending",
+      "status": "in_progress",
       "metadata": {},
       "blocks": [],
       "blockedBy": [],
       "createdAt": 1787166902845,
-      "updatedAt": 1787166902845
+      "updatedAt": 1787167101396
     }
   ]
 }
