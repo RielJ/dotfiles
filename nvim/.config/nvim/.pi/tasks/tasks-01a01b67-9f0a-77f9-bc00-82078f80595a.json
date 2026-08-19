@@ -5,27 +5,27 @@
       "id": "1",
       "subject": "Deepen a code-action module (rielj.lsp.action)",
       "description": "Create lua/rielj/lsp/action.lua owning the LSP code-action wire format: apply({bufnr, kind, filter, sync}). Handles diagnostic conversion (vim.lsp.diagnostic.from), codeAction/resolve, command vs edit dispatch, offset encoding. Rewrite callers: lua/rielj/tsgo-tools.lua apply_code_action, lua/rielj/lsp/handlers.lua tailwind fns, ftdetect/go.lua organizeImports.</description>\n<parameter name=\"activeForm\">Deepening code-action module",
-      "status": "in_progress",
+      "status": "completed",
       "metadata": {},
       "blocks": [
         "2"
       ],
       "blockedBy": [],
       "createdAt": 1787166902837,
-      "updatedAt": 1787166907540
+      "updatedAt": 1787167048314
     },
     {
       "id": "2",
       "subject": "One writer for format-on-save",
       "description": "Remove duplicate BufWritePre writers. Delete after/plugin/format.lua autocmd (keep :Format command routed to conform), fold ftdetect/go.lua organizeImports into conform module as pre-hook using rielj.lsp.action. Conform's format_on_save stays the only gate.</description>\n<parameter name=\"activeForm\">Consolidating format-on-save",
-      "status": "pending",
+      "status": "in_progress",
       "metadata": {},
       "blocks": [],
       "blockedBy": [
         "1"
       ],
       "createdAt": 1787166902838,
-      "updatedAt": 1787166907538
+      "updatedAt": 1787167048315
     },
     {
       "id": "3",

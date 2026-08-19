@@ -46,7 +46,23 @@ local function biome_or_prettier(bufnr)
 	return { "prettierd", "prettier", stop_after_first = true }
 end
 
-require("conform").setup({
+-- Filetype-specific work that must happen before the formatters run.
+-- gopls' organizeImports adds missing imports, which goimports_reviser can't do.
+local function pre_format(bufnr)
+	if vim.bo[bufnr].filetype == "go" then
+		require("rielj.lsp.action").apply({
+			bufnr = bufnr,
+			kind = "source.organizeImports",
+			sync = true,
+		})
+	end
+end
+
+local conform = require("conform")
+
+conform.setup({
+	-- The only BufWritePre formatter in this config. Anything that wants to run on
+	-- save belongs in this gate, so that the exclusions below actually hold.
 	format_on_save = function(bufnr)
 		-- Disable autoformat on certain filetypes
 		local ignore_filetypes = { "java" }
@@ -63,6 +79,7 @@ require("conform").setup({
 			return
 		end
 		-- ...additional logic...
+		pre_format(bufnr)
 		return { timeout_ms = 4000, lsp_format = "fallback" }
 	end,
 	formatters = {
@@ -102,3 +119,19 @@ require("conform").setup({
 		python = { "ruff_fix", "ruff_format", "ruff_organize_imports" },
 	},
 })
+
+-- :Format [range] — the manual entry point, same implementation as on-save.
+vim.api.nvim_create_user_command("Format", function(args)
+	local range = nil
+	if args.count ~= -1 then
+		local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+		range = {
+			start = { args.line1, 0 },
+			["end"] = { args.line2, end_line:len() },
+		}
+	end
+	if not range then
+		pre_format(vim.api.nvim_get_current_buf())
+	end
+	conform.format({ range = range, lsp_format = "fallback", timeout_ms = 4000 })
+end, { range = true, desc = "Format buffer or range" })
