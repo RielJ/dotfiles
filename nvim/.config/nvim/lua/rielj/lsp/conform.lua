@@ -114,7 +114,9 @@ conform.setup({
     sol = { "forge_fmt" },
     solidity = { "forge_fmt" },
 
-    go = { "gofumpt", "goimports_reviser", "golines" },
+    -- conform's builtin is spelled with a hyphen; "goimports_reviser" silently
+    -- resolved to nothing and the step was skipped.
+    go = { "gofumpt", "goimports-reviser", "golines" },
 
     python = { "ruff_fix", "ruff_format", "ruff_organize_imports" },
   },

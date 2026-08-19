@@ -1,7 +1,10 @@
--- Python provider: dedicated venv with pynvim (created via uv).
--- See ../../docs or run: uv venv ~/.local/share/nvim/python3 &&
---   uv pip install --python ~/.local/share/nvim/python3 pynvim
-vim.g.python3_host_prog = vim.fn.stdpath("data") .. "/python3/bin/python"
+-- No remote-plugin hosts are in use, so every provider is disabled. This skips
+-- their startup probes and silences four checkhealth warnings. The previous
+-- python3_host_prog pointed at a venv that no longer exists.
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
 vim.opt.winborder = "rounded"
 vim.o.termguicolors = true
 vim.opt.backup = false -- creates a backup file

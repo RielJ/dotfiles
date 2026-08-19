@@ -125,47 +125,59 @@ Small behaviour changes. Each replaces something upstream has stopped supporting
 
 ---
 
-## Tier 2b — `:checkhealth` findings
+## Tier 2b — `:checkhealth` findings ✅ DONE
+
+Result: **17 errors and ~30 warnings → 0 errors and 6 warnings**, all six benign (the
+luarocks `lua5.1` note lazy tells you to ignore, plus mason's optional `composer`/`java`/
+`javac`/`julia` runtimes for packages not installed). Roughly **734 MB** of disk reclaimed.
 
 Full healthcheck run after Tier 1. No errors attributable to the Tier 1 changes;
 `vim.deprecated` reports *"No deprecated functions detected"* even with the stub removed.
 What it did surface:
 
-- [ ] **Delete ~501 MB of abandoned package trees.**
+- [x] **Delete ~501 MB of abandoned package trees.**
       `$XDG_DATA_HOME/nvim/site/pack/core` (318 MB, 33 plugins incl. `blink.cmp`, `mini.pick`,
       `typescript-tools.nvim`) and `.../site/pack/deps` (183 MB, incl. `deps/start/mini.nvim`)
       are leftovers from an abandoned Aug-2025 experiment; lazy.nvim's healthcheck flags both
       as "found existing packages". Verified **not** on `'runtimepath'` and `require("mini.pick")`
       fails, so nothing loads them — pure dead disk. Safe to `rm -rf`.
 
-- [ ] **17 treesitter query errors from stale parsers.**
-      `blade`, `chatito`, `desktop`, `gdscript`, `julia`, `nickel`, `php`, `php_only`,
-      `powershell`, `purescript`, `swift`, `tcl`, `wit` fail to load queries
-      (`Invalid node type ...`) — old compiled parsers against current nvim-treesitter `main`
-      queries. None are languages you work in. Fix with `:TSUpdate`, or uninstall them.
+- [x] **17 treesitter query errors from stale parsers.** — root cause was *not* nvim-treesitter.
+      A second parser directory, `$XDG_DATA_HOME/nvim/site/parser`, held **320 stale `.so`
+      files (233 MB)**, 314 of them duplicating the managed set, installed by the same
+      abandoned main-branch experiment as the pack trees. It shadowed nvim-treesitter's own
+      parsers on `'runtimepath'`; `:TSUninstall blade` refused with *"the parser is still
+      installed (not by nvim-treesitter)"*. Deleting the directory cleared all 17 errors and
+      left the 317 managed parsers intact. The affected languages were `blade`, `chatito`,
+      `desktop`, `gdscript`, `julia`, `nickel`, `php`, `php_only`, `powershell`, `purescript`,
+      `swift`, `tcl` and `wit` — none of them languages you work in.
+      Related correction: this config runs nvim-treesitter's **classic (master) branch**, not
+      `main` — `require("nvim-treesitter")` exposes `setup`/`define_modules`/`statusline`.
+      An earlier draft of this document said `main`.
 
-- [ ] **`bashls` is enabled but `bash-language-server` is not installed.**
-      `:checkhealth vim.lsp` → *"'bash-language-server' is not executable. Configuration will
-      not be used."* Either `:MasonInstall bash-language-server` or drop `bashls` from the
-      enabled set. The other 11 enabled configs (`biome`, `cssls`, `gopls`, `jsonls`,
-      `lua_ls`, `oxlint`, `rust_analyzer`, `tailwindcss`, `tsgo`, `ty`, `yamlls`) all resolve.
+- [x] **`bashls` is enabled but `bash-language-server` is not installed.** → installed via mason,
+      resolving the *"not executable. Configuration will not be used"* warning. The other 11
+      enabled configs (`biome`, `cssls`, `gopls`, `jsonls`, `lua_ls`, `oxlint`,
+      `rust_analyzer`, `tailwindcss`, `tsgo`, `ty`, `yamlls`) already resolved.
 
-- [ ] **`goimports_reviser` is a broken conform entry** — *"Unknown formatter. Formatter config
-      missing or incomplete"*. It is referenced but never defined in `conform.formatters`.
-      Define it or remove it from the `go` formatter list.
+- [x] **`goimports_reviser` is a broken conform entry.** → the cause was a **spelling bug**, not
+      a missing binary: conform's builtin is `goimports-reviser` (hyphen), so the underscored
+      name resolved to nothing and the step was silently skipped on every Go format. Fixed in
+      `lsp/conform.lua`, binary installed via mason. End-to-end verified: an unformatted
+      `main.go` in a module now comes back gofumpt'd with imports grouped.
 
-- [ ] **Missing formatters:** `prettier`, `prettierd`, `clang-format` all report unavailable.
-      `biome` covers JS/TS, so decide whether the prettier entries are aspirational or dead.
+- [x] **Missing formatters** → `prettier`, `prettierd`, `clang-format` all installed via mason.
+      `:checkhealth conform` is now clean.
 
-- [ ] **Disable unused language providers** to cut healthcheck noise and a little startup work:
-      `vim.g.loaded_perl_provider = 0`, `loaded_ruby_provider = 0`, `loaded_node_provider = 0`
-      (or `npm i -g neovim` if you want it). The Python 3 provider is worse than missing — it
-      errors with *"Python executable can import 'pynvim' but not 'neovim'"* against
-      `g:python3_host_prog = .../nvim/python3/bin/python`, whose executable no longer exists.
-      Either repair that venv or set `loaded_python3_provider = 0`.
+- [x] **Disable unused language providers.** → all four disabled in `plugin/options.lua`
+      (`loaded_python3_provider`, `loaded_node_provider`, `loaded_perl_provider`,
+      `loaded_ruby_provider` = 0), replacing the `python3_host_prog` line that pointed at a
+      venv which no longer existed. The python3 provider had been erroring with *"Python
+      executable can import 'pynvim' but not 'neovim'"*.
 
-- [ ] **Minor:** `json2go` missing (`:GoJson` from gopher.nvim), luasnip wants `jsregexp` for
-      variable/placeholder transformations. Both optional.
+- [x] **Minor items installed.** `json2go` via `go install olexsmir.xyz/json2go/cmd/json2go@latest`
+      (note: it is *not* on GitHub — the module path is a vanity domain), and LuaSnip's
+      `jsregexp` built with `make install_jsregexp`.
 
 Ignorable: the luarocks `lua 5.1` vs `5.5` warning — lazy states *"no plugins require
 `luarocks`, so you can ignore any warnings below"*.
