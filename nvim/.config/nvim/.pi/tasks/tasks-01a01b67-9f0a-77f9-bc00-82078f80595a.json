@@ -42,23 +42,23 @@
       "id": "4",
       "subject": "Keymaps behind one seam (rielj.keymap)",
       "description": "Give lua/rielj/keymap.lua a real implementation: map/bufmap with collision detection and descriptions. Route plugin/keymappings.lua, handlers.lsp_keymaps, tsgo-tools.on_attach through it. Fix dead maps: duplicate <leader>gb, <leader>ll TroubleToggle, gl vim.lsp.diagnostic.show_line_diagnostics. Replace command strings with Lua callbacks.</description>\n<parameter name=\"activeForm\">Consolidating keymaps",
-      "status": "pending",
+      "status": "in_progress",
       "metadata": {},
       "blocks": [],
       "blockedBy": [],
       "createdAt": 1787166902843,
-      "updatedAt": 1787166902843
+      "updatedAt": 1787167151960
     },
     {
       "id": "5",
       "subject": "Delete unreachable modules",
       "description": "Delete lua/rielj/typescript.lua, lua/rielj/codelens.lua, after/plugin/codelens.lua, lua/rielj/lsp/null-ls.lua, unreferenced servers (eslint, svelte, solidity, html, htmx, basedpyright as appropriate), and the nvim<0.8 M.format fallback in handlers.lua.</description>\n<parameter name=\"activeForm\">Deleting unreachable modules",
-      "status": "in_progress",
+      "status": "completed",
       "metadata": {},
       "blocks": [],
       "blockedBy": [],
       "createdAt": 1787166902845,
-      "updatedAt": 1787167101396
+      "updatedAt": 1787167151959
     }
   ]
 }

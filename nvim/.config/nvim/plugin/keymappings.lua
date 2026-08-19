@@ -1,241 +1,195 @@
-local opts = { noremap = true, silent = true }
+-- Global keymaps. Everything goes through rielj.keymap so collisions are
+-- detected at startup (:KeymapCollisions) instead of at keypress.
+--
+-- Buffer-local maps live with the thing that owns them: LSP maps in
+-- rielj.lsp.handlers, tsgo maps in rielj.tsgo-tools, plugin maps in the
+-- plugin's own spec.
 
-local term_opts = { silent = true }
+local map = require("rielj.keymap").map
 
--- Shorten function name
-local keymap = vim.api.nvim_set_keymap
+-- Window movement --
+map("n", "<C-h>", "<C-w>h", { desc = "Window left" })
+map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
+map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
+map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
 
--- Normal --
--- better window movement
-keymap("n", "<C-h>", "<C-w>h", term_opts)
-keymap("n", "<C-j>", "<C-w>j", term_opts)
-keymap("n", "<C-k>", "<C-w>k", term_opts)
-keymap("n", "<C-l>", "<C-w>l", term_opts)
+-- Resize with arrows --
+map("n", "<C-Up>", "<cmd>resize +2<CR>", { desc = "Resize taller" })
+map("n", "<C-Down>", "<cmd>resize -2<CR>", { desc = "Resize shorter" })
+map("n", "<C-Left>", "<cmd>vertical resize -2<CR>", { desc = "Resize narrower" })
+map("n", "<C-Right>", "<cmd>vertical resize +2<CR>", { desc = "Resize wider" })
 
 -- LSP --
--- keymap("n", "<leader>lf", "<cmd>lua require('rielj.lsp.handlers').format()<CR>", opts)
--- keymap(
---   "n",
---   "<leader>lr",
---   "<ESC><CMD>lua vim.lsp.buf.rename(nil, {filter = require('rielj.lsp.handlers').rename_filter})<CR>",
---   opts
--- )
-keymap("n", "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-keymap("n", "<leader>lA", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
-keymap("n", "<leader>lt", "<cmd>lua require('rielj.lsp.handlers').apply_all_tailwind_actions_buffer()<CR>", opts)
-keymap("n", "<leader>lT", "<cmd>lua require('rielj.lsp.handlers').apply_all_tailwind_actions()<CR>", opts)
-keymap("n", "<leader>ld", "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", opts)
-keymap("n", "<leader>lw", "<cmd>Telescope diagnostics<cr>", opts)
-keymap("n", "<leader>lj", "<cmd>lua vim.diagnostic.goto_next({float=true})<CR>", opts)
-keymap("n", "<leader>lk", "<cmd>lua vim.diagnostic.goto_prev({float=true})<CR>", opts)
-keymap("n", "<leader>ll", "<cmd>TroubleToggle<CR>", opts)
-
--- TROUBLE
-vim.keymap.set("n", "<leader>xx", function()
-  require("trouble").toggle()
-end)
-vim.keymap.set("n", "<leader>xw", function()
-  require("trouble").toggle("workspace_diagnostics")
-end)
-vim.keymap.set("n", "<leader>xd", function()
-  require("trouble").toggle("document_diagnostics")
-end)
-vim.keymap.set("n", "<leader>xq", function()
-  require("trouble").toggle("quickfix")
-end)
-vim.keymap.set("n", "<leader>xl", function()
-  require("trouble").toggle("loclist")
-end)
--- vim.keymap.set("n", "<Leader>ll", function()
---   vim.diagnostic.setloclist({ open = false }) -- don't open and focus
---   local window = vim.api.nvim_get_current_win()
---   vim.cmd.lwindow()                           -- open+focus loclist if has entries, else close -- this is the magic toggle command
---   vim.api.nvim_set_current_win(window)        -- restore focus to window you were editing (delete this if you want to stay in loclist)
--- end, { buffer = bufnr })
--- keymap("n", "<leader>ll", "<cmd>lua vim.lsp.codelens.run()<cr>", opts)
-keymap("n", "<leader>lpd", "<cmd>lua require('rielj.lsp.peek').Peek('definition')<cr>", opts)
-keymap("n", "<leader>lpt", "<cmd>lua require('rielj.lsp.peek').Peek('typeDefinition')<cr>", opts)
-keymap("n", "<leader>lpi", "<cmd>lua require('rielj.lsp.peek').Peek('implementation')<cr>", opts)
-keymap("n", "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<cr>", opts)
-keymap("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", opts)
-keymap("n", "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", opts)
-keymap("n", "<leader>le", "<cmd>Telescope quickfix<cr>", opts)
-
--- LSP TYPESCRIPT --
--- keymap("n", "gs", "<cmd>lua require('typescript').actions.removeUnused()<cr>", opts)
--- keymap("n", "gS", "<cmd>lua require('typescript').actions.organizeImports()<cr>", opts)
--- keymap("n", "go", "<cmd>lua require('typescript').actions.addMissingImports()<cr>", opts)
--- keymap("n", "gA", "<cmd>lua require('typescript').actions.fixAll()<cr>", opts)
--- keymap("n", "gI", "<cmd>lua require('typescript').actions.renameFile(0, %)<cr>", opts)
-
--- Buffers --
-keymap("n", "<leader>bf", "<cmd>Telescope buffers<cr>", opts)
-
--- Search --
-keymap("n", "<leader>sb", "<cmd>Telescope git_branches<cr>", opts)
-keymap("n", "<leader>sf", "<cmd>Telescope find_files<cr>", opts)
-keymap("n", "<leader>sr", "<cmd>Telescope oldfiles<cr>", opts)
-keymap("n", "<leader>sR", "<cmd>Telescope registers<cr>", opts)
-
--- Terminal --
--- Better terminal navigation
-keymap("t", "<C-h>", "<C-\\><C-N><C-w>h", term_opts)
-keymap("t", "<C-j>", "<C-\\><C-N><C-w>j", term_opts)
-keymap("t", "<C-k>", "<C-\\><C-N><C-w>k", term_opts)
-keymap("t", "<C-l>", "<C-\\><C-N><C-w>l", term_opts)
-keymap("n", "<leader>lg", "<cmd>lua require 'rielj.terminal'._lazygit_toggle()<CR>", opts)
-
--- Cheatsheet
--- keymap("n", "?", "<cmd>CheatWithoutComments<cr>", opts)
-
--- Glow
-keymap("n", "<leader>sg", "<cmd>Glow<CR>", opts)
-
--- Git --
-keymap("n", "<leader>gj", "<cmd>lua require 'gitsigns'.next_hunk()<CR>", opts)
-keymap("n", "<leader>gk", "<cmd>lua require 'gitsigns'.prev_hunk()<CR>", opts)
-keymap("n", "<leader>gp", "<cmd>lua require 'gitsigns'.preview_hunk()<CR>", opts)
-keymap("n", "<leader>gr", "<cmd>lua require 'gitsigns'.reset_hunk()<CR>", opts)
-keymap("n", "<leader>gs", "<cmd>Telescope git_status<CR>", opts)
-keymap("n", "<leader>gb", "<cmd>Telescope git_branches<CR>", opts)
-keymap("n", "<leader>gb", "<cmd>Telescope git_branches<CR>", opts)
-
--- Spectre
-keymap("n", "<leader>rf", "<cmd>lua require 'spectre'.open_file_search()<CR>", opts)
-keymap("n", "<leader>rp", "<cmd>lua require 'spectre'.open()<CR>", opts)
-keymap("n", "<leader>rw", "<cmd>lua require 'spectre'.open_visual({select_word=true})<CR>", opts)
-
--- Resize with arrows
-keymap("n", "<C-Up>", ":resize +2<CR>", opts)
-keymap("n", "<C-Down>", ":resize -2<CR>", opts)
-keymap("n", "<C-Left>", ":vertical resize -2<CR>", opts)
-keymap("n", "<C-Right>", ":vertical resize +2<CR>", opts)
-
--- Status Bar
-keymap("n", "<leader>c", ":Bdelete<CR>", opts)
-keymap("n", "]b", "<Cmd>BufferLineCycleNext<CR>", opts)
-keymap("n", "[b", "<Cmd>BufferLineCyclePrev<CR>", opts)
-keymap("n", "<S-l>", ":BufferLineCycleNext<CR>", opts)
-keymap("n", "<S-h>", ":BufferLineCyclePrev<CR>", opts)
-keymap("n", "<leader>be", "<cmd>lua require('rielj.bufferline').close_except_current()<CR>", opts)
-
--- Comment
--- keymap("n", "<leader>/", "<cmd>lua require('Comment.api').toggle_current_linewise()<CR>", opts)
--- keymap("v", "<leader>/", "<ESC><cmd>lua require('Comment.api').toggle_linewise_op(vim.fn.visualmode())<CR>", opts)
-
--- Telescope --
--- keymap(
---   "n",
---   "<leader>f",
---   "<cmd>lua require'telescope.builtin'.find_files(require('telescope.themes').get_dropdown({ previewer = false }))<cr>",
---   opts
--- )
--- keymap("n", "<leader>st", "<cmd>Telescope live_grep<cr>", opts)
-
--- For Escaping
-keymap("i", "jk", "<ESC>", opts)
-keymap("i", "<C-c>", "<ESC>", opts)
-keymap("v", "<C-c>", "<ESC>", opts)
-
--- Visual --
--- Stay in indent mode
-keymap("v", "<", "<gv", opts)
-keymap("v", ">", ">gv", opts)
-
--- Move text up and down
-keymap("n", "<A-j>", ":m .+1<CR>==", opts)
-keymap("n", "<A-k>", ":m .-2<CR>==", opts)
-keymap("v", "<A-j>", ":m .+1<CR>==", opts)
-keymap("v", "<A-k>", ":m .-2<CR>==", opts)
-keymap("v", "p", '"_dP', opts)
-
--- Visual Block --
--- Move text up and down
-keymap("x", "J", ":move '>+1<CR>gv-gv", opts)
-keymap("x", "K", ":move '<-2<CR>gv-gv", opts)
-keymap("x", "<A-j>", ":move '>+1<CR>gv-gv", opts)
-keymap("x", "<A-k>", ":move '<-2<CR>gv-gv", opts)
-
--- Add Oneline before and stay in normal mode
-keymap("n", "<leader>o", "o<ESC>", opts)
-
--- NvimTree
-keymap("n", "<leader>e", ":NvimTreeToggle<CR>", opts)
-
--- The Primeagean top 5 remaps
--- #1
-keymap("n", "Y", "y$", opts)
-
--- #2
-keymap("n", "n", "nzzzv", opts)
-keymap("n", "N", "Nzzzv", opts)
-keymap("n", "J", "mzJ`z", opts)
-
--- #3
-keymap("i", ",", ",<C-g>u", opts)
-keymap("i", ".", ".<C-g>u", opts)
-keymap("i", "(", "(<C-g>u", opts)
-keymap("i", "!", "!<C-g>u", opts)
-keymap("i", "?", "?<C-g>u", opts)
-
--- #4
-keymap("n", "<expr>", 'k (v:count > 5 ? "m\'" . v:count : "" . \'k\'', opts)
-keymap("n", "<expr>", 'h (v:count > 5 ? "m\'" . v:count : "" . \'j\'', opts)
-
--- #5
-keymap("v", "J", ">+1<CR>gv=gv", opts)
-keymap("v", "K", "<-2<CR>gv=gv", opts)
-
--- vim dadbod
-keymap("n", "<leader>db", ":DBUIToggle<CR>", opts)
-
-vim.keymap.set("n", "<leader>h", function()
+map("n", "<leader>la", vim.lsp.buf.code_action, { desc = "Code action" })
+map("n", "<leader>lA", vim.lsp.codelens.run, { desc = "Run codelens" })
+map("n", "<leader>lt", function()
+  require("rielj.lsp.handlers").apply_all_tailwind_actions_buffer()
+end, { desc = "Tailwind: fix buffer" })
+map("n", "<leader>lT", function()
+  require("rielj.lsp.handlers").apply_all_tailwind_actions()
+end, { desc = "Tailwind: fix line" })
+map("n", "<leader>ld", "<cmd>Telescope diagnostics bufnr=0 theme=get_ivy<cr>", { desc = "Buffer diagnostics" })
+map("n", "<leader>lw", "<cmd>Telescope diagnostics<cr>", { desc = "Workspace diagnostics" })
+map("n", "<leader>lj", function()
+  vim.diagnostic.jump({ count = 1, float = true })
+end, { desc = "Next diagnostic" })
+map("n", "<leader>lk", function()
+  vim.diagnostic.jump({ count = -1, float = true })
+end, { desc = "Previous diagnostic" })
+map("n", "<leader>ll", vim.diagnostic.open_float, { desc = "Line diagnostics" })
+map("n", "<leader>lq", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
+map("n", "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", { desc = "Document symbols" })
+map("n", "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", { desc = "Workspace symbols" })
+map("n", "<leader>le", "<cmd>Telescope quickfix<cr>", { desc = "Quickfix list" })
+map("n", "<leader>lpd", function()
+  require("rielj.lsp.peek").Peek("definition")
+end, { desc = "Peek definition" })
+map("n", "<leader>lpt", function()
+  require("rielj.lsp.peek").Peek("typeDefinition")
+end, { desc = "Peek type definition" })
+map("n", "<leader>lpi", function()
+  require("rielj.lsp.peek").Peek("implementation")
+end, { desc = "Peek implementation" })
+map("n", "<leader>h", function()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
   vim.notify("LSP inlay hints " .. (vim.lsp.inlay_hint.is_enabled() and "enabled" or "disabled"))
-end)
+end, { desc = "Toggle inlay hints" })
 
--- Copy file path with line number for OpenCode
-vim.keymap.set("n", "<leader>cs", function()
-  local filepath = vim.fn.expand("%:.")
-  local line = vim.fn.line(".")
-  local text = "@" .. filepath .. ":" .. line
+-- Buffers --
+map("n", "<leader>bf", "<cmd>Telescope buffers<cr>", { desc = "Find buffer" })
+map("n", "<leader>c", "<cmd>Bdelete<CR>", { desc = "Close buffer" })
+map("n", "]b", "<cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" })
+map("n", "[b", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous buffer" })
+map("n", "<S-l>", "<cmd>BufferLineCycleNext<CR>", { desc = "Next buffer" })
+map("n", "<S-h>", "<cmd>BufferLineCyclePrev<CR>", { desc = "Previous buffer" })
+map("n", "<leader>be", function()
+  require("rielj.bufferline").close_except_current()
+end, { desc = "Close other buffers" })
+
+-- Search --
+map("n", "<leader>sb", "<cmd>Telescope git_branches<cr>", { desc = "Git branches" })
+map("n", "<leader>sf", "<cmd>Telescope find_files<cr>", { desc = "Find files" })
+map("n", "<leader>sr", "<cmd>Telescope oldfiles<cr>", { desc = "Recent files" })
+map("n", "<leader>sR", "<cmd>Telescope registers<cr>", { desc = "Registers" })
+
+-- Git --
+map("n", "<leader>gj", function()
+  require("gitsigns").nav_hunk("next")
+end, { desc = "Next hunk" })
+map("n", "<leader>gk", function()
+  require("gitsigns").nav_hunk("prev")
+end, { desc = "Previous hunk" })
+map("n", "<leader>gp", function()
+  require("gitsigns").preview_hunk()
+end, { desc = "Preview hunk" })
+map("n", "<leader>gr", function()
+  require("gitsigns").reset_hunk()
+end, { desc = "Reset hunk" })
+map("n", "<leader>gs", "<cmd>Telescope git_status<CR>", { desc = "Git status" })
+map("n", "<leader>gb", "<cmd>Telescope git_branches<CR>", { desc = "Git branches" })
+
+-- Terminal --
+map("t", "<C-h>", "<C-\\><C-N><C-w>h", { desc = "Window left" })
+map("t", "<C-j>", "<C-\\><C-N><C-w>j", { desc = "Window down" })
+map("t", "<C-k>", "<C-\\><C-N><C-w>k", { desc = "Window up" })
+map("t", "<C-l>", "<C-\\><C-N><C-w>l", { desc = "Window right" })
+map("n", "<leader>lg", function()
+  require("rielj.terminal")._lazygit_toggle()
+end, { desc = "Lazygit" })
+
+-- Spectre --
+map("n", "<leader>rf", function()
+  require("spectre").open_file_search()
+end, { desc = "Search/replace in file" })
+map("n", "<leader>rp", function()
+  require("spectre").open()
+end, { desc = "Search/replace in project" })
+map("n", "<leader>rw", function()
+  require("spectre").open_visual({ select_word = true })
+end, { desc = "Search/replace word" })
+
+-- Trees & UI --
+map("n", "<leader>e", "<cmd>NvimTreeToggle<CR>", { desc = "File tree" })
+map("n", "<leader>db", "<cmd>DBUIToggle<CR>", { desc = "Database UI" })
+
+-- Escaping --
+map("i", "jk", "<ESC>", { desc = "Escape" })
+map({ "i", "v" }, "<C-c>", "<ESC>", { desc = "Escape" })
+
+-- Visual: stay in indent mode --
+map("v", "<", "<gv", { desc = "Outdent" })
+map("v", ">", ">gv", { desc = "Indent" })
+map("v", "p", '"_dP', { desc = "Paste without yanking" })
+
+-- Move text up and down --
+map("n", "<A-j>", "<cmd>m .+1<CR>==", { desc = "Move line down" })
+map("n", "<A-k>", "<cmd>m .-2<CR>==", { desc = "Move line up" })
+map("x", "J", ":move '>+1<CR>gv=gv", { desc = "Move selection down" })
+map("x", "K", ":move '<-2<CR>gv=gv", { desc = "Move selection up" })
+map("x", "<A-j>", ":move '>+1<CR>gv=gv", { desc = "Move selection down" })
+map("x", "<A-k>", ":move '<-2<CR>gv=gv", { desc = "Move selection up" })
+
+-- Add a line below, stay in normal mode --
+map("n", "<leader>o", "o<ESC>", { desc = "Blank line below" })
+
+-- Keep the cursor centred / undo-break points --
+map("n", "Y", "y$", { desc = "Yank to end of line" })
+map("n", "n", "nzzzv", { desc = "Next search result" })
+map("n", "N", "Nzzzv", { desc = "Previous search result" })
+map("n", "J", "mzJ`z", { desc = "Join lines, keep cursor" })
+map("i", ",", ",<C-g>u", { desc = "Undo break point" })
+map("i", ".", ".<C-g>u", { desc = "Undo break point" })
+map("i", "(", "(<C-g>u", { desc = "Undo break point" })
+map("i", "!", "!<C-g>u", { desc = "Undo break point" })
+map("i", "?", "?<C-g>u", { desc = "Undo break point" })
+
+-- Add large j/k jumps to the jumplist so <C-o> can walk them back --
+map("n", "k", function()
+  return vim.v.count > 5 and "m'" .. vim.v.count .. "k" or "k"
+end, { expr = true, desc = "Up (jumplist-aware)" })
+map("n", "j", function()
+  return vim.v.count > 5 and "m'" .. vim.v.count .. "j" or "j"
+end, { expr = true, desc = "Down (jumplist-aware)" })
+
+-- Copy file path with line number for OpenCode --
+map("n", "<leader>cs", function()
+  local text = "@" .. vim.fn.expand("%:.") .. ":" .. vim.fn.line(".")
   vim.fn.setreg("+", text)
   vim.notify("Copied: " .. text, vim.log.levels.INFO)
-end, { noremap = true, silent = true, desc = "Copy file path with line number for OpenCode" })
+end, { desc = "Copy file path with line number" })
 
--- Restart Neovim and reopen current buffer
+-- Restart Neovim and reopen the current buffer --
 local restart_file_path = vim.fn.stdpath("cache") .. "/restart_session.txt"
 
-vim.keymap.set("n", "<leader>R", function()
+map("n", "<leader>R", function()
   local file = vim.fn.expand("%:p")
   local line = vim.fn.line(".")
-  vim.cmd("silent! wa") -- save all files
-  -- Store file info in a temp file
+  vim.cmd("silent! wa")
   local f = io.open(restart_file_path, "w")
   if f then
     f:write(file .. "\n" .. line)
     f:close()
   end
   vim.cmd("restart")
-end, { noremap = true, silent = true, desc = "Restart Neovim and reopen buffer" })
+end, { desc = "Restart Neovim and reopen buffer" })
 
--- Reopen file after restart (checked on VimEnter)
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     local f = io.open(restart_file_path, "r")
-    if f then
-      local content = f:read("*all")
-      f:close()
-      os.remove(restart_file_path)
-      local lines = vim.split(content, "\n")
-      local file = lines[1]
-      local line = tonumber(lines[2]) or 1
-      if file and file ~= "" and vim.fn.filereadable(file) == 1 then
-        vim.schedule(function()
-          vim.cmd("edit " .. vim.fn.fnameescape(file))
-          vim.api.nvim_win_set_cursor(0, { line, 0 })
-        end)
-      end
+    if not f then
+      return
+    end
+    local content = f:read("*all")
+    f:close()
+    os.remove(restart_file_path)
+    local lines = vim.split(content, "\n")
+    local file = lines[1]
+    local line = tonumber(lines[2]) or 1
+    if file and file ~= "" and vim.fn.filereadable(file) == 1 then
+      vim.schedule(function()
+        vim.cmd("edit " .. vim.fn.fnameescape(file))
+        vim.api.nvim_win_set_cursor(0, { line, 0 })
+      end)
     end
   end,
 })

@@ -139,23 +139,14 @@ end
 --- Setup keymaps (mirrors typescript-tools.nvim bindings)
 ---@param bufnr number
 function M.on_attach(bufnr)
-	local buf_opts = { noremap = true, silent = true, buffer = bufnr }
-	vim.keymap.set(
-		"n",
-		"gs",
-		M.remove_unused_imports,
-		vim.tbl_extend("force", buf_opts, { desc = "Remove unused imports" })
-	)
-	vim.keymap.set("n", "ge", M.remove_unused, vim.tbl_extend("force", buf_opts, { desc = "Remove unused" }))
-	vim.keymap.set("n", "gS", M.organize_imports, vim.tbl_extend("force", buf_opts, { desc = "Organize imports" }))
-	vim.keymap.set(
-		"n",
-		"go",
-		M.add_missing_imports,
-		vim.tbl_extend("force", buf_opts, { desc = "Add missing imports" })
-	)
-	vim.keymap.set("n", "gA", M.fix_all, vim.tbl_extend("force", buf_opts, { desc = "Fix all" }))
-	vim.keymap.set("n", "gR", M.rename_file, vim.tbl_extend("force", buf_opts, { desc = "Rename file" }))
+	local bufmap = require("rielj.keymap").bufmap
+
+	bufmap(bufnr, "n", "gs", M.remove_unused_imports, { desc = "Remove unused imports" })
+	bufmap(bufnr, "n", "ge", M.remove_unused, { desc = "Remove unused" })
+	bufmap(bufnr, "n", "gS", M.organize_imports, { desc = "Organize imports" })
+	bufmap(bufnr, "n", "go", M.add_missing_imports, { desc = "Add missing imports" })
+	bufmap(bufnr, "n", "gA", M.fix_all, { desc = "Fix all" })
+	bufmap(bufnr, "n", "gR", M.rename_file, { desc = "Rename file" })
 end
 
 -- Register commands on load

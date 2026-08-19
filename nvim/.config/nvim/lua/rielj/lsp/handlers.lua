@@ -75,29 +75,28 @@ local function lsp_highlight_document(client, bufnr)
 end
 
 local function lsp_keymaps(bufnr)
-  local opts = { noremap = true, silent = true }
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gP", "<cmd>require('rielj.lsp.peek)<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>lr",
-    "<ESC><CMD>lua vim.lsp.buf.rename(nil, {filter = require('rielj.lsp.handlers').rename_filter})<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gr", "<cmd>lua vim.lsp.buf.references()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>lf", "<cmd>lua require('rielj.lsp.handlers').format()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>lf", "<cmd>lua vim.cmd.Format()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>f", "<cmd>lua vim.diagnostic.open_float()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "[d", '<cmd>lua vim.diagnostic.goto_prev({ border = "rounded" })<CR>', opts)
-  vim.api.nvim_buf_set_keymap(
-    bufnr,
-    "n",
-    "gl",
-    '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics({ border = "rounded" })<CR>',
-    opts
-  )
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "]d", '<cmd>lua vim.diagnostic.goto_next({ border = "rounded" })<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
+  local bufmap = require("rielj.keymap").bufmap
+
+  bufmap(bufnr, "n", "gD", vim.lsp.buf.declaration, { desc = "Go to declaration" })
+  bufmap(bufnr, "n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
+  bufmap(bufnr, "n", "gi", vim.lsp.buf.implementation, { desc = "Go to implementation" })
+  bufmap(bufnr, "n", "gr", vim.lsp.buf.references, { desc = "References" })
+  bufmap(bufnr, "n", "K", vim.lsp.buf.hover, { desc = "Hover" })
+  bufmap(bufnr, "n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature help" })
+  bufmap(bufnr, "n", "<leader>lr", function()
+    vim.lsp.buf.rename(nil, { filter = M.rename_filter })
+  end, { desc = "Rename symbol" })
+  bufmap(bufnr, "n", "<leader>lf", function()
+    vim.cmd.Format()
+  end, { desc = "Format buffer" })
+  bufmap(bufnr, "n", "gl", vim.diagnostic.open_float, { desc = "Line diagnostics" })
+  bufmap(bufnr, "n", "[d", function()
+    vim.diagnostic.jump({ count = -1, float = { border = "rounded" } })
+  end, { desc = "Previous diagnostic" })
+  bufmap(bufnr, "n", "]d", function()
+    vim.diagnostic.jump({ count = 1, float = { border = "rounded" } })
+  end, { desc = "Next diagnostic" })
+  bufmap(bufnr, "n", "<leader>q", vim.diagnostic.setloclist, { desc = "Diagnostics to loclist" })
 end
 
 function M.common_on_attach(client, bufnr)
