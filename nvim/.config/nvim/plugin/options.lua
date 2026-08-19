@@ -1,4 +1,7 @@
-vim.g.python3_host_prog = "/usr/bin/python3"
+-- Python provider: dedicated venv with pynvim (created via uv).
+-- See ../../docs or run: uv venv ~/.local/share/nvim/python3 &&
+--   uv pip install --python ~/.local/share/nvim/python3 pynvim
+vim.g.python3_host_prog = vim.fn.stdpath("data") .. "/python3/bin/python"
 vim.opt.winborder = "rounded"
 vim.o.termguicolors = true
 vim.opt.backup = false -- creates a backup file

@@ -1,111 +1,68 @@
-require("nvim-treesitter.configs").setup({
-  ensure_installed = {}, -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  ignore_install = {},
+-- nvim-treesitter (main branch) configuration.
+--
+-- The `main` branch removed the legacy modules system
+-- (`require("nvim-treesitter.configs").setup{ highlight=..., indent=... }`).
+-- Highlighting, folding and indentation are now driven by Neovim's built-in
+-- `vim.treesitter`. We start it per-buffer here, honouring the same disable
+-- rules the old config used (latex + big files) and the indent exclusions.
 
-  -- A directory to install the parsers into.
-  -- By default parsers are installed to either the package dir, or the "site" dir.
-  -- If a custom path is used (not nil) it must be added to the runtimepath.
-  parser_install_dir = nil,
+local ts = require("nvim-treesitter")
 
-  -- Install parsers synchronously (only applied to `ensure_installed`)
-  sync_install = false,
+-- Languages where the highlighter should NOT start.
+local highlight_disabled = { latex = true }
 
-  -- Automatically install missing parsers when entering buffer
-  auto_install = true,
+-- Languages where the treesitter indentexpr should NOT be used.
+local indent_disabled = { yaml = true, python = true }
 
-  matchup = {
-    enable = true, -- mandatory, false will disable the whole extension
-    -- disable = { "c", "ruby" },  -- optional, list of language that will be disabled
-  },
-  highlight = {
-    enable = true, -- false will disable the whole extension
-    additional_vim_regex_highlighting = false,
-    disable = function(lang, buf)
-      if vim.tbl_contains({ "latex" }, lang) then
-        return true
-      end
+-- Detect buffers flagged as "big file" by whatever bigfile plugin is in use.
+local function is_bigfile(buf)
+  local ok, val = pcall(vim.api.nvim_buf_get_var, buf, "bigfile_disable_treesitter")
+  return ok and val == true
+end
 
-      local status_ok, big_file_detected = pcall(vim.api.nvim_buf_get_var, buf, "bigfile_disable_treesitter")
-      return status_ok and big_file_detected
-    end,
-  },
-  indent = { enable = true, disable = { "yaml", "python" } },
-  autotag = { enable = false },
-  textobjects = {
-    swap = {
-      enable = false,
-      -- swap_next = textobj_swap_keymaps,
-    },
-    -- move = textobj_move_keymaps,
-    select = {
-      enable = false,
-      -- keymaps = textobj_sel_keymaps,
-    },
-  },
-  textsubjects = {
-    enable = false,
-    keymaps = { ["."] = "textsubjects-smart", [";"] = "textsubjects-big" },
-  },
-  playground = {
-    enable = false,
-    disable = {},
-    updatetime = 25, -- Debounced time for highlighting nodes in the playground from source code
-    persist_queries = false, -- Whether the query persists across vim sessions
-    keybindings = {
-      toggle_query_editor = "o",
-      toggle_hl_groups = "i",
-      toggle_injected_languages = "t",
-      toggle_anonymous_nodes = "a",
-      toggle_language_display = "I",
-      focus_language = "f",
-      unfocus_language = "F",
-      update = "R",
-      goto_node = "<cr>",
-      show_help = "?",
-    },
-  },
-  rainbow = {
-    enable = false,
-    extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
-    max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
-  },
+-- Resolve a filetype to a treesitter language, if any.
+local function lang_for(ft)
+  return vim.treesitter.language.get_lang(ft) or ft
+end
 
-  -- sync_install = true,
-  -- auto_install = true,
-  -- ensure_installed = {}, -- one of "all", "maintained" (parsers with maintainers), or a list of languages
-  -- ignore_install = {},
-  -- matchup = {
-  --   enable = false, -- mandatory, false will disable the whole extension
-  --   -- disable = { "c", "ruby" },  -- optional, list of language that will be disabled
-  -- },
-  -- highlight = {
-  --   enable = true, -- false will disable the whole extension
-  --   additional_vim_regex_highlighting = true,
-  --   disable = { "latex" },
-  -- },
-  -- context_commentstring = {
-  --   enable = true,
-  -- },
-  -- indent = { enable = true, disable = { "yaml", "html", "javascript", "python" } },
-  -- autotag = { enable = true, filetypes = { "typescript", "typescriptreact", "vue" } },
-  -- textobjects = {
-  --   swap = {
-  --     enable = false,
-  --   },
-  --   select = {
-  --     enable = false,
-  --   },
-  -- },
-  -- textsubjects = {
-  --   enable = false,
-  --   keymaps = { ["."] = "textsubjects-smart", [";"] = "textsubjects-big" },
-  -- },
-  -- rainbow = {
-  --   enable = false,
-  --   extended_mode = true, -- Highlight also non-parentheses delimiters, boolean or table: lang -> boolean
-  --   max_file_lines = 1000, -- Do not enable for files with more than 1000 lines, int
-  -- },
+-- Returns true if a parser is available for the given language.
+local function has_parser(lang)
+  return pcall(vim.treesitter.get_string_parser, "", lang)
+end
+
+local group = vim.api.nvim_create_augroup("NvimTreesitterMain", { clear = true })
+
+-- Start the highlighter / indentexpr for supported buffers.
+vim.api.nvim_create_autocmd("FileType", {
+  group = group,
+  callback = function(args)
+    local buf = args.buf
+    local lang = lang_for(args.match)
+    if not lang or not has_parser(lang) then return end
+    if is_bigfile(buf) then return end
+
+    if not highlight_disabled[lang] then
+      pcall(vim.treesitter.start, buf, lang)
+    end
+
+    if not indent_disabled[lang] then
+      vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
+  end,
 })
+
+-- Auto-install missing parsers (replaces the old `auto_install = true`).
+vim.api.nvim_create_autocmd("FileType", {
+  group = group,
+  callback = function(args)
+    local lang = lang_for(args.match)
+    if lang and not has_parser(lang) then
+      vim.cmd("silent! TSInstall " .. vim.fn.fnameescape(lang))
+    end
+  end,
+})
+
+_ = ts -- kept for clarity / future use
 
 require("treesitter-context").setup({
   enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)

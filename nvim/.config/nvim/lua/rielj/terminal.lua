@@ -1,11 +1,30 @@
 local M = {}
 local Terminal = require("toggleterm.terminal").Terminal
+-- Resolve the shell's working SSH agent socket (persisted by zsh) so that
+-- lazygit can sign commits even when nvim itself inherited a different
+-- (key-less) launchd socket.
+local function resolve_ssh_auth_sock()
+  local path = vim.env.HOME .. "/.ssh/ssh-auth-sock.path"
+  local f = io.open(path, "r")
+  if f then
+    local sock = f:read("*l")
+    f:close()
+    if sock and sock ~= "" then
+      return sock
+    end
+  end
+  return vim.env.SSH_AUTH_SOCK
+end
+
 local lazygit = Terminal:new {
   cmd = "lazygit",
   hidden = true,
   direction = "float",
   close_on_exit = true,
-  env = { NVIM = vim.v.servername },
+  env = {
+    NVIM = vim.v.servername,
+    SSH_AUTH_SOCK = resolve_ssh_auth_sock(),
+  },
   float_opts = {
     border = "curved",
     winblend = 0,

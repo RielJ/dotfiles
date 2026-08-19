@@ -133,10 +133,6 @@ require("nvim-tree").setup({
       watcher = false,
     },
   },
-  system_open = {
-    cmd = nil,
-    args = {},
-  },
   open_on_tab = false,
   update_cwd = false,
   diagnostics = {
