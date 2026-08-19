@@ -93,10 +93,14 @@ return {
       })
     end,
   },
-  "nvim-treesitter/nvim-treesitter-context",
+  -- Dependency of the context config above; loaded with it.
+  { "nvim-treesitter/nvim-treesitter-context", lazy = true },
   {
     "0oAstro/dim.lua",
     dependencies = { "nvim-treesitter/nvim-treesitter", "neovim/nvim-lspconfig" },
+    -- Dims unused symbols from LSP diagnostics, so it has nothing to do until
+    -- a server attaches.
+    event = "LspAttach",
     opts = {},
   },
 }

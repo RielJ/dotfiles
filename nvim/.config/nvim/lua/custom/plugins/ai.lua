@@ -1,6 +1,11 @@
 return {
   {
     "ThePrimeagen/99",
+    keys = {
+      { "<leader>9v", mode = "v", desc = "99: send visual selection" },
+      { "<leader>9x", desc = "99: stop all requests" },
+      { "<leader>9s", desc = "99: search" },
+    },
     config = function()
       local _99 = require("99")
       local cwd = vim.uv.cwd()
@@ -36,6 +41,8 @@ return {
   },
   {
     "supermaven-inc/supermaven-nvim",
+    -- Inline completion only matters while typing.
+    event = "InsertEnter",
     config = function()
       require("supermaven-nvim").setup({
         keymaps = {

@@ -467,42 +467,74 @@ defensible — but it is a lateral move, not an upgrade. Do it only if you want 
 
 ---
 
-## Tier 5 — Lazy-loading pass
+## Tier 5 — Lazy-loading pass ✅ DONE
 
-44 of 77 plugins load at startup. Work down this table one batch at a time, checking startup
-after each. Mechanical and low-risk, but tedious — hence last.
+Was 37 of 77 plugins loading at startup; now **5**. Headless startup **239 ms → 111 ms**.
 
-| Plugin | Trigger |
+Still eager, deliberately: `nvim-treesitter` and `tokyonight` (highlighting and colorscheme
+are startup-visible), `alpha-nvim` (it *is* the startup screen), and the two telescope
+extensions, which are trivial and load with telescope anyway.
+
+| Plugin | Trigger chosen |
 |---|---|
 | nvim-lspconfig | `event = { "BufReadPre", "BufNewFile" }` |
-| nvim-cmp + sources | `event = "InsertEnter"` |
-| LuaSnip | `event = "InsertEnter"` (dependency of cmp) |
-| telescope + fzf-native + file-browser | `cmd = "Telescope"`, `keys = { … }` |
-| nvim-tree.lua | `cmd = { "NvimTreeToggle", "NvimTreeFindFile" }`, `keys = "<leader>e"` |
-| gitsigns.nvim | `event = { "BufReadPre", "BufNewFile" }` |
-| vim-fugitive / vim-rhubarb | `cmd = { "Git", "G", "GBrowse" }` |
-| undotree | `cmd = "UndotreeToggle"`, `keys = "<leader>u"` |
-| nvim-bqf | `ft = "qf"` |
-| tabular | `cmd = "Tabularize"` |
-| vim-abolish | `cmd = { "Abolish", "Subvert", "S" }` |
-| nvim-colorizer.lua | `event = "BufReadPost"` |
+| nvim-cmp + sources | `event = { "InsertEnter", "CmdlineEnter" }` |
+| LuaSnip | `lazy = true` (cmp dependency) |
+| supermaven-nvim | `event = "InsertEnter"` |
 | nvim-autopairs | `event = "InsertEnter"` |
-| nvim-treesitter-context | `event = "BufReadPost"` |
-| nvim-ts-context-commentstring | `event = "VeryLazy"` |
-| hlslens | `keys = { "n", "N", "*", "#", "/", "?" }` |
-| smear-cursor | `event = "VeryLazy"` |
+| telescope + fzf-native + file-browser | `event = "VeryLazy"` |
+| nvim-tree.lua | `cmd = { "NvimTreeToggle", … }` + directory-argv check |
+| gitsigns.nvim | `event = { "BufReadPre", "BufNewFile" }` |
+| vim-fugitive / vim-rhubarb | `cmd = { "G", "Git", "Gdiffsplit", … }` / `cmd = "GBrowse"` |
+| undotree | `cmd = { "UndotreeToggle", … }` + `keys = "<leader>u"` |
+| Comment.nvim | `keys = { "gcc", "gbc", "gc", "gb", "gcO", "gco", "gcA" }` |
+| nvim-ts-context-commentstring | `lazy = true` (Comment.nvim dependency) |
+| nvim-colorizer.lua | `lazy = true` (tokyonight dependency — see below) |
+| bufferline.nvim / smear-cursor / vim-surround / -repeat / -unimpaired | `event = "VeryLazy"` |
+| nvim-treesitter-context | `lazy = true` (configured by the treesitter spec) |
+| dim.lua | `event = "LspAttach"` |
+| vim-matchup | `event = { "BufReadPost", "BufNewFile" }`, globals moved to `init` |
+| vim-sleuth | `event = { "BufReadPre", "BufNewFile" }` |
+| nvim-bqf | `ft = "qf"` |
 | crates.nvim | `ft = "toml"` |
-| gopher.nvim | `ft = "go"` |
-| dim.lua | `event = "LspAttach"` (if kept) |
-| alpha-nvim | `event = "VimEnter"` |
-| 99 | `cmd`/`keys` per its own commands |
-| fff.nvim | remove `lazy = false`; its `keys` already trigger it |
-| vim-characterize, vim-scriptease, vim-matchup, vim-surround, vim-repeat, vim-unimpaired | `event = "VeryLazy"` if kept |
+| gopher.nvim | `ft = { "go", "gomod", "gowork", "gotmpl" }` |
+| hlslens | `keys = { "n", "N", "*", "#", "g*", "g#" }` |
+| tabular / vim-abolish | `cmd = { "Tabularize", … }` / `cmd = { "Abolish", "Subvert", "S" }` |
+| code-shot.nvim | `keys = { "<leader>ss" }` (visual) |
+| 99 | `keys = { "<leader>9v", "<leader>9x", "<leader>9s" }` |
+| fff.nvim | removed `lazy = false`; its own `keys` now trigger it |
 
-Leave `nvim-treesitter` and `tokyonight` eager — highlighting and colorscheme are
-startup-visible.
+### Three things this turned up
 
----
+**`gopher.nvim` was running `:GoInstallDeps` on every startup.** Its spec had
+`build = { vim.cmd([[silent! GoInstallDeps]]) }` — a *table containing the result of calling
+vim.cmd*, so the command ran while the spec file was being parsed, every launch, rather than
+on install. Now `build = ":GoInstallDeps"`, which lazy runs on install/update only. Its
+`requires` key was a packer-ism too, silently ignored by lazy; now `dependencies`.
+
+**`fff.nvim` had `lazy = false` *and* a `keys` table.** The former wins, so the keys were
+decorative and the plugin loaded eagerly. Removing `lazy = false` makes the keys real.
+
+**Two hidden couplings that `event` triggers would have broken.** The tokyonight config calls
+`require("colorizer").setup()`, and `vim.g.matchup_*` globals are read while vim-matchup
+loads. Colorizer became a tokyonight `dependency`; matchup's globals moved from `config`
+(after load) to `init` (before load).
+
+`nvim-tree` needed care as well: `hijack_netrw` only fires if the plugin is loaded when a
+directory is opened, and no lazy event covers that. An `init` hook checks whether argv[0] is a
+directory and force-loads in that one case.
+
+### Verification
+
+Loaded state inspected in a headless session, per trigger:
+
+- at startup, with a TypeScript file: lspconfig loaded with 3 clients attached, gitsigns,
+  treesitter-context and dim.lua loaded; cmp, LuaSnip, autopairs, supermaven, telescope,
+  bufferline, nvim-tree and Comment.nvim all **not** loaded;
+- after `doautocmd InsertEnter`: cmp (9 sources), LuaSnip, autopairs, supermaven loaded;
+- after `doautocmd User VeryLazy`: telescope (with its `<space>ft` mappings installed),
+  bufferline, smear-cursor, vim-surround loaded, lualine drawing a statusline;
+- after `:NvimTreeToggle`: nvim-tree loaded.
 
 ## Tier 6 — Commenting (highest friction, do last)
 

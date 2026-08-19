@@ -1,6 +1,8 @@
 return {
   {
     "Saecki/crates.nvim",
+    -- Only ever active in Cargo.toml.
+    ft = "toml",
     config = function()
       require("crates").setup()
     end,

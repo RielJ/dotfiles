@@ -1,6 +1,9 @@
 return {
   {
     "kevinhwang91/nvim-hlslens",
+    -- The lens only appears once a search is running; these are exactly the
+    -- keys whose mappings the config below installs.
+    keys = { "n", "N", "*", "#", "g*", "g#" },
     config = function()
       local _, hlslens = pcall(require, "hlslens")
       hlslens.setup({
@@ -59,7 +62,10 @@ return {
 
   {
     "andymass/vim-matchup",
-    config = function()
+    event = { "BufReadPost", "BufNewFile" },
+    -- These globals are read while the plugin loads, so they must be set in
+    -- `init` (before load) rather than `config` (after).
+    init = function()
       vim.g.matchup_enabled = 1
       vim.g.matchup_surround_enabled = 1
       vim.g.matchup_matchparen_offscreen = { method = "popup" }
@@ -70,6 +76,8 @@ return {
     "niuiic/code-shot.nvim",
     dependencies = { "niuiic/core.nvim", "Aloxaf/silicon" },
     version = "v1",
+    -- Screenshotting a selection is the only entry point.
+    keys = { { "<leader>ss", mode = "v", desc = "Screenshot selection" } },
     config = function()
       require("code-shot").setup({
         ---@return string output file path

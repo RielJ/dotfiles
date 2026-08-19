@@ -1,6 +1,8 @@
 return {
   {
     "hrsh7th/nvim-cmp",
+    -- CmdlineEnter matters too: cmp drives `:` and `/` completion.
+    event = { "InsertEnter", "CmdlineEnter" },
     dependencies = {
       "saadparwaiz1/cmp_luasnip",
       "hrsh7th/cmp-buffer",

@@ -5,6 +5,7 @@ return {
   },
   {
     "windwp/nvim-autopairs",
+    event = "InsertEnter",
     dependencies = { "windwp/nvim-ts-autotag", "hrsh7th/nvim-cmp" },
     config = function()
       vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {

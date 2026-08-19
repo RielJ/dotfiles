@@ -1,6 +1,8 @@
 return {
   {
     "L3MON4D3/LuaSnip",
+    -- Loaded as an nvim-cmp dependency, or on demand by require().
+    lazy = true,
     build = "make install_jsregexp",
     dependencies = { "rafamadriz/friendly-snippets" },
     config = function()

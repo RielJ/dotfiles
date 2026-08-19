@@ -2,6 +2,15 @@ return {
   {
     "kyazdani42/nvim-tree.lua",
     dependencies = { "nvim-tree/nvim-web-devicons" },
+    cmd = { "NvimTreeToggle", "NvimTreeOpen", "NvimTreeFocus", "NvimTreeFindFile", "NvimTreeCollapse" },
+    -- hijack_netrw only works if the plugin is already loaded when a directory
+    -- is opened, which no lazy trigger covers. Load it eagerly in that one case.
+    init = function()
+      local argv = vim.fn.argv(0)
+      if type(argv) == "string" and argv ~= "" and vim.fn.isdirectory(argv) == 1 then
+        require("lazy").load({ plugins = { "nvim-tree.lua" } })
+      end
+    end,
     config = function()
       require("nvim-tree").setup({
         auto_reload_on_write = false,

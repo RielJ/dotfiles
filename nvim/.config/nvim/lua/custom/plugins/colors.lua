@@ -2,6 +2,9 @@ return {
   {
     "folke/tokyonight.nvim",
     priority = 1000,
+    -- The config below calls require("colorizer").setup(), so colorizer has to
+    -- come with it rather than load on its own trigger.
+    dependencies = { "catgoose/nvim-colorizer.lua" },
     config = function()
       require("tokyonight").setup({
         -- your configuration comes here
@@ -51,7 +54,5 @@ return {
       end
     end,
   },
-  {
-    "catgoose/nvim-colorizer.lua",
-  },
+  { "catgoose/nvim-colorizer.lua", lazy = true },
 }

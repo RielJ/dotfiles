@@ -2,6 +2,8 @@ return {
   {
     {
       "neovim/nvim-lspconfig",
+      -- Servers attach to buffers, so there is nothing to start before one exists.
+      event = { "BufReadPre", "BufNewFile" },
       dependencies = {
         "nvim-lua/plenary.nvim",
         "b0o/schemastore.nvim",
@@ -54,9 +56,8 @@ return {
     -- },
     {
       "mbbill/undotree",
-      config = function()
-        vim.keymap.set("n", "<leader>u", vim.cmd.UndotreeToggle)
-      end,
+      cmd = { "UndotreeToggle", "UndotreeShow", "UndotreeFocus" },
+      keys = { { "<leader>u", vim.cmd.UndotreeToggle, desc = "Undo tree" } },
     },
   },
 }

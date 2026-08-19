@@ -1,6 +1,8 @@
 return {
   {
     "lewis6991/gitsigns.nvim",
+    -- Signs are per-buffer, so there is nothing to do before one is read.
+    event = { "BufReadPre", "BufNewFile" },
     config = function()
       require("gitsigns").setup({
         signs = {

@@ -37,7 +37,6 @@ return {
         send_to_quickfix = "<C-q>",
       },
     },
-    lazy = false,
     keys = {
       {
         "<leader>fd",

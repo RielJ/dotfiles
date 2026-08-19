@@ -1,6 +1,8 @@
 return {
   {
     "JoosepAlviste/nvim-ts-context-commentstring",
+    -- Pulled in by Comment.nvim's pre_hook; never needed on its own.
+    lazy = true,
     config = function()
       require("ts_context_commentstring").setup({
         enable_autocmd = false,
@@ -19,6 +21,15 @@ return {
   {
     "numToStr/Comment.nvim",
     dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" },
+    keys = {
+      { "gcc", desc = "Comment line" },
+      { "gbc", desc = "Comment block" },
+      { "gc", mode = { "n", "x", "o" }, desc = "Comment" },
+      { "gb", mode = { "n", "x", "o" }, desc = "Comment block" },
+      { "gcO", desc = "Comment above" },
+      { "gco", desc = "Comment below" },
+      { "gcA", desc = "Comment end of line" },
+    },
     config = function()
       require("Comment").setup({
         -- ignores empty lines
