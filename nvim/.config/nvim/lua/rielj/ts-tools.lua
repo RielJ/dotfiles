@@ -30,6 +30,40 @@ local action = require("rielj.lsp.action")
 local CLIENT = "tsc"
 local ADD_ALL_IMPORTS = "Add all missing imports"
 
+-- Every title the server can put on an import fix, from typescript-go's
+-- internal/diagnostics:
+--
+--   90013  Import '{0}' from "{1}"
+--   90057  Add import from "{0}"
+--   90058  Update import from "{0}"   <- when an import from that module exists
+--   95064  Add all missing imports
+--
+-- 90058 is the one that matters in practice: as soon as the file already
+-- imports *something* from the target module, the server offers to widen that
+-- statement rather than add a second one. Matching only "Add import from" made
+-- `go` report "no matching code actions" in exactly the case where the fix was
+-- most obviously available.
+local IMPORT_FIX_PATTERNS = {
+  "^Add import from ",
+  "^Update import from ",
+  "^Import '",
+}
+
+--- Does this action's title name an import fix?
+---@param title string
+---@return boolean
+local function is_import_fix(title)
+  if title == ADD_ALL_IMPORTS then
+    return true
+  end
+  for _, pattern in ipairs(IMPORT_FIX_PATTERNS) do
+    if title:match(pattern) then
+      return true
+    end
+  end
+  return false
+end
+
 local M = {}
 
 --- The TypeScript client attached to this buffer, if any.
@@ -92,11 +126,14 @@ function M.add_missing_imports()
     notify = true,
     -- Cheap pre-filter so unrelated quickfixes are never resolved.
     filter = function(candidate)
-      local title = candidate.title or ""
-      return title == ADD_ALL_IMPORTS or title:match("^Add import from") ~= nil
+      return is_import_fix(candidate.title or "")
     end,
     -- One batch edit beats N single-import edits computed against the same
     -- original document, which would conflict once the first is applied.
+    --
+    -- With no batch action the first candidate wins. The server orders them by
+    -- its own preference, which is the same order "Add all missing imports"
+    -- would have resolved them in.
     select = function(actions)
       for _, candidate in ipairs(actions) do
         if candidate.title == ADD_ALL_IMPORTS then
