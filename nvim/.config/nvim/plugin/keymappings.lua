@@ -2,7 +2,7 @@
 -- detected at startup (:KeymapCollisions) instead of at keypress.
 --
 -- Buffer-local maps live with the thing that owns them: LSP maps in
--- rielj.lsp.handlers, tsgo maps in rielj.tsgo-tools, plugin maps in the
+-- rielj.lsp.handlers, TypeScript maps in rielj.ts-tools, plugin maps in the
 -- plugin's own spec.
 
 local map = require("rielj.keymap").map

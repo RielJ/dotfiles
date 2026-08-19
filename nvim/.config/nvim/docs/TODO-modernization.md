@@ -184,7 +184,10 @@ Ignorable: the luarocks `lua 5.1` vs `5.5` warning — lazy states *"no plugins 
 
 ---
 
-## Tier 3 — TypeScript: `tsgo` → `tsc`
+## Tier 3 — TypeScript: `tsgo` → `tsc` ✅ DONE
+
+Completed August 2026, including a working `add_missing_imports` built by hand — see
+"Implementing the missing code actions" at the end of this section.
 
 ### What changed
 
@@ -234,15 +237,80 @@ deprecation notice because of the `vim.deprecate` stub in `init.lua`.
 ### Decision
 
 Stay on the native server — you have already accepted its tradeoffs and it is where Microsoft
-is heading — but migrate from `tsgo` to `tsc`. Keep `vtsls` in mind as the fallback if losing
-"add missing imports" turns out to be intolerable.
+is heading — but migrate from `tsgo` to `tsc`. `vtsls` remains the fallback if the native
+server's gaps ever bite.
 
-- [ ] Rename the server config `tsgo` → `tsc` and delete the hardcoded `cmd`, inheriting
-      lspconfig's binary resolution.
-- [ ] Move inlay-hint settings from `settings.typescript.*` to `settings['js/ts'].*`.
-- [ ] Trim `lua/rielj/tsgo-tools.lua` to the kinds the server implements: `gS` organize
-      imports, `gs` remove unused imports, `gA` fix all, `gR` rename file. Remove `ge` and `go`.
-- [ ] Rename `tsgo-tools.lua` → `ts-tools.lua` to match.
+- [x] Updated nvim-lspconfig (82 commits behind; the local clone predated `lsp/tsc.lua`).
+- [x] Replaced `servers/tsgo.lua` with `servers/tsc.lua`, dropping the hardcoded `cmd` so
+      lspconfig's resolution applies: project-local `node_modules/.bin` first, `--version`
+      major >= 7 enforced, monorepo roots, Deno projects skipped.
+- [x] Moved inlay-hint settings from `settings.typescript.*` to `settings['js/ts'].*`, and the
+      `preferences` block with them. Verified at runtime: the client's settings table now has
+      exactly one key, `js/ts`.
+- [x] Rewrote `tsgo-tools.lua` as `lua/rielj/ts-tools.lua`; commands renamed `:Tsgo*` → `:Ts*`;
+      client name is now `tsc`.
+- [x] `ge` is an alias of `remove_unused_imports` rather than a dead `source.removeUnused`.
+- [x] `go` reimplemented over `quickfix` (below) instead of the non-existent
+      `source.addMissingImports`.
+
+### Implementing the missing code actions
+
+Rather than accept the two dead mappings, the server was probed directly (isolated
+`nvim -u NONE` + `tsc --lsp --stdio` against a scratch project) to see what it really offers:
+
+```text
+codeActionProvider.codeActionKinds = {
+  "quickfix", "source.organizeImports", "source.removeUnusedImports",
+  "source.sortImports", "source.fixAll",
+}
+```
+
+**Add missing imports — recovered.** Asking for `quickfix` over the whole buffer, with the
+buffer's diagnostics in context, makes the server return one `Add import from "./lib"` per
+unresolved name *plus* a batch `Add all missing imports`, each with a complete workspace edit:
+
+```text
+actions: 3
+  1. kind=quickfix title="Add import from \"./lib\""  edit=yes
+  2. kind=quickfix title="Add import from \"./lib\""  edit=yes
+  3. kind=quickfix title="Add all missing imports"    edit=yes
+```
+
+`M.add_missing_imports` filters to those titles, prefers the batch action, and falls back to
+the first single fix. Preferring the batch matters: the individual edits are all computed
+against the *original* document, so applying more than one would conflict.
+
+This needed one addition to the `rielj.lsp.action` seam: a `select` hook that runs once with
+the whole filtered list, letting a caller choose among actions instead of applying all of
+them. Resolution (`codeAction/resolve`) now happens after selection, so discarded candidates
+are never resolved.
+
+**Remove unused locals — genuinely impossible.** A quickfix request at a `6133`
+("declared but its value is never read") diagnostic returns zero actions, and `source.fixAll`
+leaves `const unusedLocal = 42` untouched. Only unused *imports* can be removed, via
+`source.removeUnusedImports`. Hence `ge` aliases `gs` rather than pretending.
+
+Incidental finding: `source.fixAll` also adds missing imports, so `gA` overlaps `go`.
+
+### Verification
+
+Against a scratch project with two unresolved names, one unused import and one unused local:
+
+| Key | Result |
+|---|---|
+| `go` | `import { VERSION, greet } from "./lib";` inserted |
+| `gs` | unused `readFileSync` import removed |
+| `gS` | imports sorted, output stable |
+| `gA` | applies, also adds imports |
+| `gR` | `workspace/willRenameFiles` advertised by the server |
+
+Re-run against `~/pi-scratch`, the project where this all started: `tsc` attaches at the
+project root, all five actions execute, and **no `InvalidParams` / `cannot unmarshal` error
+appears** — the original failure is gone.
+
+One loose end: there is no global TypeScript 7 on `$PATH`, only a `tsgo` dev build
+(`7.0.0-dev.20251005.1`). Projects with a local `typescript` dependency are unaffected, but
+any project without one will fall back to that stale binary. `npm i -g typescript` fixes it.
 
 ---
 

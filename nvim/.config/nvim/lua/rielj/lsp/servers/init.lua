@@ -13,7 +13,7 @@ return {
   oxlint = require("rielj.lsp.servers.oxlint"),
   rust_analyzer = require("rielj.lsp.servers.rust_analyzer"),
   tailwindcss = require("rielj.lsp.servers.tailwindcss"),
-  tsgo = require("rielj.lsp.servers.tsgo"),
+  tsc = require("rielj.lsp.servers.tsc"),
   ty = require("rielj.lsp.servers.ty"),
   yamlls = require("rielj.lsp.servers.yamlls"),
 }

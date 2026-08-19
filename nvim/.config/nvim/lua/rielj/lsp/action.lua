@@ -7,16 +7,21 @@
 -- Why this exists: three call sites used to hand-roll these params, and each
 -- had to independently know that `vim.diagnostic.get()` returns Neovim-shaped
 -- diagnostics (lnum/col) while the wire format requires `range`. Strict servers
--- such as tsgo (Go/lsproto) reject the Neovim shape outright.
+-- such as tsc (TypeScript 7, Go/lsproto) reject the Neovim shape outright.
 
 local M = {}
 
 ---@class rielj.lsp.action.Opts
 ---@field bufnr? integer            Buffer to act on (default: current)
 ---@field kind? string|string[]     Code action kind(s), e.g. "source.organizeImports"
----@field client? string            Restrict to a single client name, e.g. "tsgo"
+---@field client? string            Restrict to a single client name, e.g. "tsc"
 ---@field range? "buffer"|"cursor"  Range to request actions for (default: "buffer")
 ---@field filter? fun(action: table, client: vim.lsp.Client): boolean
+---@field select? fun(actions: table[], client: vim.lsp.Client): table[]
+---                             Choose among the filtered actions. Runs once with
+---                             the whole matched list, so callers can prefer one
+---                             action over another ("apply the batch fix if the
+---                             server offered one, else the first single fix").
 ---@field sync? boolean             Block until applied (required on BufWritePre)
 ---@field reverse? boolean          Apply bottom-up, so earlier edits don't shift later ones
 ---@field timeout_ms? integer       Sync timeout (default: 3000)
@@ -217,6 +222,19 @@ function M.apply(opts)
     return true
   end
 
+  --- Narrow the matched set, then resolve only what will actually be applied.
+  ---@param matched table[]
+  ---@param client vim.lsp.Client
+  ---@return table[]
+  local function choose(matched, client)
+    if opts.select then
+      matched = opts.select(matched, client) or {}
+    end
+    return vim.tbl_map(function(a)
+      return resolve(a, client, bufnr, timeout_ms)
+    end, matched)
+  end
+
   local applied = 0
 
   for _, client in ipairs(clients) do
@@ -230,9 +248,10 @@ function M.apply(opts)
         local matched = {}
         for _, action in ipairs(response.result) do
           if accept(action, client) then
-            table.insert(matched, resolve(action, client, bufnr, timeout_ms))
+            table.insert(matched, action)
           end
         end
+        matched = choose(matched, client)
         apply_all(matched, client, bufnr, opts.reverse)
         applied = applied + #matched
       end
@@ -251,9 +270,10 @@ function M.apply(opts)
         local matched = {}
         for _, action in ipairs(result) do
           if accept(action, client) then
-            table.insert(matched, resolve(action, client, bufnr, timeout_ms))
+            table.insert(matched, action)
           end
         end
+        matched = choose(matched, client)
         if #matched == 0 and opts.notify then
           vim.notify("No matching code actions", vim.log.levels.INFO)
         end

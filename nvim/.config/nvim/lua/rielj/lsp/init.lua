@@ -57,7 +57,7 @@ vim.lsp.config("lua_ls", {
   },
 })
 
--- require("rielj.typescript") -- replaced by tsgo + tsgo-tools
+-- require("rielj.typescript") -- replaced by tsc + rielj.ts-tools
 
 for server, config in pairs(servers) do
   setup_server(server, config)

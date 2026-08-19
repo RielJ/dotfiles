@@ -15,7 +15,7 @@ vim.opt.completeopt = { "menuone", "noselect", "menu" }
 vim.opt.conceallevel = 0 -- so that `` is visible in markdown files
 -- Set fileencoding only if buffer is modifiable (avoids errors during Lazy UI)
 if vim.bo.modifiable then
-  vim.opt.fileencoding = "utf-8" -- the encoding written to a file
+	vim.opt.fileencoding = "utf-8" -- the encoding written to a file
 end
 vim.opt.foldmethod = "manual" -- folding set to "expr" for treesitter based folding
 vim.opt.foldexpr = "" -- set to "nvim_treesitter#foldexpr()" for treesitter based folding
