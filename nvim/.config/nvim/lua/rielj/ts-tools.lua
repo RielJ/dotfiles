@@ -44,24 +44,24 @@ local ADD_ALL_IMPORTS = "Add all missing imports"
 -- `go` report "no matching code actions" in exactly the case where the fix was
 -- most obviously available.
 local IMPORT_FIX_PATTERNS = {
-	"^Add import from ",
-	"^Update import from ",
-	"^Import '",
+  "^Add import from ",
+  "^Update import from ",
+  "^Import '",
 }
 
 --- Does this action's title name an import fix?
 ---@param title string
 ---@return boolean
 local function is_import_fix(title)
-	if title == ADD_ALL_IMPORTS then
-		return true
-	end
-	for _, pattern in ipairs(IMPORT_FIX_PATTERNS) do
-		if title:match(pattern) then
-			return true
-		end
-	end
-	return false
+  if title == ADD_ALL_IMPORTS then
+    return true
+  end
+  for _, pattern in ipairs(IMPORT_FIX_PATTERNS) do
+    if title:match(pattern) then
+      return true
+    end
+  end
+  return false
 end
 
 local M = {}
@@ -70,24 +70,24 @@ local M = {}
 ---@param bufnr integer
 ---@return vim.lsp.Client|nil
 local function ts_client(bufnr)
-	return vim.lsp.get_clients({ bufnr = bufnr, name = CLIENT })[1]
+  return vim.lsp.get_clients({ bufnr = bufnr, name = CLIENT })[1]
 end
 
 --- Apply every action of `kind`, or warn if the server is not attached.
 ---@param kind string
 ---@param bufnr? integer
 local function apply_kind(kind, bufnr)
-	bufnr = bufnr or vim.api.nvim_get_current_buf()
-	if not ts_client(bufnr) then
-		vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
-		return
-	end
-	action.apply({ bufnr = bufnr, client = CLIENT, kind = kind, notify = true })
+  bufnr = bufnr or vim.api.nvim_get_current_buf()
+  if not ts_client(bufnr) then
+    vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
+    return
+  end
+  action.apply({ bufnr = bufnr, client = CLIENT, kind = kind, notify = true })
 end
 
 --- Remove unused imports.
 function M.remove_unused_imports()
-	apply_kind("source.removeUnusedImports")
+  apply_kind("source.removeUnusedImports")
 end
 
 --- Alias of `remove_unused_imports`. The server cannot remove unused locals.
@@ -95,17 +95,17 @@ M.remove_unused = M.remove_unused_imports
 
 --- Organize imports (sort + remove unused).
 function M.organize_imports()
-	apply_kind("source.organizeImports")
+  apply_kind("source.organizeImports")
 end
 
 --- Sort imports without removing anything.
 function M.sort_imports()
-	apply_kind("source.sortImports")
+  apply_kind("source.sortImports")
 end
 
 --- Fix everything the server considers auto-fixable.
 function M.fix_all()
-	apply_kind("source.fixAll")
+  apply_kind("source.fixAll")
 end
 
 --- Add imports for every unresolved name in the buffer.
@@ -113,36 +113,36 @@ end
 --- Implemented over `quickfix` because the server exposes no
 --- `source.addMissingImports` kind.
 function M.add_missing_imports()
-	local bufnr = vim.api.nvim_get_current_buf()
-	if not ts_client(bufnr) then
-		vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
-		return
-	end
+  local bufnr = vim.api.nvim_get_current_buf()
+  if not ts_client(bufnr) then
+    vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
+    return
+  end
 
-	action.apply({
-		bufnr = bufnr,
-		client = CLIENT,
-		kind = "quickfix",
-		notify = true,
-		-- Cheap pre-filter so unrelated quickfixes are never resolved.
-		filter = function(candidate)
-			return is_import_fix(candidate.title or "")
-		end,
-		-- One batch edit beats N single-import edits computed against the same
-		-- original document, which would conflict once the first is applied.
-		--
-		-- With no batch action the first candidate wins. The server orders them by
-		-- its own preference, which is the same order "Add all missing imports"
-		-- would have resolved them in.
-		select = function(actions)
-			for _, candidate in ipairs(actions) do
-				if candidate.title == ADD_ALL_IMPORTS then
-					return { candidate }
-				end
-			end
-			return actions[1] and { actions[1] } or {}
-		end,
-	})
+  action.apply({
+    bufnr = bufnr,
+    client = CLIENT,
+    kind = "quickfix",
+    notify = true,
+    -- Cheap pre-filter so unrelated quickfixes are never resolved.
+    filter = function(candidate)
+      return is_import_fix(candidate.title or "")
+    end,
+    -- One batch edit beats N single-import edits computed against the same
+    -- original document, which would conflict once the first is applied.
+    --
+    -- With no batch action the first candidate wins. The server orders them by
+    -- its own preference, which is the same order "Add all missing imports"
+    -- would have resolved them in.
+    select = function(actions)
+      for _, candidate in ipairs(actions) do
+        if candidate.title == ADD_ALL_IMPORTS then
+          return { candidate }
+        end
+      end
+      return actions[1] and { actions[1] } or {}
+    end,
+  })
 end
 
 --- Push the current position onto the tag stack, so <C-t> comes back.
@@ -150,9 +150,9 @@ end
 --- `vim.lsp.buf.definition` does this internally; a hand-rolled jump has to do
 --- it itself or the jump is one-way.
 local function push_tagstack()
-	local winid = vim.api.nvim_get_current_win()
-	local from = { vim.fn.bufnr("%"), vim.fn.line("."), vim.fn.col("."), 0 }
-	vim.fn.settagstack(winid, { items = { { from = from, tagname = vim.fn.expand("<cword>") } } }, "t")
+  local winid = vim.api.nvim_get_current_win()
+  local from = { vim.fn.bufnr("%"), vim.fn.line("."), vim.fn.col("."), 0 }
+  vim.fn.settagstack(winid, { items = { { from = from, tagname = vim.fn.expand("<cword>") } } }, "t")
 end
 
 --- Go to the *implementation* of the symbol under the cursor, not its type
@@ -172,131 +172,129 @@ end
 --- Falls back to the ordinary definition request when there is no source to
 --- find, which is the common case for a package that ships no maps.
 function M.source_definition()
-	local bufnr = vim.api.nvim_get_current_buf()
-	local client = ts_client(bufnr)
-	if not client then
-		vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
-		return
-	end
+  local bufnr = vim.api.nvim_get_current_buf()
+  local client = ts_client(bufnr)
+  if not client then
+    vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
+    return
+  end
 
-	local params = vim.lsp.util.make_position_params(0, client.offset_encoding)
+  local params = vim.lsp.util.make_position_params(0, client.offset_encoding)
 
-	client:request("custom/textDocument/sourceDefinition", params, function(err, result)
-		if err then
-			vim.notify("Source definition: " .. err.message, vim.log.levels.ERROR)
-			return
-		end
+  client:request("custom/textDocument/sourceDefinition", params, function(err, result)
+    if err then
+      vim.notify("Source definition: " .. err.message, vim.log.levels.ERROR)
+      return
+    end
 
-		if not result or vim.tbl_isempty(result) then
-			vim.notify("No source definition, falling back to definition", vim.log.levels.INFO)
-			vim.lsp.buf.definition()
-			return
-		end
+    if not result or vim.tbl_isempty(result) then
+      vim.notify("No source definition, falling back to definition", vim.log.levels.INFO)
+      vim.lsp.buf.definition()
+      return
+    end
 
-		push_tagstack()
+    push_tagstack()
 
-		if #result == 1 then
-			vim.lsp.util.show_document(result[1], client.offset_encoding, { reuse_win = true, focus = true })
-			return
-		end
+    if #result == 1 then
+      vim.lsp.util.show_document(result[1], client.offset_encoding, { reuse_win = true, focus = true })
+      return
+    end
 
-		-- More than one source: let the quickfix list arbitrate.
-		vim.fn.setqflist({}, " ", {
-			title = "Source definitions",
-			items = vim.lsp.util.locations_to_items(result, client.offset_encoding),
-		})
-		vim.cmd("botright copen")
-	end, bufnr)
+    -- More than one source: let the quickfix list arbitrate.
+    vim.fn.setqflist({}, " ", {
+      title = "Source definitions",
+      items = vim.lsp.util.locations_to_items(result, client.offset_encoding),
+    })
+    vim.cmd("botright copen")
+  end, bufnr)
 end
 
 --- Rename the current file and update every import that points at it.
 function M.rename_file()
-	local bufnr = vim.api.nvim_get_current_buf()
-	local old_path = vim.api.nvim_buf_get_name(bufnr)
+  local bufnr = vim.api.nvim_get_current_buf()
+  local old_path = vim.api.nvim_buf_get_name(bufnr)
 
-	if old_path == "" then
-		vim.notify("Buffer has no file path", vim.log.levels.WARN)
-		return
-	end
+  if old_path == "" then
+    vim.notify("Buffer has no file path", vim.log.levels.WARN)
+    return
+  end
 
-	vim.ui.input({ prompt = "New file path: ", default = old_path }, function(new_path)
-		if not new_path or new_path == "" or new_path == old_path then
-			return
-		end
+  vim.ui.input({ prompt = "New file path: ", default = old_path }, function(new_path)
+    if not new_path or new_path == "" or new_path == old_path then
+      return
+    end
 
-		local client = ts_client(bufnr)
-		if not client then
-			vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
-			return
-		end
+    local client = ts_client(bufnr)
+    if not client then
+      vim.notify("TypeScript LSP (" .. CLIENT .. ") not attached", vim.log.levels.WARN)
+      return
+    end
 
-		local rename_params = {
-			files = {
-				{
-					oldUri = vim.uri_from_fname(old_path),
-					newUri = vim.uri_from_fname(new_path),
-				},
-			},
-		}
+    local rename_params = {
+      files = {
+        {
+          oldUri = vim.uri_from_fname(old_path),
+          newUri = vim.uri_from_fname(new_path),
+        },
+      },
+    }
 
-		client:request("workspace/willRenameFiles", rename_params, function(_, result)
-			-- Import-path updates, computed before the file moves.
-			if result then
-				vim.lsp.util.apply_workspace_edit(result, client.offset_encoding or "utf-16")
-			end
+    client:request("workspace/willRenameFiles", rename_params, function(_, result)
+      -- Import-path updates, computed before the file moves.
+      if result then
+        vim.lsp.util.apply_workspace_edit(result, client.offset_encoding or "utf-16")
+      end
 
-			local ok, rename_err = pcall(vim.fn.rename, old_path, new_path)
-			if not ok then
-				vim.notify("Failed to rename file: " .. tostring(rename_err), vim.log.levels.ERROR)
-				return
-			end
+      local ok, rename_err = pcall(vim.fn.rename, old_path, new_path)
+      if not ok then
+        vim.notify("Failed to rename file: " .. tostring(rename_err), vim.log.levels.ERROR)
+        return
+      end
 
-			vim.api.nvim_buf_set_name(bufnr, new_path)
-			vim.cmd("write!")
+      vim.api.nvim_buf_set_name(bufnr, new_path)
+      vim.cmd("write!")
 
-			if client:supports_method("workspace/didRenameFiles") then
-				client:notify("workspace/didRenameFiles", rename_params)
-			end
+      if client:supports_method("workspace/didRenameFiles") then
+        client:notify("workspace/didRenameFiles", rename_params)
+      end
 
-			vim.notify(
-				"Renamed: " .. vim.fn.fnamemodify(old_path, ":t") .. " → " .. vim.fn.fnamemodify(new_path, ":t")
-			)
-		end, bufnr)
-	end)
+      vim.notify("Renamed: " .. vim.fn.fnamemodify(old_path, ":t") .. " → " .. vim.fn.fnamemodify(new_path, ":t"))
+    end, bufnr)
+  end)
 end
 
 --- Register user commands.
 function M.register_commands()
-	local commands = {
-		TsOrganizeImports = { M.organize_imports, "Organize imports" },
-		TsSortImports = { M.sort_imports, "Sort imports (non-destructive)" },
-		TsRemoveUnusedImports = { M.remove_unused_imports, "Remove unused imports" },
-		TsAddMissingImports = { M.add_missing_imports, "Add missing imports" },
-		TsFixAll = { M.fix_all, "Fix all auto-fixable issues" },
-		TsRenameFile = { M.rename_file, "Rename file and update imports" },
-	}
-	for name, spec in pairs(commands) do
-		vim.api.nvim_create_user_command(name, spec[1], { desc = spec[2] })
-	end
+  local commands = {
+    TsOrganizeImports = { M.organize_imports, "Organize imports" },
+    TsSortImports = { M.sort_imports, "Sort imports (non-destructive)" },
+    TsRemoveUnusedImports = { M.remove_unused_imports, "Remove unused imports" },
+    TsAddMissingImports = { M.add_missing_imports, "Add missing imports" },
+    TsFixAll = { M.fix_all, "Fix all auto-fixable issues" },
+    TsRenameFile = { M.rename_file, "Rename file and update imports" },
+  }
+  for name, spec in pairs(commands) do
+    vim.api.nvim_create_user_command(name, spec[1], { desc = spec[2] })
+  end
 end
 
 --- Buffer-local keymaps, mirroring typescript-tools.nvim.
 ---@param bufnr integer
 function M.on_attach(bufnr)
-	local bufmap = require("rielj.keymap").bufmap
+  local bufmap = require("rielj.keymap").bufmap
 
-	bufmap(bufnr, "n", "gs", M.remove_unused_imports, { desc = "Remove unused imports" })
-	bufmap(bufnr, "n", "ge", M.remove_unused, { desc = "Remove unused imports (alias of gs)" })
-	bufmap(bufnr, "n", "gS", M.organize_imports, { desc = "Organize imports" })
-	bufmap(bufnr, "n", "go", M.add_missing_imports, { desc = "Add missing imports" })
-	bufmap(bufnr, "n", "gA", M.fix_all, { desc = "Fix all" })
-	bufmap(bufnr, "n", "gR", M.rename_file, { desc = "Rename file" })
+  bufmap(bufnr, "n", "gs", M.remove_unused_imports, { desc = "Remove unused imports" })
+  bufmap(bufnr, "n", "ge", M.remove_unused, { desc = "Remove unused imports (alias of gs)" })
+  bufmap(bufnr, "n", "gS", M.organize_imports, { desc = "Organize imports" })
+  bufmap(bufnr, "n", "go", M.add_missing_imports, { desc = "Add missing imports" })
+  bufmap(bufnr, "n", "gA", M.fix_all, { desc = "Fix all" })
+  bufmap(bufnr, "n", "gR", M.rename_file, { desc = "Rename file" })
 
-	-- Shadows the generic `gD` (declaration), which is dead weight here: the
-	-- server advertises no declarationProvider at all, so that map did nothing in
-	-- a TypeScript buffer. Buffer-local wins because LspAttach fires *before*
-	-- a config's on_attach.
-	bufmap(bufnr, "n", "gD", M.source_definition, { desc = "Go to source definition" })
+  -- Shadows the generic `gD` (declaration), which is dead weight here: the
+  -- server advertises no declarationProvider at all, so that map did nothing in
+  -- a TypeScript buffer. Buffer-local wins because LspAttach fires *before*
+  -- a config's on_attach.
+  bufmap(bufnr, "n", "gD", M.source_definition, { desc = "Go to source definition" })
 end
 
 M.register_commands()
