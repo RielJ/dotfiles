@@ -17,6 +17,27 @@ return {
 
       local ts = require("nvim-treesitter")
 
+      -- The treesitter indent entry point differs by branch, and this checkout
+      -- is `master` (archived upstream) despite the `branch = "main"` above --
+      -- lazy never switched it, and the locked commit is not even present.
+      --
+      --   main:   v:lua.require'nvim-treesitter'.indentexpr()
+      --   master: nvim_treesitter#indent()          (autoload/nvim_treesitter.vim)
+      --
+      -- Pointing at main's expr from a master checkout set an 'indentexpr' whose
+      -- function does not exist, so every evaluation failed and returned 0: `o`
+      -- inside a nested block opened a line at column 1. Detect instead of
+      -- assume, so this survives an eventual branch switch either way.
+      -- Detection note: `exists("*nvim_treesitter#indent")` is 0 until something
+      -- calls it, because Neovim's exists() does not source the autoload script.
+      -- Test for the file on the runtimepath instead.
+      local indent_expr = nil
+      if type(ts.indentexpr) == "function" then
+        indent_expr = "v:lua.require'nvim-treesitter'.indentexpr()"
+      elseif #vim.api.nvim_get_runtime_file("autoload/nvim_treesitter.vim", false) > 0 then
+        indent_expr = "nvim_treesitter#indent()"
+      end
+
       -- Languages where the highlighter should NOT start.
       local highlight_disabled = { latex = true }
 
@@ -58,8 +79,11 @@ return {
             pcall(vim.treesitter.start, buf, lang)
           end
 
-          if not indent_disabled[lang] then
-            vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          -- With no usable treesitter indent, leave 'indentexpr' alone: the
+          -- runtime ftplugin's own indent script is a working fallback, and
+          -- clobbering it is what caused the column-1 bug.
+          if indent_expr and not indent_disabled[lang] then
+            vim.bo[buf].indentexpr = indent_expr
           end
         end,
       })
@@ -74,8 +98,6 @@ return {
           end
         end,
       })
-
-      _ = ts -- kept for clarity / future use
 
       require("treesitter-context").setup({
         enable = true, -- Enable this plugin (Can be enabled/disabled later via commands)
