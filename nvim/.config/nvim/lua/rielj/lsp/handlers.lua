@@ -43,6 +43,29 @@ M.setup = function()
       end
     end,
   })
+
+  -- A server may register capabilities *after* it has attached, via dynamic
+  -- registration. Since every map below is gated on the client supporting the
+  -- method, a capability that shows up late would otherwise never get its
+  -- keymap: LspAttach already fired, and nothing re-runs the gate.
+  --
+  -- Re-run the attach logic for the client's buffers when that happens. Both
+  -- helpers clear their own autocommands first, so this is idempotent.
+  local register_capability = vim.lsp.handlers["client/registerCapability"]
+  vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
+    local result = register_capability(err, res, ctx)
+
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    if client then
+      for bufnr in pairs(client.attached_buffers) do
+        if vim.api.nvim_buf_is_valid(bufnr) then
+          M.common_on_attach(client, bufnr)
+        end
+      end
+    end
+
+    return result
+  end
 end
 
 local function lsp_highlight_document(client, bufnr)
@@ -125,11 +148,24 @@ local function lsp_keymaps(client, bufnr)
   if has("textDocument/references") then
     bufmap(bufnr, "n", "gr", vim.lsp.buf.references, { desc = "References" })
   end
+  -- Cap the floats: an unbounded hover on a wide inferred type takes the whole
+  -- screen and hides the code it is describing.
+  local function float_size()
+    return {
+      max_height = math.floor(vim.o.lines * 0.5),
+      max_width = math.floor(vim.o.columns * 0.4),
+    }
+  end
+
   if has("textDocument/hover") then
-    bufmap(bufnr, "n", "K", vim.lsp.buf.hover, { desc = "Hover" })
+    bufmap(bufnr, "n", "K", function()
+      vim.lsp.buf.hover(float_size())
+    end, { desc = "Hover" })
   end
   if has("textDocument/signatureHelp") then
-    bufmap(bufnr, "n", "<C-k>", vim.lsp.buf.signature_help, { desc = "Signature help" })
+    bufmap(bufnr, "n", "<C-k>", function()
+      vim.lsp.buf.signature_help(float_size())
+    end, { desc = "Signature help" })
   end
   if has("textDocument/rename") then
     bufmap(bufnr, "n", "<leader>lr", function()

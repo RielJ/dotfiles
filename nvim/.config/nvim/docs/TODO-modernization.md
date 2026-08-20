@@ -684,6 +684,56 @@ remaining reason someone might not migrate to TypeScript 7 yet.
 
 ---
 
+## Tier 8 — What other people's configs are doing ✅ PARTIALLY DONE
+
+Surveyed against three sources: MariaSolOs' dotfiles (she is a Neovim core LSP
+contributor, and her config uses no lspconfig at all — hand-written `lsp/*.lua` plus
+`vim.pack`), folke's personal `dot` repo, and the ~87 public configs that ship an
+`lsp/tsgo.lua`.
+
+### Adopted
+
+**Re-run the attach logic on `client/registerCapability`.** Servers may register
+capabilities *after* attaching, through dynamic registration. Every navigation map here
+is now gated on the client supporting the method, so a late-arriving capability would
+never get its keymap: `LspAttach` has already fired and nothing re-evaluates the gate.
+The handler is wrapped to re-run `common_on_attach` for the client's buffers. Both
+helpers clear their own autocommands first, so re-running is idempotent — verified: three
+attach passes still leave two document-highlight autocommands and three code-lens ones.
+
+**Bound the hover and signature-help floats** to half the screen height and 40% of its
+width. An unbounded hover over a wide inferred type covers the code it describes.
+
+### Rejected, and one piece of widespread cargo cult
+
+The `init_options` block that appears in most public `tsgo` configs — `hostInfo`,
+`disableAutomaticTypingAcquisition`, `preferences.includePackageJsonAutoImports` — does
+**nothing**. typescript-go's `InitializationOptions` struct has seven fields, and none of
+those are among them:
+
+    disablePushDiagnostics, codeLensShowLocationsCommandName, userPreferences,
+    enableTelemetry, logVerbosity, runExternalCode, trackFlakyDiagnostics
+
+Automatic type acquisition does not exist in typescript-go at all — zero hits across the
+repository. These options are tsserver-era settings copied from `ts_ls` configs into a
+server that never reads them.
+
+Similarly, configs that put inlay-hint settings under a `typescript` key are relying on a
+fallback: the server merges `editor < javascript < typescript < js/ts`, so the `js/ts`
+keys used here take precedence and are the documented shape.
+
+### Open, deliberately not done yet
+
+- **Inlay hints off while typing** (`InsertEnter`/`InsertLeave`), as MariaSolOs does.
+  Behavioural change, wants a decision.
+- **Code-action lightbulb** in the sign column, hers is ~120 lines of extmark bookkeeping.
+- **`cmd_env = { GOMEMLIMIT = "3GiB", GOGC = "50" }`** on the TypeScript server, which one
+  config uses to bound a Go server's heap on large monorepos.
+- **`vim.pack` instead of lazy.nvim.** Hers runs on it today. Ours has 40-odd plugin specs
+  with lazy-loading triggers that would need re-expressing.
+
+---
+
 ## Evaluated and rejected
 
 Recorded so these do not get re-litigated.
