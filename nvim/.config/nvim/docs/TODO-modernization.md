@@ -588,6 +588,102 @@ On a `.tsx` file, driven through real keypresses:
 
 ---
 
+## Tier 7 — Capabilities the server advertises and we never asked for ✅ DONE
+
+After the `tsc` migration settled, the obvious follow-up question was what else `tsc --lsp`
+is willing to do. The answer came from two sides that agree: the handler registrations in
+`microsoft/typescript-go`'s `internal/lsp/server.go`, and a live `server_capabilities` dump
+from a real client attach.
+
+### What was advertised but unused
+
+| Capability | Status |
+| --- | --- |
+| `callHierarchyProvider` | wired — `<leader>lci` / `<leader>lco` |
+| `selectionRangeProvider` | wired — `<M-o>` expand, `<M-i>` shrink |
+| `experimental.customSourceDefinitionProvider` | wired — `gD` |
+| `codeLensProvider` | wired — refresh added, see below |
+| `linkedEditingRangeProvider` | rejected, see below |
+| `_vs_onAutoInsertProvider` | rejected, see below |
+| `documentOnTypeFormattingProvider` | rejected — conform owns formatting |
+
+### Go to Source Definition
+
+`gd` on a symbol imported from a compiled package lands in the shipped `.d.ts`: the
+signature, and nothing else. TypeScript exposes a second, non-standard provider that
+resolves through the declaration file to the original source when the package ships
+`declarationMap`s:
+
+```text
+custom/textDocument/sourceDefinition  ->  LocationLink[]
+```
+
+This is VS Code's "Go to Source Definition". It is registered in typescript-go as
+`handleSourceDefinition` and gated behind `experimental.customSourceDefinitionProvider`,
+which the server does set. `rielj.ts-tools.source_definition` issues the request, pushes
+the tag stack by hand (`vim.lsp.buf.definition` does that internally; a hand-rolled jump
+has to do it itself, or `<C-t>` does not come back), and falls back to an ordinary
+definition request when there is no mapped source.
+
+It takes `gD`, which was free in practice: `textDocument/declaration` is a C/C++ notion
+that clangd implements and gopls, `tsc`, lua_ls and rust-analyzer all do not.
+
+### The keymap bug this uncovered
+
+The first version of the `gD` override did not stick, and the reason generalises. `LspAttach`
+fires **once per client**, and a TypeScript buffer here routinely has three: `tsc`, `oxlint`
+and `tailwindcss`. The shared handler re-applied its ungated `gD` on every one of those
+attaches, so `oxlint` attaching after `tsc` quietly overwrote the server-specific map.
+
+The fix is not ordering — it is that every navigation map is now gated on the attaching
+client actually implementing the method. A client that cannot do `textDocument/declaration`
+no longer claims `gD`; one that cannot do `textDocument/references` no longer claims `gr`.
+Dead maps disappear along with the clobbering.
+
+### Code lenses were configured but invisible
+
+`after/lsp/gopls.lua` has had `codelenses = { test = true }` set, and `<leader>lA` mapped to
+`vim.lsp.codelens.run`, for as long as the config has existed. Neither did anything: code
+lenses are pull-based, and nothing ever called `vim.lsp.codelens.refresh()`, so no lens was
+ever attached to a buffer and `run` had nothing to run.
+
+A capability-gated refresh now fires on `BufEnter`, `InsertLeave` and `BufWritePost` —
+events, not `TextChanged`, which would mean a request per keystroke. A Go test file now
+reports one lens (`run test`) where it previously reported zero. TypeScript stays quiet,
+because tsgo returns lenses only when `js/ts.referencesCodeLens.enabled` is set, and
+reference counts on every symbol are noise.
+
+### Rejected, with reasons
+
+**Linked editing and `_vs_onAutoInsert` — duplicates of a plugin already installed.**
+The server will rename a paired JSX tag (`textDocument/linkedEditingRange`) and close one
+as you type `>` (`textDocument/_vs_onAutoInsert`, returning a snippet-format `$0</div>`).
+Both were verified working against a live server. Both are also exactly what
+`nvim-ts-autotag` already does — synchronously, from treesitter, with no round trip, and
+for `html`, `vue`, `xml` and `markdown` as well, which `tsc` does not serve. Adopting the
+LSP versions would mean two mechanisms racing on the same keystroke for the subset of
+filetypes where they overlap. Not worth it.
+
+**No refactors exist to wire.** `internal/ls/codeactions.go` registers three code-fix
+providers — `fixMissingImport`, `fixMissingTypeAnnotationOnExports`,
+`fixClassIncorrectlyImplementsInterface` — plus the organize-imports family and fix-all.
+There is no `refactor.*` kind at all: no extract function, no extract variable, no move to
+file, no convert to arrow function. Those remain `ts_ls`/`vtsls`-only, and are the clearest
+remaining reason someone might not migrate to TypeScript 7 yet.
+
+### Verification
+
+- `gD` on a call site jumps to the defining file, and the tag stack has an entry to return
+  through;
+- `gD` reports "Go to source definition" as its description with all three clients attached,
+  confirming it survives the later attaches that used to overwrite it;
+- `<leader>lci`, `<leader>lco`, `<M-o>` and `<M-i>` are present in TypeScript and Go
+  buffers and absent from buffers whose only client cannot serve them;
+- a Go test file reports one code lens, `run test`, on the `TestSum` line;
+- `:messages` is clean in both.
+
+---
+
 ## Evaluated and rejected
 
 Recorded so these do not get re-litigated.
