@@ -8,14 +8,11 @@ return {
     event = "InsertEnter",
     dependencies = { "windwp/nvim-ts-autotag", "hrsh7th/nvim-cmp" },
     config = function()
-      vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(vim.lsp.diagnostic.on_publish_diagnostics, {
-        underline = true,
-        virtual_text = {
-          spacing = 5,
-          -- severity_limit = "Warning",
-        },
-        update_in_insert = true,
-      })
+      -- A publishDiagnostics handler override used to sit here: deprecated API
+      -- (vim.lsp.with + vim.lsp.diagnostic.on_publish_diagnostics), diagnostic
+      -- config living in the autopairs spec, and its `virtual_text` contradicted
+      -- the `virtual_text = false` that rielj.lsp.handlers sets. Diagnostics are
+      -- configured in one place now.
       require("nvim-ts-autotag").setup()
 
       local autopairs = require("nvim-autopairs")
@@ -78,12 +75,16 @@ return {
         fast_wrap = config.fast_wrap,
       })
 
+      -- Insert `(` after accepting a function or method completion.
+      --
+      -- This is the *only* place this hook may be registered. cmp fires
+      -- `confirm_done` once per accepted item and every listener runs, so a
+      -- second registration (there was one in the cmp spec) inserted a second
+      -- pair: `ctx.ui.custom(())`.
       local cmp_status_ok, cmp = pcall(require, "cmp")
       if cmp_status_ok then
-        -- If you want insert `(` after select function or method item
         local cmp_autopairs = require("nvim-autopairs.completion.cmp")
-        local map_char = config.map_char
-        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done({ map_char = map_char }))
+        cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done({ map_char = config.map_char }))
       end
     end,
   },

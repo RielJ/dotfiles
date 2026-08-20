@@ -27,7 +27,6 @@ return {
       end
 
       local luasnip = require("luasnip")
-      local cmp_autopairs = require("nvim-autopairs.completion.cmp")
       local cmp = require("cmp")
 
       vim.api.nvim_set_hl(0, "GhostText", { fg = "#777777", bg = "#333333" })
@@ -272,7 +271,9 @@ return {
           }),
         }),
       })
-      cmp.event:on("confirm_done", cmp_autopairs.on_confirm_done())
+      -- The autopairs `confirm_done` hook lives in the autopairs spec, which is
+      -- its one home. Registering it here as well ran it twice per completion,
+      -- and each run inserted a pair: accepting `custom` produced `custom(())`.
       -- require("cmp_tabnine").setup({
       --   max_lines = 1000,
       --   max_num_results = 10,
