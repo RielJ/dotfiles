@@ -113,6 +113,32 @@ return {
           conceallevel = { rendered = 2 },
           concealcursor = { rendered = "nc" },
         },
+
+        -- LSP hover and signature-help floats are `buftype=nofile` markdown
+        -- buffers, so everything above applies to them too -- including the code
+        -- block geometry, which is wrong for a float.
+        --
+        -- Neovim sizes a hover window from the *raw* text, before this plugin
+        -- renders anything. The 2-column left pad is then drawn as inline virtual
+        -- text, which shifts the real text right without participating in
+        -- 'wrap'. A line that exactly filled the window loses its last two
+        -- characters off the right edge: `(parameter) done: (result: null) => vo`.
+        -- `min_width = 60` in a 40-column float overflows the same way.
+        --
+        -- Reset the geometry for floats and keep the language line, which is the
+        -- part that actually helps there.
+        overrides = {
+          buftype = {
+            nofile = {
+              code = {
+                left_pad = 0,
+                right_pad = 0,
+                min_width = 0,
+                width = "block",
+              },
+            },
+          },
+        },
       })
     end,
   },
