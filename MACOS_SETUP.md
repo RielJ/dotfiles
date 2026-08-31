@@ -38,16 +38,20 @@ Set up Raycast to respond to `Option+D` (like `Super+D` for wofi in Sway).
 2. Go to **Settings** (Cmd+,) → **General**
 3. Set **Raycast Hotkey** to `Option+D`
 
-### 3. Configure Screenshot Shortcuts (Optional)
+### 3. Configure Screenshot Shortcuts
 
-To match Sway's screenshot behavior, configure macOS screenshot shortcuts:
+Run the script to apply the current mappings:
 
-1. Open **System Settings**
-2. Go to **Keyboard** → **Keyboard Shortcuts** → **Screenshots**
-3. Recommended mappings:
-   - **Screenshot area to clipboard**: `Option+Shift+S` (like `$mod+Shift+s` in Sway)
-   - **Screenshot screen to clipboard**: `Option+Shift+3`
-   - **Screenshot area to file**: `Option+Ctrl+S`
+```bash
+./scripts/macos-screenshot-hotkeys.sh
+```
+
+It sets:
+
+- **Screenshot area to clipboard** (region select, drag to resize): `Ctrl+Shift+S`
+- **Screenshot & recording options** (the `Cmd+Shift+5` toolbar): **disabled**, so `Ctrl+Shift+5` / `Cmd+Shift+5` stay free for AeroSpace's `move-node-to-workspace 5`.
+
+The same values can be edited manually under **System Settings → Keyboard → Keyboard Shortcuts → Screenshots**.
 
 ### 4. Disable macOS "Displays have separate Spaces" (Recommended)
 

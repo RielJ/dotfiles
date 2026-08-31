@@ -23,3 +23,10 @@ export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
 # fnm (Fast Node Manager) — must come AFTER homebrew PATH so fnm shims win
 eval "$(fnm env --use-on-cd --shell zsh)"
 fnm use default --silent-if-unchanged 2>/dev/null
+
+# Persist SSH agent socket path for non-shell processes (nvim/lazygit).
+# macOS launchd assigns per-process sockets; this lets nvim read the shell's
+# working socket and pass it explicitly to lazygit for commit signing.
+if [[ -n "$SSH_AUTH_SOCK" ]]; then
+  echo "$SSH_AUTH_SOCK" > "$HOME/.ssh/ssh-auth-sock.path" 2>/dev/null
+fi
