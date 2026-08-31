@@ -1,9 +1,9 @@
 /**
- * Planner — Phase 0 exploration + Dual-model planning
+ * Planner — Phase 0 exploration + Multi-model planning
  *
  * /plan <task> runs a three-step pipeline:
  *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
- *   Phase 1: Opus 4.6 + GPT 5.5 plan in parallel (both get Phase 0 output)
+ *   Phase 1: Opus 5 + GPT 5.6 Sol plan in parallel (both get Phase 0 output)
  *   Main agent synthesizes both plans for the user.
  */
 
@@ -22,26 +22,29 @@ import { runAgent, runExploration, resolveTaskContext, extractConversationContex
 
 export const module = {
   id: "planner",
-  name: "Dual Planner",
-  description: "Two models plan in parallel, main agent reviews & you decide",
-  systemPromptWhenEnabled: `### Dual Planner
-Use /plan <task> to generate plans from two models in parallel:
-- Opus 4.6 produces Plan A (Anthropic)
-- GPT-5.5 produces Plan B (OpenAI)
-Both plans are presented to the user for review. You then:
-- Compare both plans, highlight key differences
+  name: "Multi-Planner",
+  description: "Three models plan in parallel, main agent reviews & you decide",
+  systemPromptWhenEnabled: `### Multi-Planner
+Use /plan <task> to generate plans from three models in parallel:
+- Claude Opus 5 produces Plan A (Anthropic)
+- GPT-5.6 Sol produces Plan B (OpenAI)
+- GLM 5.2 produces Plan C (Z.ai)
+All plans are presented to the user for review. You then:
+- Compare the plans, highlight key differences
 - Pick one, merge them, or suggest modifications
 - Approve and execute, or ask for changes and re-plan
 
-You can also use the plan_dual tool programmatically.`,
+You can also use the plan_multi tool programmatically.`,
 };
 
 // ── Config ──────────────────────────────────────────────────────────
 
 const MODEL_A = MODELS.plan;
-const MODEL_A_LABEL = "Opus 4.6";
+const MODEL_A_LABEL = "Opus 5";
 const MODEL_B = MODELS.diversity;
-const MODEL_B_LABEL = "GPT 5.5";
+const MODEL_B_LABEL = "GPT 5.6 Sol";
+const MODEL_C = MODELS.diversity2;
+const MODEL_C_LABEL = "GLM 5.2";
 
 const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
 const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for planning
@@ -182,8 +185,10 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   ): Promise<{
     planA: string;
     planB: string;
+    planC: string;
     statusA: string;
     statusB: string;
+    statusC: string;
   }> {
     startTime = Date.now();
 
@@ -252,16 +257,22 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       activity: "starting...",
       elapsed: 0,
     };
+    agentState[MODEL_C_LABEL] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
     updateWidget();
 
     onUpdate?.({
-      content: [{ type: "text", text: `⚡ Phase 1: ${MODEL_A_LABEL} + ${MODEL_B_LABEL} planning in parallel...` }],
+      content: [{ type: "text", text: `⚡ Phase 1: ${MODEL_A_LABEL} + ${MODEL_B_LABEL} + ${MODEL_C_LABEL} planning in parallel...` }],
     });
 
     const planDir = path.join(os.tmpdir(), `pi-plan-${Date.now()}`);
     fs.mkdirSync(planDir, { recursive: true });
     const planFileA = path.join(planDir, "plan-a.md");
     const planFileB = path.join(planDir, "plan-b.md");
+    const planFileC = path.join(planDir, "plan-c.md");
 
     // Build enriched task with exploration findings + conversation context
     let enrichedTask = resolvedTask;
@@ -312,7 +323,25 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       },
     });
 
-    const [resultA, resultB] = await Promise.all([promiseA, promiseB]);
+    await new Promise((r) => setTimeout(r, 1000));
+
+    // Plan C: GLM (gets same Phase 0 context, third perspective)
+    const taskC = `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${planFileC}`;
+    const promiseC = runAgent({
+      cwd,
+      model: MODEL_C,
+      systemPrompt: PLANNER_PROMPT_B,
+      tools: "read,write,grep,find,ls,bash",
+      task: taskC,
+      timeoutMs: PHASE_1_TIMEOUT_MS,
+      signal,
+      onActivity: (activity) => {
+        agentState[MODEL_C_LABEL].activity = activity;
+        updateWidget();
+      },
+    });
+
+    const [resultA, resultB, resultC] = await Promise.all([promiseA, promiseB, promiseC]);
 
     // Read plans from output files, fall back to stdout capture
     let planA = "";
@@ -331,9 +360,18 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     } catch {}
     if (!planB) planB = resultB.output || "";
 
+    let planC = "";
+    try {
+      if (fs.existsSync(planFileC)) {
+        planC = fs.readFileSync(planFileC, "utf-8").trim();
+      }
+    } catch {}
+    if (!planC) planC = resultC.output || "";
+
     // Cleanup temp files
     try { fs.unlinkSync(planFileA); } catch {}
     try { fs.unlinkSync(planFileB); } catch {}
+    try { fs.unlinkSync(planFileC); } catch {}
     try { fs.rmdirSync(planDir); } catch {}
 
     agentState[MODEL_A_LABEL] = {
@@ -344,6 +382,11 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     agentState[MODEL_B_LABEL] = {
       status: resultB.exitCode === 0 && planB ? "done" : "error",
       activity: resultB.exitCode === 0 && planB ? `✓ plan ready` : "✗ failed",
+      elapsed: Date.now() - startTime,
+    };
+    agentState[MODEL_C_LABEL] = {
+      status: resultC.exitCode === 0 && planC ? "done" : "error",
+      activity: resultC.exitCode === 0 && planC ? `✓ plan ready` : "✗ failed",
       elapsed: Date.now() - startTime,
     };
     widgetPhase = "done — review below";
@@ -359,8 +402,10 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     return {
       planA: planA || "(no output)",
       planB: planB || "(no output)",
+      planC: planC || "(no output)",
       statusA: resultA.exitCode === 0 && planA ? "done" : "error",
       statusB: resultB.exitCode === 0 && planB ? "done" : "error",
+      statusC: resultC.exitCode === 0 && planC ? "done" : "error",
     };
   }
 
@@ -380,12 +425,12 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     },
   });
 
-  // ── plan_dual tool ──────────────────────────────────────────────
+  // ── plan_multi tool ─────────────────────────────────────────────
 
   pi.registerTool({
-    name: "plan_dual",
-    label: "Dual Plan",
-    description: `Run two planning models in parallel (Opus 4.6 + GPT-5.5) and return both plans for review. Present both to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
+    name: "plan_multi",
+    label: "Multi-Plan",
+    description: `Run three planning models in parallel (Opus 5 + GPT-5.6 Sol + GLM 5.2) and return all plans for review. Present them to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
     parameters: Type.Object({
       task: Type.String({ description: "Task description to plan for" }),
     }),
@@ -397,7 +442,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     renderCall(args, theme) {
       const preview = (args.task || "").slice(0, 60);
       return new Text(
-        theme.fg("toolTitle", theme.bold("plan_dual ")) + theme.fg("dim", preview),
+        theme.fg("toolTitle", theme.bold("plan_multi ")) + theme.fg("dim", preview),
         0, 0,
       );
     },
@@ -405,10 +450,9 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const hasA = text.includes("## Plan A");
       const hasB = text.includes("## Plan B");
-      const label = hasA && hasB ? "2 plans ready"
-        : hasA ? "1 plan (A only)"
-        : hasB ? "1 plan (B only)"
-        : "plans generated";
+      const hasC = text.includes("## Plan C");
+      const count = [hasA, hasB, hasC].filter(Boolean).length;
+      const label = count > 0 ? `${count} plan${count === 1 ? "" : "s"} ready` : "plans generated";
       return new Text(
         theme.fg("success", `✓ ${label}`) + theme.fg("dim", " — review & decide"),
         0, 0,
@@ -418,11 +462,11 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   function buildReviewMessage(
     task: string,
-    result: { planA: string; planB: string; statusA: string; statusB: string },
+    result: { planA: string; planB: string; planC: string; statusA: string; statusB: string; statusC: string },
   ): string {
     const parts: string[] = [];
-    parts.push(`# Dual Plan: ${task}\n`);
-    parts.push(`Two models explored the codebase and produced plans independently. Review both and decide.\n`);
+    parts.push(`# Multi-Model Plan: ${task}\n`);
+    parts.push(`Three models explored the codebase and produced plans independently. Review all and decide.\n`);
 
     if (result.statusA === "done") {
       parts.push(`## Plan A (${MODEL_A_LABEL})\n\n${result.planA}\n`);
@@ -436,11 +480,17 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       parts.push(`## Plan B (${MODEL_B_LABEL})\n\n⚠️ Failed to generate.\n`);
     }
 
+    if (result.statusC === "done") {
+      parts.push(`## Plan C (${MODEL_C_LABEL})\n\n${result.planC}\n`);
+    } else {
+      parts.push(`## Plan C (${MODEL_C_LABEL})\n\n⚠️ Failed to generate.\n`);
+    }
+
     parts.push(`---\n`);
     parts.push(`**What would you like to do?**`);
-    parts.push(`- Compare both plans and highlight the key differences`);
-    parts.push(`- Pick one plan (A or B) as-is`);
-    parts.push(`- Merge the best parts of both into a final plan`);
+    parts.push(`- Compare the plans and highlight the key differences`);
+    parts.push(`- Pick one plan (A, B, or C) as-is`);
+    parts.push(`- Merge the best parts into a final plan`);
     parts.push(`- Suggest modifications before proceeding`);
     parts.push(`- Approve the final plan and execute it`);
 

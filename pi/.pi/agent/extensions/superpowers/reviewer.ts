@@ -1,5 +1,5 @@
 /**
- * Dual Review — Phase 0 exploration + two models review in parallel
+ * Multi-Reviewer — Phase 0 exploration + three models review in parallel
  *
  * /review <context>       — review a specific area, file, or concept
  * /review-changes         — auto-detect git changes and review them
@@ -7,7 +7,7 @@
  *
  * Pipeline:
  *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
- *   Phase 1: Opus 4.6 + GPT 5.5 review in parallel (both get Phase 0 output)
+ *   Phase 1: Opus 5 + GPT 5.6 Sol review in parallel (both get Phase 0 output)
  *   Main agent synthesizes both reviews.
  */
 
@@ -26,14 +26,15 @@ import { runAgent, runExploration, resolveTaskContext, extractConversationContex
 
 export const module = {
   id: "dual-review",
-  name: "Dual Review",
+  name: "Multi-Reviewer",
   description:
-    "Two models review code in parallel, main agent synthesizes findings",
-  systemPromptWhenEnabled: `### Dual Review
-Use /review <context> to run a targeted dual code review:
-- Opus 4.6 reviews for bugs, security, performance, quality
-- GPT 5.5 reviews for architecture, patterns, maintainability
-Both reviews are synthesized with a comparison.
+    "Three models review code in parallel, main agent synthesizes findings",
+  systemPromptWhenEnabled: `### Multi-Reviewer
+Use /review <context> to run a targeted multi-model code review:
+- Claude Opus 5 reviews for bugs, security, performance, quality
+- GPT 5.6 Sol reviews for architecture, patterns, maintainability
+- GLM 5.2 adds a third independent perspective
+All reviews are synthesized with a comparison.
 
 Usage:
   /review the auth middleware        — review a specific area
@@ -46,15 +47,17 @@ Use /review-changes to review git changes:
   /review-changes --pr the auth logic — PR mode with focus context
   /review-changes only the API layer — focus on a specific area of changes
 
-You can also use the review_dual tool programmatically.`,
+You can also use the review_multi tool programmatically.`,
 };
 
 // ── Config ──────────────────────────────────────────────────────────
 
 const MODEL_A = MODELS.plan;
-const MODEL_A_LABEL = "Opus 4.6";
+const MODEL_A_LABEL = "Opus 5";
 const MODEL_B = MODELS.diversity;
-const MODEL_B_LABEL = "GPT 5.5";
+const MODEL_B_LABEL = "GPT 5.6 Sol";
+const MODEL_C = MODELS.diversity2;
+const MODEL_C_LABEL = "GLM 5.2";
 
 const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
 const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for review
@@ -234,7 +237,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
           const border = theme.fg("border", "─".repeat(width));
           const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
           const header =
-            theme.fg("accent", theme.bold(" 🔍 Dual Review")) +
+            theme.fg("accent", theme.bold(" 🔍 Multi-Review")) +
             theme.fg("dim", ` — ${widgetPhase}`) +
             theme.fg("dim", ` (${elapsed}s)`);
           const lines = [border, truncateToWidth(header, width)];
@@ -289,13 +292,16 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   ): Promise<{
     opusFile: string;
     gptFile: string;
+    glmFile: string;
     statusA: string;
     statusB: string;
+    statusC: string;
   }> {
     const reviewDir = path.join(os.tmpdir(), `pi-review-${Date.now()}`);
     fs.mkdirSync(reviewDir, { recursive: true });
     const opusFile = path.join(reviewDir, "review-opus.md");
     const gptFile = path.join(reviewDir, "review-gpt.md");
+    const glmFile = path.join(reviewDir, "review-glm.md");
 
     startTime = Date.now();
 
@@ -360,6 +366,11 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       activity: "starting...",
       elapsed: 0,
     };
+    agentState[MODEL_C_LABEL] = {
+      status: "running",
+      activity: "starting...",
+      elapsed: 0,
+    };
     updateWidget();
 
     // Build enriched task with Phase 0 findings
@@ -415,7 +426,25 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       },
     });
 
-    const [resultA, resultB] = await Promise.all([promiseA, promiseB]);
+    await new Promise((r) => setTimeout(r, 1000));
+
+    // Review C: GLM (gets same Phase 0 context, third perspective)
+    const taskC = `${enrichedTask}\n\n## Output File\nWrite your FULL review to: ${glmFile}`;
+    const promiseC = runAgent({
+      cwd,
+      model: MODEL_C,
+      systemPrompt: REVIEWER_PROMPT_B,
+      tools: "read,write,grep,find,ls,bash",
+      task: taskC,
+      timeoutMs: PHASE_1_TIMEOUT_MS,
+      signal,
+      onActivity: (activity) => {
+        agentState[MODEL_C_LABEL].activity = activity;
+        updateWidget();
+      },
+    });
+
+    const [resultA, resultB, resultC] = await Promise.all([promiseA, promiseB, promiseC]);
 
     agentState[MODEL_A_LABEL] = {
       status: resultA.exitCode === 0 ? "done" : "error",
@@ -425,6 +454,11 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     agentState[MODEL_B_LABEL] = {
       status: resultB.exitCode === 0 ? "done" : "error",
       activity: resultB.exitCode === 0 ? `✓ review ready` : "✗ failed",
+      elapsed: Date.now() - startTime,
+    };
+    agentState[MODEL_C_LABEL] = {
+      status: resultC.exitCode === 0 ? "done" : "error",
+      activity: resultC.exitCode === 0 ? `✓ review ready` : "✗ failed",
       elapsed: Date.now() - startTime,
     };
     widgetPhase = "done — synthesizing";
@@ -440,8 +474,10 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     return {
       opusFile,
       gptFile,
+      glmFile,
       statusA: resultA.exitCode === 0 ? "done" : "error",
       statusB: resultB.exitCode === 0 ? "done" : "error",
+      statusC: resultC.exitCode === 0 ? "done" : "error",
     };
   }
 
@@ -452,17 +488,19 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     result: {
       opusFile: string;
       gptFile: string;
+      glmFile: string;
       statusA: string;
       statusB: string;
+      statusC: string;
     },
   ): string {
     const parts: string[] = [];
-    parts.push(`# Dual Code Review Complete\n`);
+    parts.push(`# Multi-Model Code Review Complete\n`);
     if (userContext) {
       parts.push(`**Focus:** ${userContext}\n`);
     }
     parts.push(
-      `Two models reviewed the code independently using shared exploration context. Read both full reviews and synthesize.\n`,
+      `Three models reviewed the code independently using shared exploration context. Read all full reviews and synthesize.\n`,
     );
 
     if (result.statusA === "done") {
@@ -481,12 +519,20 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       parts.push(`## Review B (${MODEL_B_LABEL})\n⚠️ Failed to generate.\n`);
     }
 
+    if (result.statusC === "done") {
+      parts.push(
+        `## Review C (${MODEL_C_LABEL})\nFull review written to: ${result.glmFile}\n**Read this file now.**\n`,
+      );
+    } else {
+      parts.push(`## Review C (${MODEL_C_LABEL})\n⚠️ Failed to generate.\n`);
+    }
+
     parts.push(`---\n`);
-    parts.push(`**Synthesize both reviews:**`);
-    parts.push(`1. Read both review files above using the read tool`);
-    parts.push(`2. 🔴 **Both agree** — Issues found by BOTH reviewers (high confidence)`);
+    parts.push(`**Synthesize all reviews:**`);
+    parts.push(`1. Read all review files above using the read tool`);
+    parts.push(`2. 🔴 **Consensus** — Issues found by MULTIPLE reviewers (high confidence)`);
     parts.push(`3. 🟡 **One found** — Issues found by only ONE reviewer (investigate)`);
-    parts.push(`4. 🟢 **Positives** — Good things noted by either reviewer`);
+    parts.push(`4. 🟢 **Positives** — Good things noted by any reviewer`);
     parts.push(`5. 📋 **Final recommendation** — Synthesized action items`);
 
     return parts.join("\n");
@@ -496,7 +542,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   pi.registerCommand("review", {
     description:
-      "Dual code review (Opus 4.6 + GPT 5.5): /review <context to review>",
+      "Multi-model code review (Claude Opus 5 + GPT 5.6 Sol + GLM 5.2): /review <context to review>",
     handler: async (args, ctx) => {
       const trimmed = (args || "").trim();
       if (!trimmed) {
@@ -525,7 +571,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   pi.registerCommand("review-changes", {
     description:
-      "Dual review of git changes (Opus 4.6 + GPT 5.5): /review-changes [--pr] [focus]",
+      "Multi-model review of git changes (Claude Opus 5 + GPT 5.6 Sol + GLM 5.2): /review-changes [--pr] [focus]",
     handler: async (args, ctx) => {
       const trimmed = (args || "").trim();
       const isPR = trimmed.startsWith("--pr");
@@ -551,13 +597,13 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     },
   });
 
-  // ── review_dual tool ────────────────────────────────────────────
+  // ── review_multi tool ─────────────────────────────────────────
 
   pi.registerTool({
-    name: "review_dual",
-    label: "Dual Review",
+    name: "review_multi",
+    label: "Multi-Review",
     description:
-      "Run two code reviewers in parallel (Opus 4.6 + GPT 5.5) and return both reviews for synthesis.",
+      "Run three code reviewers in parallel (Claude Opus 5 + GPT 5.6 Sol + GLM 5.2) and return all reviews for synthesis.",
     parameters: Type.Object({
       focus: Type.Optional(
         Type.String({
@@ -586,7 +632,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     renderCall(args, theme) {
       const preview = (args.focus || "auto-detect changes").slice(0, 60);
       return new Text(
-        theme.fg("toolTitle", theme.bold("review_dual ")) + theme.fg("dim", preview),
+        theme.fg("toolTitle", theme.bold("review_multi ")) + theme.fg("dim", preview),
         0, 0,
       );
     },
@@ -594,10 +640,9 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
       const hasA = text.includes("Review A");
       const hasB = text.includes("Review B");
-      const label = hasA && hasB ? "2 reviews ready"
-        : hasA ? "1 review (A only)"
-        : hasB ? "1 review (B only)"
-        : "reviews generated";
+      const hasC = text.includes("Review C");
+      const count = [hasA, hasB, hasC].filter(Boolean).length;
+      const label = count > 0 ? `${count} review${count === 1 ? "" : "s"} ready` : "reviews generated";
       return new Text(
         theme.fg("success", `✓ ${label}`) + theme.fg("dim", " — synthesize below"),
         0, 0,
@@ -608,7 +653,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   // ── Ctrl+Shift+R shortcut ──────────────────────────────────────
 
   pi.registerShortcut("ctrl+shift+r", {
-    description: "Dual review of git changes (Opus 4.6 + GPT 5.5)",
+    description: "Multi-model review of git changes (Claude Opus 5 + GPT 5.6 Sol + GLM 5.2)",
     handler: async () => {
       pi.sendUserMessage("/review-changes", { deliverAs: "followUp" });
     },
