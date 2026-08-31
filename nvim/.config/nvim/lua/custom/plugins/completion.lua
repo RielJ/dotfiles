@@ -201,8 +201,8 @@ return {
               cmp.complete()
             elseif check_backspace() then
               fallback()
-              -- elseif is_emmet_active() then
-              --   return vim.fn["cmp#complete"]()
+            -- elseif is_emmet_active() then
+            --   return vim.fn["cmp#complete"]()
             else
               fallback()
             end
