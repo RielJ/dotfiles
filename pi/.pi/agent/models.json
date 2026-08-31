@@ -1,16 +1,31 @@
 {
   "providers": {
     "anthropic": {
-      "apiKey": "!python3 /Users/rielj/.pi/agent/helpers/read-dotenv-key.py /Users/rielj/.pi/agent/.env ANTHROPIC_API_KEY",
       "modelOverrides": {
         "claude-opus-4-6": {
-          "contextWindow": 200000
+          "contextWindow": 200000,
+          "maxTokens": 64000
         },
         "claude-opus-4-8": {
-          "contextWindow": 200000
+          "contextWindow": 200000,
+          "maxTokens": 64000
+        },
+        "claude-opus-5": {
+          "contextWindow": 200000,
+          "maxTokens": 64000
         },
         "claude-fable-5": {
-          "contextWindow": 200000
+          "contextWindow": 200000,
+          "maxTokens": 64000
+        }
+      }
+    },
+    "zai": {
+      "apiKey": "!python3 -c \"import json;d=json.load(open('/Users/rielj/.pi/agent/auth.json'));print((d.get('zai',{}).get('key') or d.get('zai',{}).get('access') or '').strip())\"",
+      "modelOverrides": {
+        "glm-5.2": {
+          "contextWindow": 200000,
+          "maxTokens": 64000
         }
       }
     }

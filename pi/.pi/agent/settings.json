@@ -1,8 +1,11 @@
 {
-  "lastChangelogVersion": "0.79.10",
-  "defaultProvider": "zai",
-  "defaultModel": "glm-5.2",
+  "lastChangelogVersion": "0.84.4",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
+  "compaction": {
+    "reserveTokens": 20000
+  },
   "superpowers": {
     "enabled": {
       "planner": true,
@@ -12,7 +15,7 @@
       "qmd": true
     }
   },
-  "theme": "dracula",
+  "theme": "dark",
   "usage": {
     "plan": "max20x"
   },
@@ -32,7 +35,12 @@
     "npm:pi-bash-bg",
     "npm:pi-tool-display",
     "npm:pi-vim",
-    "npm:pi-textbrowser",
-    "../../personal/projects/pi-image-preview"
+    "npm:@bytesbrains/pi-textbrowser",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:pi-lens",
+    "npm:@ayulab/pi-rewind",
+    "npm:pi-agent-browser-native",
+    "npm:@llblab/pi-telegram",
+    "npm:@vigolium/piolium"
   ]
 }

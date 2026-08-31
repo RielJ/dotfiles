@@ -12,6 +12,12 @@
 - You may stage files with `git add` while working, but do NOT commit or push without explicit user confirmation.
 - When work is done, tell the user what changed and let them decide when to commit/push.
 
+## Import Paths — Prefer Alias Paths
+- **Prefer path aliases over relative imports** when the project has one configured (e.g. `@/*` → `./app/*`). Check `tsconfig.json` `compilerOptions.paths`.
+- Use `@/components/...`, `@/lib/...`, `@/routes/...` — NOT `../../components/...`.
+- Intra-module siblings (same feature folder, e.g. `./sidebar-nav` inside a `components/` dir) may stay relative — the rule targets cross-directory imports where `@/` is clearer.
+- If no alias is configured, use relative paths as normal.
+
 ## Tool Usage — Prefer FFF over bash grep/find
 - **NEVER use `grep` or `find` via the `bash` tool.** Use `ffgrep` for content search and `fffind` for file/path search instead.
 - `ffgrep` and `fffind` are faster (Rust SIMD), frecency-ranked, git-aware, and context-window friendly.
