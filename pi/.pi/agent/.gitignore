@@ -1,6 +1,8 @@
 # Secrets - OAuth tokens from /login and local API keys
 auth.json
 .env
+# Telegram bot token + chat allowlist
+telegram.json
 
 # Sessions - conversation history (large, personal)
 sessions/
@@ -31,6 +33,19 @@ run-history.jsonl
 SYSTEM.md
 mcp-cache.json
 mcp-npx-cache.json
+locks.json
+models-store.json
+tmp/
+
+# Editor/tool backups
+*.bak
+
+# Tesseract OCR language data, re-downloaded on demand
+*.traineddata
+
+# Symlinks to out-of-repo project checkouts
+extensions/adw
+extensions/*.off
 
 # OS
 .DS_Store
