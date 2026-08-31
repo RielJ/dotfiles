@@ -4,16 +4,33 @@
  * Sends a native notification + sound when Pi finishes and is waiting for input,
  * but ONLY when the terminal is not focused (you're in another app).
  *
+ * "Waiting for input" means `agent_settled`, not `agent_end`. An agent run can
+ * end and Pi carry straight on -- auto-retry, auto-compact and retry, or a
+ * queued follow-up message -- so `agent_end` fires repeatedly during one long
+ * task and pings you for work you are not being asked to do. `agent_settled`
+ * fires once Pi will not continue on its own, which is the only moment the
+ * notification is actually true.
+ *
  * macOS: osascript notification + afplay sound
  * Windows: PowerShell toast notification
  * Linux: falls back to OSC terminal escape sequences
  *
+ * It fires on exactly two things, both of which mean "you are being asked for
+ * something":
+ *
+ *   1. `agent_settled` — Pi has stopped and will not continue on its own.
+ *   2. a question tool starting — the agent is blocked on your answer, which
+ *      can happen long before the run settles.
+ *
  * Environment variables:
  *   PI_NOTIFY_SOUND      — path to sound file (default: /System/Library/Sounds/Glass.aiff)
  *   PI_NOTIFY_SOUND_CMD  — custom command to play sound (overrides PI_NOTIFY_SOUND)
+ *   PI_NOTIFY_ASK_TOOLS  — comma-separated extra tool names treated as questions
+ *   PI_NOTIFY_DISABLE    — set to any value to silence this extension entirely
+ *   PI_NOTIFY_FORCE      — notify even from a session another agent is driving
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { execSync, spawn } from "node:child_process";
 
 // ── Focus Detection ─────────────────────────────────────────────────
@@ -166,8 +183,84 @@ function notify(title: string, body: string): void {
     playSound();
 }
 
+// ── Policy ──────────────────────────────────────────────────
+
+/**
+ * Is there a human sitting in front of this process at all?
+ *
+ * `ctx.mode` is the only honest answer. `ctx.hasUI` is not: it is true in RPC
+ * mode too, and RPC is precisely how headless subagents and worktree sessions
+ * are spawned — so a `hasUI` guard would still ping the operator once per
+ * background agent.
+ *
+ * Being wrong here is worse than a missed notification. `notifyOSC` writes
+ * escape sequences to stdout, and in `--mode rpc` or `--mode json` stdout is
+ * the protocol stream: a notification from a headless process can corrupt the
+ * very run it is reporting on.
+ */
+function isAttended(ctx: Pick<ExtensionContext, "mode">): boolean {
+    if (process.env.PI_NOTIFY_DISABLE) return false;
+    if (isDrivenByAnotherAgent()) return false;
+    return ctx.mode === "tui";
+}
+
+/**
+ * Is this session being driven by something other than a human?
+ *
+ * `ctx.mode` catches the headless spawners (`--mode rpc`, `-p`) but not all of
+ * them: a worktree agent gets a real TUI in a detached tmux window, so it is
+ * "tui" by every test pi can offer while nobody is sitting in front of it.
+ * Running several of those in parallel is what turns one notification per
+ * settle into a stream of them.
+ *
+ * Detected by the markers the spawners already set, so nothing new has to be
+ * threaded through. `PI_NOTIFY_FORCE` opts a specific session back in.
+ */
+function isDrivenByAnotherAgent(): boolean {
+    if (process.env.PI_NOTIFY_FORCE) return false;
+    const markers = [
+        "PI_GIT_WORKTREES_BACKGROUND", // worktree background session
+        "PI_WT_READY_FILE",            // worktree tmux window
+        "PI_REAL_AGENT_DIR",           // adw shadow agent dir
+    ];
+    return markers.some((m) => process.env[m] !== undefined && process.env[m] !== "");
+}
+
+/** Tools whose execution means the agent is blocked on a human answer. */
+function questionTools(): Set<string> {
+    const extra = (process.env.PI_NOTIFY_ASK_TOOLS ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s !== "");
+    return new Set(["ask_user_question", ...extra]);
+}
+
 export default function (pi: ExtensionAPI) {
-    pi.on("agent_end", async () => {
+    const asks = questionTools();
+
+    /**
+     * A question is a harder interrupt than a finished turn: the run is
+     * stopped until it is answered, and it can be raised in the middle of a
+     * long task the operator has deliberately walked away from.
+     */
+    pi.on("tool_execution_start", async (event, ctx) => {
+        if (!isAttended(ctx)) return;
+        if (!asks.has(event.toolName)) return;
+        notify("Pi", "Waiting on your answer");
+    });
+
+    /**
+     * `agent_settled`, not `agent_end`: a run can end and Pi carry straight on
+     * with an auto-retry, an auto-compaction retry, or a queued follow-up.
+     * Hooking `agent_end` therefore fires repeatedly during one long task and
+     * claims you are needed when you are not.
+     */
+    pi.on("agent_settled", async (_event, ctx) => {
+        if (!isAttended(ctx)) return;
+        // Settled is not always idle: another extension may have started a new
+        // run in response to this one, and notifying then is the same false
+        // alarm one event later.
+        if (!ctx.isIdle()) return;
         notify("Pi", "Ready for input");
     });
 }
