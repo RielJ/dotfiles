@@ -1,5 +1,9 @@
 {
   "status": {
     "enabled": true
+  },
+  "keepAlive": {
+    "enabled": true,
+    "idleCloseMinutes": 30
   }
 }

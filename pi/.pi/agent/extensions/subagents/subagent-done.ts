@@ -5,9 +5,13 @@
  * - Shows agent identity + available tools as a styled widget above the editor (toggle with Ctrl+Alt+O)
  * - Provides an `ask_question` tool for asking the parent orchestrator a question
  *
- * Subagents do NOT self-terminate via a tool. Auto-exit agents shut down
- * automatically when their agent loop ends (see the `agent_end` handler);
- * interactive agents end when the human exits the pane.
+ * Subagents do NOT self-terminate via a tool. Keep-alive agents
+ * (PI_SUBAGENT_KEEP_ALIVE=1, the default for autonomous agents) park after each
+ * completed turn and signal the parent through a `${sessionFile}.turn` sidecar;
+ * the orchestrator sends more work with subagent_message or ends them with
+ * subagent_close. Legacy auto-exit agents shut down when their agent loop ends
+ * (see the `agent_end` handler); interactive agents end when the human exits
+ * the pane.
  *
  * `ask_question` keeps the session OPEN: it writes a `${sessionFile}.ask`
  * signal the parent's watcher picks up, parks the session in a "waiting" state
@@ -19,6 +23,7 @@ import { Box, Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { writeFileSync } from "node:fs";
 import { createSubagentActivityRecorder } from "./activity.ts";
+import { resolveAgentEndAction, writeTurnSignal } from "./keep-alive.ts";
 
 export function shouldMarkUserTookOver(agentStarted: boolean): boolean {
   return agentStarted;
@@ -127,6 +132,8 @@ export default function (pi: ExtensionAPI) {
   const subagentAgent = process.env.PI_SUBAGENT_AGENT ?? "";
   const deniedToolsValue = process.env.PI_DENY_TOOLS;
   const autoExit = process.env.PI_SUBAGENT_AUTO_EXIT === "1";
+  const keepAlive = process.env.PI_SUBAGENT_KEEP_ALIVE === "1";
+  let turnSeq = 0;
   const recorder = createSubagentActivityRecorder({
     runningChildId: process.env.PI_SUBAGENT_ID,
     activityFile: process.env.PI_SUBAGENT_ACTIVITY_FILE,
@@ -248,14 +255,41 @@ export default function (pi: ExtensionAPI) {
     //    would strand those children and drop their results.
     // In both cases the session parks as `waiting` and resumes when the next
     // turn lands.
-    const hasPendingChildren = runningChildrenCount() > 0;
-    const shouldExit =
-      !awaitingAnswer &&
-      !hasPendingChildren &&
-      autoExit &&
-      shouldAutoExitOnAgentEnd(userTookOver, messages);
+    const action = resolveAgentEndAction({
+      autoExit,
+      keepAlive,
+      awaitingAnswer,
+      pendingChildren: runningChildrenCount() > 0,
+      turnCompleted: shouldAutoExitOnAgentEnd(userTookOver, messages),
+    });
 
-    if (shouldExit) {
+    if (action === "report") {
+      // Keep-alive: park and hand this turn's result to the orchestrator. The
+      // session stays open until the orchestrator closes it or sends more work.
+      // Record "waiting" first: the parent treats activity newer than the turn
+      // signal as the start of a new turn.
+      recorder.agentEndWaiting();
+      const errorInfo = findLatestAssistantError(messages);
+      const sessionFile = process.env.PI_SUBAGENT_SESSION;
+      if (sessionFile) {
+        turnSeq += 1;
+        try {
+          writeTurnSignal(sessionFile, {
+            seq: turnSeq,
+            at: Date.now(),
+            type: errorInfo ? "error" : "done",
+            ...(errorInfo ? { errorMessage: errorInfo.errorMessage } : {}),
+          });
+        } catch {
+          // Without the signal the parent cannot see this turn; it still sees
+          // the session if the agent later exits, so this is not fatal.
+        }
+      }
+      userTookOver = false;
+      return;
+    }
+
+    if (action === "exit") {
       // Surface stopReason: "error" turns (auto-retry exhausted, provider
       // overload, etc.) to the parent via the .exit sidecar so the watcher
       // can report a clear failure with the underlying error message.

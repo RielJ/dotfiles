@@ -110,6 +110,8 @@ export interface SubagentLoadout {
   spawnable: string[] | null;
   /** Whether the agent auto-exits (informational; resume forces autonomous). */
   autoExit: boolean;
+  /** Whether the agent parks after each turn for the orchestrator to close. */
+  keepAlive?: boolean;
   /** Working directory the subagent ran in, or null. */
   cwd: string | null;
   /** PI_CODING_AGENT_DIR the subagent resolved config/extensions from, or null. */

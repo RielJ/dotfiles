@@ -1,6 +1,7 @@
 ---
 name: explore
 description: Read-only codebase exploration and architecture mapping
+model: anthropic/claude-sonnet-4-6
 tools: read, ls, ffgrep, fffind, symbol_search, project_report, module_report, read_symbol, read_enclosing
 system-prompt: append
 auto-exit: true
