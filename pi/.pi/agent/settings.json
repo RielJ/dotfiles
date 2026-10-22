@@ -1,21 +1,26 @@
 {
-  "lastChangelogVersion": "0.84.4",
+  "lastChangelogVersion": "1.0.1",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
   "compaction": {
-    "reserveTokens": 20000
+    "reserveTokens": 20000,
+    "modelOverrides": {
+      "anthropic/claude-opus-5-5": {
+        "keepRecentTokens": 30000
+      }
+    }
   },
   "superpowers": {
     "enabled": {
       "planner": true,
-      "executor": true,
       "web-search": true,
       "dual-review": true,
       "qmd": true
     }
   },
-  "theme": "dark",
+  "theme": "dark-classic",
+  "tuiMode": "regular",
   "usage": {
     "plan": "max20x"
   },
@@ -39,8 +44,11 @@
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-lens",
     "npm:@ayulab/pi-rewind",
-    "npm:pi-agent-browser-native",
     "npm:@llblab/pi-telegram",
-    "npm:@vigolium/piolium"
+    "npm:@vigolium/piolium",
+    "../../personal/contribs/pi-agent-browser-native"
+  ],
+  "extensions": [
+    "-builtin:mcp"
   ]
 }

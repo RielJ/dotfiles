@@ -1,8 +1,13 @@
 # Secrets - OAuth tokens from /login and local API keys
 auth.json
 .env
+.env.*
+!.env.example
 # Telegram bot token + chat allowlist
 telegram.json
+# Per-machine project trust decisions (absolute paths; each entry auto-loads
+# that project's extensions, skills, and MCP servers)
+trust.json
 
 # Sessions - conversation history (large, personal)
 sessions/
@@ -13,9 +18,12 @@ npm/
 
 # Runtime / auto-generated
 usage-log.json
+usage-extension-cache.json
 cache/
 image-preview.bak/
 fff/
+# Rewind checkpoints contain session snapshots and nested git repositories
+ayu/
 
 .pi
 .pi-lens
@@ -28,13 +36,13 @@ STATUS-*.md
 
 # Runtime data
 intercom/
-pi-vcc-config.json
 run-history.jsonl
 SYSTEM.md
 mcp-cache.json
 mcp-npx-cache.json
 locks.json
 models-store.json
+mcp-onboarding.json
 tmp/
 
 # Editor/tool backups
@@ -45,6 +53,7 @@ tmp/
 
 # Symlinks to out-of-repo project checkouts
 extensions/adw
+extensions/git-worktrees
 extensions/*.off
 
 # OS

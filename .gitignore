@@ -6,3 +6,18 @@ zsh/.config/zsh/.zcompcache/
 .dmux/
 /.pi/
 
+# ~/.pi is a symlink to pi/.pi in this public repo. ~/.config/git/ignore
+# ignores .pi/ in every repo, so re-include this one; agent memory and runtime
+# data inside it must still never be pushed.
+!/pi/.pi/
+pi/.pi/memory/
+pi/.pi/multi-runs/
+pi/.pi/agent-sessions/
+pi/.pi/pi-lens/
+pi/.pi/tasks/
+
+# Karabiner saves imported rule sets here; enabled rules live in karabiner.json
+karabiner/.config/karabiner/assets/
+# Azote regenerates this wallpaper script
+sway/.config/sway/scripts/.azotebg
+
