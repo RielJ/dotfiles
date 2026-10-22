@@ -1,0 +1,13 @@
+{
+  "name": "pi-memory-local",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local long-term memory for Pi: Markdown notes in ~/.pi/memory, never in a repo",
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts"
+  }
+}
