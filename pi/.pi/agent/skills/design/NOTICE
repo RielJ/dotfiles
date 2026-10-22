@@ -1,0 +1,33 @@
+Third-party notices for the design skill.
+
+This skill fuses four earlier skills: design-engineering, better-ui, animate,
+and web-design-guidelines. Shared rules were merged into SKILL.md, and values
+that disagreed were reconciled there (press scale 0.96 at 150ms, bounce 0 by
+default, stagger by context).
+
+1. SKILL.md and references/{components,motion-audit,opportunities,web-craft,
+   build-animation,animation-recipes}.md are synthesized from Emil Kowalski's
+   skills (https://github.com/emilkowalski/skills: emil-design-eng,
+   apple-design, find-animation-opportunities, improve-animations, animate).
+   MIT License, Copyright (c) 2026 Emil Kowalski. See LICENSE.
+
+2. references/{craft-floor,typography,color,layout,distill,harden}.md are
+   adapted from Impeccable by Paul Bakaus
+   (https://github.com/pbakaus/impeccable, skill/reference/craft-floor.md,
+   typeset.md, colorize.md, layout.md, distill.md, harden.md).
+   Apache License 2.0. See LICENSE-impeccable.
+   These files were modified: condensed, harness- and detector-specific
+   instructions removed, and React/Tailwind/shadcn notes added. Each file ends
+   with a line describing its changes.
+
+3. references/{polish,surfaces,icons,icon-transitions,state-transitions,
+   enter-exit,performance}.md are adapted from Jakub Krehel's better-ui skill
+   (https://github.com/jakubkrehel/skills, commit d574cc8a576d,
+   skills/better-ui). MIT License, Copyright (c) 2026 Jakub Krehel.
+   See LICENSE-better-ui. state-transitions.md was animations.md upstream.
+
+4. references/web-interface-guidelines.md is a snapshot of
+   https://github.com/vercel-labs/web-interface-guidelines (commit
+   434b7f913646, command.md, frontmatter removed). The compliance-audit
+   workflow follows Vercel's web-design-guidelines skill. MIT License,
+   Copyright (c) 2025 Vercel Labs. See LICENSE-vercel.

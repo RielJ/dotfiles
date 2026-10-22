@@ -240,3 +240,22 @@ npx shadcn@latest view @shadcn/button
 - [rules/base-vs-radix.md](./rules/base-vs-radix.md) — asChild vs render, Select, ToggleGroup, Slider, Accordion
 - [cli.md](./cli.md) — Commands, flags, presets, templates
 - [customization.md](./customization.md) — Theming, CSS variables, extending components
+
+## Sonner troubleshooting
+
+shadcn's toast is Sonner. Credit: Emil Kowalski's Sonner guide (MIT, Copyright (c) 2026 Emil Kowalski; https://github.com/emilkowalski/skills).
+
+| Symptom | Cause → fix |
+| --- | --- |
+| Toast never appears | No `<Toaster />` mounted, or it unmounted (conditional or per-page). Mount one in the root layout. `toast()` is client-only: return the server action result and call `toast()` on the client. |
+| Same toast twice | Two Toasters (layout and page), or `toast()` in an effect under StrictMode. Keep one Toaster; fire from the event handler or pass a stable `id`. |
+| Tailwind classes ignored | Sonner's styles win. Use `!` classes (`!text-red-900`) in `toastOptions.classNames`, or go `unstyled` / `toast.custom()`. |
+| Completely unstyled (Astro, view transitions) | Injected stylesheet lost. `import 'sonner/dist/styles.css'` in a layout. |
+| Unstyled inside Shadow DOM | Styles go to `document.head`. Copy the style tag containing `[data-sonner-toaster]` into the shadow root. |
+| Behind a modal or clipped | Ancestor stacking context (`transform`, `filter`, `overflow`) or overlay z-index. Move `<Toaster />` to the document root, outside dialogs and portals. |
+| Dark mode ignored | `theme` defaults to `'light'`. Pass `theme="system"` or `resolvedTheme` from `next-themes` (shadcn's wrapper uses `useTheme`). |
+| Success/error look gray | Default. Add `richColors`. |
+| Never closes / `toast.promise` stuck loading | `duration: Infinity`, `dismissible: false`, or a promise that never settles. Pass a promise (or a function returning one) that resolves or rejects. |
+| Swipe direction wrong | Derived from `position`. Set `swipeDirections` on the Toaster. |
+| Shows in every toaster | Give each Toaster an `id` and pass `toasterId` to `toast()`. |
+| Too close to the edge on mobile | `offset` (default 32px) and `mobileOffset` (<600px, default 16px). |
