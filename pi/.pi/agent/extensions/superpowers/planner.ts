@@ -3,53 +3,92 @@
  *
  * /plan <task> runs a three-step pipeline:
  *   Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, 90s)
- *   Phase 1: Opus 5 + GPT 5.6 Sol plan in parallel (both get Phase 0 output)
+ *   Phase 1: Opus 5.5 + GPT 5.6 Sol + GLM 5.2 + Opus 5 plan in parallel (all get Phase 0 output)
  *   Main agent synthesizes both plans for the user.
  */
 
 import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
 import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { Text, truncateToWidth } from "@earendil-works/pi-tui";
+import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { runAgent, runExploration, resolveTaskContext, extractConversationContext, MODELS } from "./_shared.js";
+import { parseWaitFlag, shouldRunAsync } from "./_async.js";
+import { type LiveRun, RunTracker } from "./_background.js";
+import { addMember, createRun, followupHint, markDelivered, type MultiRun, readOutput, runFollowup, saveRun } from "./multirun.js";
 
 // ── Module Metadata ─────────────────────────────────────────────────
 
 export const module = {
   id: "planner",
   name: "Multi-Planner",
-  description: "Three models plan in parallel, main agent reviews & you decide",
+  description: "Four models plan in parallel, main agent reviews & you decide",
   systemPromptWhenEnabled: `### Multi-Planner
-Use /plan <task> to generate plans from three models in parallel:
-- Claude Opus 5 produces Plan A (Anthropic)
+Use /plan <task> to generate plans from four models in parallel:
+- Claude Opus 5.5 produces Plan A (Anthropic)
 - GPT-5.6 Sol produces Plan B (OpenAI)
 - GLM 5.2 produces Plan C (Z.ai)
+- Claude Opus 5 produces Plan D (Anthropic)
 All plans are presented to the user for review. You then:
 - Compare the plans, highlight key differences
 - Pick one, merge them, or suggest modifications
 - Approve and execute, or ask for changes and re-plan
 
-You can also use the plan_multi tool programmatically.`,
+You can also use the plan_multi tool programmatically. It runs in the background by default:
+it returns a run id at once, and all four plans arrive later as one follow-up message.
+Do not poll or wait for them. /plan-stop [id|all] cancels runs; /plan --wait blocks.
+Every run is saved: plan_followup({ run: "<id>", key: "B", message }) continues one planner
+with its full context. Without run, it targets the most recently delivered run.`,
 };
 
 // ── Config ──────────────────────────────────────────────────────────
-
-const MODEL_A = MODELS.plan;
-const MODEL_A_LABEL = "Opus 5";
-const MODEL_B = MODELS.diversity;
-const MODEL_B_LABEL = "GPT 5.6 Sol";
-const MODEL_C = MODELS.diversity2;
-const MODEL_C_LABEL = "GLM 5.2";
 
 const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
 const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for planning
 
 // Phase 1 prompts — planners get Phase 0 context, do targeted verification, write plan
+
+// Shared plan format. "## Task N: title" headings let validate-plan and
+// subagent workers address each task as its own section.
+const PLAN_FORMAT = `## Plan Format
+Use these top-level headings, in this order:
+
+## Summary
+One paragraph overview.
+
+## Architecture
+Key design decisions, patterns, trade-offs.
+
+## Risks and unknowns
+What could go wrong, edge cases, open questions, and how to handle them.
+
+## What we're NOT doing
+Out-of-scope items, listed explicitly so builders do not drift into them.
+
+## Overview
+A checklist with one line per task, in order:
+- [ ] Task 1: <title>
+- [ ] Task 2: <title>
+
+Then one heading per task, formatted exactly "## Task N: <title>". Each task is a small, verifiable, thin vertical slice that leaves the project building with existing tests passing. Start each task with these lines:
+
+- **Files owned:** files this task creates or modifies
+- **Depends on:** task numbers (e.g. "Task 1, Task 3"), or "none"
+- **Mode:** parallel-safe | sequential | contract-first
+- **Steps:** implement, test (write a test if none exists), verify. Test-first where appropriate.
+- **Automated verification:** commands an agent can run to prove the task works (tests, build, typecheck, lint, a script)
+- **Manual verification:** steps that need a human (UI checks, real devices, external services), or "none"
+
+Rules:
+- Put every non-task section before the first task. Text after a task heading belongs to that task.
+- Prefer automated verification. List a step as manual only when an agent cannot check it.
+- Tasks that can run in parallel must not own the same file.
+- parallel-safe: independent feature slices, tests for features that already exist, documentation.
+- sequential: database migrations, shared state changes, dependency chains. Depends on the previous task.
+- contract-first: features that share an API contract. Put the contract in its own earlier task and make the consumers depend on it.
+- Tasks should take 2-5 minutes each. Reference actual file paths and function names from the exploration.`;
 
 const PLANNER_PROMPT_A = `You are a senior software architect creating an implementation plan.
 You receive codebase exploration findings from a prior analysis. Use them as your primary context.
@@ -59,16 +98,7 @@ You receive codebase exploration findings from a prior analysis. Use them as you
 2. If something critical is missing or unclear, use read/grep/find to verify (max 5 tool calls).
 3. Write a detailed implementation plan based on your understanding.
 
-## Plan Format
-1. **Summary** — one paragraph overview
-2. **Architecture** — key design decisions, patterns, trade-offs
-3. **Tasks** — numbered list of concrete implementation steps
-   - Each task: what to do, which files to modify, estimated complexity
-   - Tasks should be 2-5 minutes each
-   - Include test-first steps where appropriate
-   - Reference actual file paths and function names from the exploration
-4. **Edge cases** — what could go wrong, how to handle it
-5. **Acceptance criteria** — how to verify the plan is complete
+${PLAN_FORMAT}
 
 Be specific. Include exact file paths, function names, and code snippets where helpful.
 Always produce a plan — never refuse or say you need more info.
@@ -86,16 +116,7 @@ You receive codebase exploration findings from a prior analysis. Use them as you
 2. If needed, verify or explore further (max 5 tool calls).
 3. Write a detailed implementation plan.
 
-## Plan Format
-1. **Summary** — one paragraph overview
-2. **Architecture** — key design decisions, patterns, trade-offs
-3. **Tasks** — numbered list of concrete implementation steps
-   - Each task: what to do, which files to modify, estimated complexity
-   - Tasks should be 2-5 minutes each
-   - Include test-first steps where appropriate
-   - Reference actual file paths and function names from the exploration
-4. **Edge cases** — what could go wrong, how to handle it
-5. **Acceptance criteria** — how to verify the plan is complete
+${PLAN_FORMAT}
 
 Be specific. Include exact file paths, function names, and code snippets where helpful.
 Always produce a plan — never refuse or say you need more tools.
@@ -105,96 +126,59 @@ Your task will specify an output file path. After completing your plan,
 you MUST write your complete plan to that file using the write tool.
 Do NOT modify any repository files — only write to the output file.`;
 
+interface Planner {
+  key: string;
+  label: string;
+  model: string;
+  prompt: string;
+  thinking?: string;
+}
+
+// Letters stay stable: adding a planner appends a new letter.
+const PLANNERS: Planner[] = [
+  { key: "A", label: "Opus 5.5", model: MODELS.plan, prompt: PLANNER_PROMPT_A },
+  { key: "B", label: "GPT 5.6 Sol", model: MODELS.diversity, prompt: PLANNER_PROMPT_B, thinking: "low" },
+  { key: "C", label: "GLM 5.2", model: MODELS.diversity2, prompt: PLANNER_PROMPT_B },
+  { key: "D", label: "Opus 5", model: MODELS.planAlt, prompt: PLANNER_PROMPT_A },
+];
+
+interface PlanResult {
+  key: string;
+  label: string;
+  plan: string;
+  status: "done" | "error";
+}
+
 // ── Extension ───────────────────────────────────────────────────────
 
 export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   let currentCtx: ExtensionContext | undefined;
+  const tracker = new RunTracker({ widgetKey: "planner", title: "Plan", noun: "plan", isEnabled });
 
   pi.on("session_start", async (_ev, ctx) => {
     currentCtx = ctx;
+    tracker.setContext(ctx);
   });
 
-  // ── Live widget state ───────────────────────────────────────────
-  const agentState: Record<
-    string,
-    { status: "running" | "done" | "error"; activity: string; elapsed: number }
-  > = {};
-  let widgetPhase = "";
-  let startTime = 0;
-  let timerHandle: ReturnType<typeof setInterval> | undefined;
-
-  function updateWidget() {
-    if (!currentCtx || !isEnabled()) return;
-    currentCtx.ui.setWidget(
-      "planner",
-      (_tui, theme) => ({
-        render(width: number): string[] {
-          const border = theme.fg("border", "─".repeat(width));
-          const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
-          const header =
-            theme.fg("accent", theme.bold(" 📝 Planner")) +
-            theme.fg("dim", ` — ${widgetPhase}`) +
-            theme.fg("dim", ` (${elapsed}s)`);
-          const lines = [border, truncateToWidth(header, width)];
-
-          for (const [label, state] of Object.entries(agentState)) {
-            const icon =
-              state.status === "done"
-                ? theme.fg("success", "✓")
-                : state.status === "error"
-                  ? theme.fg("error", "✗")
-                  : theme.fg("warning", "●");
-            const sec =
-              state.status === "running"
-                ? theme.fg("dim", ` ${((Date.now() - startTime) / 1000).toFixed(0)}s`)
-                : theme.fg("dim", ` ${(state.elapsed / 1000).toFixed(0)}s`);
-            const activity = state.activity
-              ? theme.fg("muted", `  ${state.activity}`)
-              : "";
-            lines.push(
-              truncateToWidth(
-                ` ${icon} ${theme.fg("accent", label)}${sec}${activity}`,
-                width,
-              ),
-            );
-          }
-
-          lines.push(border);
-          return lines;
-        },
-        invalidate() {},
-        dispose() {},
-      }),
-      { placement: "aboveEditor" },
-    );
-  }
-
-  function clearWidget() {
-    if (timerHandle) {
-      clearInterval(timerHandle);
-      timerHandle = undefined;
-    }
-    currentCtx?.ui.setWidget("planner", undefined);
-  }
+  // Background runs belong to this session: kill them on quit, /new, /reload,
+  // resume, or fork so they never spend tokens or deliver into another session.
+  pi.on("session_shutdown", async () => {
+    tracker.abortAll();
+    currentCtx = undefined;
+  });
 
   async function runDualPlan(
+    run: MultiRun,
     task: string,
     cwd: string,
-    signal: AbortSignal | undefined,
+    live: LiveRun,
+    // biome-ignore lint/suspicious/noExplicitAny: upstream AgentToolUpdateCallback type is not resolvable (pi-agent-core not installed locally)
     onUpdate?: (partial: any) => void,
-  ): Promise<{
-    planA: string;
-    planB: string;
-    planC: string;
-    statusA: string;
-    statusB: string;
-    statusC: string;
-  }> {
-    startTime = Date.now();
+  ): Promise<PlanResult[]> {
+    const signal = live.controller.signal;
 
     // ── Pre-Phase: Resolve external references ────────────────────
-    widgetPhase = "resolving references...";
-    updateWidget();
+    tracker.setPhase(live, "resolving refs");
 
     const { resolvedTask, references } = await resolveTaskContext(cwd, task);
     if (references.length > 0) {
@@ -204,20 +188,8 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     }
 
     // ── Phase 0: Exploration (Sonnet + gitnexus + code-review-graph) ──
-    widgetPhase = "Phase 0 — exploring codebase";
-    agentState["Explorer"] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    updateWidget();
-
-    if (currentCtx) {
-      timerHandle = setInterval(() => updateWidget(), 1000);
-      if (timerHandle && typeof timerHandle === "object" && "unref" in timerHandle) {
-        (timerHandle as any).unref();
-      }
-    }
+    tracker.setPhase(live, "exploring");
+    tracker.setAgent(live, "Explorer", { status: "running", activity: "starting" });
 
     onUpdate?.({
       content: [{ type: "text", text: `🔍 Phase 0: Exploring codebase with Sonnet + gitnexus...` }],
@@ -229,50 +201,23 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       mode: "plan",
       timeoutMs: PHASE_0_TIMEOUT_MS,
       signal,
-      onActivity: (activity) => {
-        agentState["Explorer"].activity = activity;
-        updateWidget();
-      },
+      onActivity: (activity) => tracker.setAgent(live, "Explorer", { activity }),
     });
 
-    const phase0Elapsed = Date.now() - startTime;
-    agentState["Explorer"] = {
+    tracker.setAgent(live, "Explorer", {
       status: explorationFindings ? "done" : "error",
       activity: explorationFindings
-        ? `✓ context gathered (${(explorationFindings.length / 1024).toFixed(1)}KB)`
-        : "✗ no results (planners will explore on their own)",
-      elapsed: phase0Elapsed,
-    };
-    updateWidget();
-
-    // ── Phase 1: Both planners in parallel ────────────────────────
-    widgetPhase = "Phase 1 — planning in parallel";
-    agentState[MODEL_A_LABEL] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    agentState[MODEL_B_LABEL] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    agentState[MODEL_C_LABEL] = {
-      status: "running",
-      activity: "starting...",
-      elapsed: 0,
-    };
-    updateWidget();
-
-    onUpdate?.({
-      content: [{ type: "text", text: `⚡ Phase 1: ${MODEL_A_LABEL} + ${MODEL_B_LABEL} + ${MODEL_C_LABEL} planning in parallel...` }],
+        ? `context ${(explorationFindings.length / 1024).toFixed(1)}KB`
+        : "no context",
     });
 
-    const planDir = path.join(os.tmpdir(), `pi-plan-${Date.now()}`);
-    fs.mkdirSync(planDir, { recursive: true });
-    const planFileA = path.join(planDir, "plan-a.md");
-    const planFileB = path.join(planDir, "plan-b.md");
-    const planFileC = path.join(planDir, "plan-c.md");
+    // ── Phase 1: all planners in parallel ─────────────────────────
+    if (signal.aborted) return [];
+    tracker.setPhase(live, "planning");
+
+    onUpdate?.({
+      content: [{ type: "text", text: `⚡ Phase 1: ${PLANNERS.map((p) => p.label).join(" + ")} planning in parallel...` }],
+    });
 
     // Build enriched task with exploration findings + conversation context
     let enrichedTask = resolvedTask;
@@ -288,140 +233,148 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       }
     }
 
-    // Plan A: Opus (gets Phase 0 context, can verify with targeted reads)
-    const taskA = `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${planFileA}`;
-    const promiseA = runAgent({
-      cwd,
-      model: MODEL_A,
-      systemPrompt: PLANNER_PROMPT_A,
-      tools: "read,write,grep,find,ls,bash",
-      task: taskA,
-      timeoutMs: PHASE_1_TIMEOUT_MS,
-      signal,
-      onActivity: (activity) => {
-        agentState[MODEL_A_LABEL].activity = activity;
-        updateWidget();
-      },
-    });
-
-    await new Promise((r) => setTimeout(r, 1000));
-
-    // Plan B: GPT (gets same Phase 0 context, different perspective)
-    const taskB = `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${planFileB}`;
-    const promiseB = runAgent({
-      cwd,
-      model: MODEL_B,
-      systemPrompt: PLANNER_PROMPT_B,
-      tools: "read,write,grep,find,ls,bash",
-      task: taskB,
-      thinking: "low",
-      timeoutMs: PHASE_1_TIMEOUT_MS,
-      signal,
-      onActivity: (activity) => {
-        agentState[MODEL_B_LABEL].activity = activity;
-        updateWidget();
-      },
-    });
-
-    await new Promise((r) => setTimeout(r, 1000));
-
-    // Plan C: GLM (gets same Phase 0 context, third perspective)
-    const taskC = `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${planFileC}`;
-    const promiseC = runAgent({
-      cwd,
-      model: MODEL_C,
-      systemPrompt: PLANNER_PROMPT_B,
-      tools: "read,write,grep,find,ls,bash",
-      task: taskC,
-      timeoutMs: PHASE_1_TIMEOUT_MS,
-      signal,
-      onActivity: (activity) => {
-        agentState[MODEL_C_LABEL].activity = activity;
-        updateWidget();
-      },
-    });
-
-    const [resultA, resultB, resultC] = await Promise.all([promiseA, promiseB, promiseC]);
-
-    // Read plans from output files, fall back to stdout capture
-    let planA = "";
-    try {
-      if (fs.existsSync(planFileA)) {
-        planA = fs.readFileSync(planFileA, "utf-8").trim();
-      }
-    } catch {}
-    if (!planA) planA = resultA.output || "";
-
-    let planB = "";
-    try {
-      if (fs.existsSync(planFileB)) {
-        planB = fs.readFileSync(planFileB, "utf-8").trim();
-      }
-    } catch {}
-    if (!planB) planB = resultB.output || "";
-
-    let planC = "";
-    try {
-      if (fs.existsSync(planFileC)) {
-        planC = fs.readFileSync(planFileC, "utf-8").trim();
-      }
-    } catch {}
-    if (!planC) planC = resultC.output || "";
-
-    // Cleanup temp files
-    try { fs.unlinkSync(planFileA); } catch {}
-    try { fs.unlinkSync(planFileB); } catch {}
-    try { fs.unlinkSync(planFileC); } catch {}
-    try { fs.rmdirSync(planDir); } catch {}
-
-    agentState[MODEL_A_LABEL] = {
-      status: resultA.exitCode === 0 && planA ? "done" : "error",
-      activity: resultA.exitCode === 0 && planA ? `✓ plan ready` : "✗ failed",
-      elapsed: Date.now() - startTime,
-    };
-    agentState[MODEL_B_LABEL] = {
-      status: resultB.exitCode === 0 && planB ? "done" : "error",
-      activity: resultB.exitCode === 0 && planB ? `✓ plan ready` : "✗ failed",
-      elapsed: Date.now() - startTime,
-    };
-    agentState[MODEL_C_LABEL] = {
-      status: resultC.exitCode === 0 && planC ? "done" : "error",
-      activity: resultC.exitCode === 0 && planC ? `✓ plan ready` : "✗ failed",
-      elapsed: Date.now() - startTime,
-    };
-    widgetPhase = "done — review below";
-    updateWidget();
-
-    if (timerHandle) {
-      clearInterval(timerHandle);
-      timerHandle = undefined;
+    // Every planner gets the same Phase 0 context and writes to its own file.
+    // Starts are staggered by a second to avoid a burst of simultaneous spawns.
+    const tools = "read,write,grep,find,ls,bash";
+    const members = PLANNERS.map((planner) =>
+      addMember(run, { key: planner.key, label: planner.label, model: planner.model, thinking: planner.thinking, tools, prompt: planner.prompt }),
+    );
+    saveRun(run);
+    const runs: Promise<{ planner: Planner; file: string; output: string; exitCode: number }>[] = [];
+    for (const [i, planner] of PLANNERS.entries()) {
+      if (i > 0) await new Promise((r) => setTimeout(r, 1000));
+      if (signal.aborted) break;
+      const member = members[i];
+      const file = member.outputFile;
+      tracker.setAgent(live, planner.label, { status: "running", activity: "starting" });
+      runs.push(
+        runAgent({
+          cwd,
+          model: planner.model,
+          systemPrompt: planner.prompt,
+          tools,
+          task: `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${file}`,
+          ...(planner.thinking ? { thinking: planner.thinking } : {}),
+          sessionFile: member.sessionFile,
+          timeoutMs: PHASE_1_TIMEOUT_MS,
+          signal,
+          onActivity: (activity) => tracker.setAgent(live, planner.label, { activity }),
+        }).then((r) => ({ planner, file, output: r.output, exitCode: r.exitCode })),
+      );
     }
-    const t = setTimeout(() => clearWidget(), 8000);
-    if (t && typeof t === "object" && "unref" in t) (t as any).unref();
 
-    return {
-      planA: planA || "(no output)",
-      planB: planB || "(no output)",
-      planC: planC || "(no output)",
-      statusA: resultA.exitCode === 0 && planA ? "done" : "error",
-      statusB: resultB.exitCode === 0 && planB ? "done" : "error",
-      statusC: resultC.exitCode === 0 && planC ? "done" : "error",
-    };
+    const results: PlanResult[] = [];
+    for (const { planner, file, output, exitCode } of await Promise.all(runs)) {
+      // Read the plan from its output file, fall back to stdout capture (and save it)
+      let plan = readOutput(file);
+      if (!plan && output) {
+        plan = output;
+        fs.writeFileSync(file, plan, "utf-8");
+      }
+
+      const status = exitCode === 0 && plan ? "done" : "error";
+      const member = run.members.find((m) => m.key === planner.key);
+      if (member) member.status = status;
+      tracker.setAgent(live, planner.label, { status, activity: status === "done" ? "plan ready" : "failed" });
+      results.push({ key: planner.key, label: planner.label, plan: plan || "(no output)", status });
+    }
+    saveRun(run);
+    return results;
+  }
+
+  /**
+   * Start a run and return its handle immediately. `done` resolves to the
+   * combined message, or undefined when the run was stopped.
+   */
+  function startPlan(
+    task: string,
+    cwd: string,
+    external?: AbortSignal,
+    // biome-ignore lint/suspicious/noExplicitAny: see runDualPlan
+    onUpdate?: (partial: any) => void,
+  ): { run: MultiRun; done: Promise<string | undefined> } {
+    const run = createRun("plan", task, cwd);
+    const live = tracker.begin(run.id, external);
+    const done = runDualPlan(run, task, cwd, live, onUpdate).then(
+      (results) => {
+        const cancelled = live.stopped || live.controller.signal.aborted;
+        tracker.finish(live, cancelled ? "stopped" : "done");
+        if (cancelled) return undefined;
+        markDelivered(run);
+        return buildReviewMessage(task, results, run);
+      },
+      (err: unknown) => {
+        tracker.finish(live, live.stopped ? "stopped" : "failed");
+        if (live.stopped || live.controller.signal.aborted) return undefined;
+        throw err;
+      },
+    );
+    return { run, done };
+  }
+
+  /** Wake the main agent after its current turn with the combined result. */
+  function deliver(content: string, runId: string): void {
+    pi.sendMessage(
+      { customType: "multi_plan_result", content, display: true, details: { run: runId } },
+      { triggerTurn: true, deliverAs: "followUp" },
+    );
+  }
+
+  /** Detach a run: deliver its result (or failure) when it finishes. */
+  function runInBackground(task: string, cwd: string): MultiRun {
+    const { run, done } = startPlan(task, cwd);
+    done.then(
+      (message) => {
+        if (message) deliver(message, run.id);
+      },
+      (err: unknown) => {
+        const reason = err instanceof Error ? err.message : String(err);
+        deliver(`⚠️ Plan run \`${run.id}\` failed: ${reason}`, run.id);
+      },
+    );
+    return run;
+  }
+
+  function startedText(run: MultiRun): string {
+    return [
+      `Started background plan run \`${run.id}\`: ${PLANNERS.map((p) => `${p.key} (${p.label})`).join(", ")}.`,
+      `All four plans arrive automatically as one follow-up message when they finish, usually within 3–8 minutes.`,
+      `Do not poll, sleep, or call plan_multi again for this task. Continue other work or end your turn.`,
+      `Cancel with /plan-stop ${run.id}.`,
+    ].join("\n");
   }
 
   // ── /plan command ───────────────────────────────────────────────
 
   pi.registerCommand("plan", {
-    description: "Generate plans from two models: /plan <task description>",
+    description: "Generate plans from four models in the background: /plan [--wait] <task description>",
     handler: async (args, ctx) => {
-      if (!args.trim()) {
-        ctx.ui.notify("Usage: /plan <task description>", "warning");
+      const { wait, rest: task } = parseWaitFlag(args);
+      if (!task) {
+        ctx.ui.notify("Usage: /plan [--wait] <task description>", "warning");
         return;
       }
 
-      const result = await runDualPlan(args, ctx.cwd, undefined);
-      const message = buildReviewMessage(args, result);
-      pi.sendUserMessage(message, { deliverAs: "followUp" });
+      if (shouldRunAsync(!wait)) {
+        const run = runInBackground(task, ctx.cwd);
+        ctx.ui.notify(`Plan run ${run.id} started in the background. Cancel with /plan-stop ${run.id}.`, "info");
+        return;
+      }
+
+      const { run, done } = startPlan(task, ctx.cwd);
+      const message = await done;
+      if (message) deliver(message, run.id);
+    },
+  });
+
+  // ── /plan-stop command ──────────────────────────────────────────
+
+  pi.registerCommand("plan-stop", {
+    description: "Cancel background plan runs: /plan-stop [run-id|all] (default: newest)",
+    handler: async (args, ctx) => {
+      const { stopped, error } = tracker.stop(args ?? "");
+      if (error) ctx.ui.notify(error, "warning");
+      else ctx.ui.notify(`Stopped plan run${stopped.length === 1 ? "" : "s"}: ${stopped.join(", ")}. Partial output stays on disk.`, "info");
     },
   });
 
@@ -430,14 +383,23 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   pi.registerTool({
     name: "plan_multi",
     label: "Multi-Plan",
-    description: `Run three planning models in parallel (Opus 5 + GPT-5.6 Sol + GLM 5.2) and return all plans for review. Present them to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan.`,
+    description:
+      "Run four planning models in parallel (Opus 5.5 + GPT-5.6 Sol + GLM 5.2 + Opus 5). By default this returns immediately with a run id, and all four plans arrive later as one follow-up message: do not poll or wait for it. When the plans arrive, present them to the user, highlight differences, and ask what they want: approve one, merge, modify, or re-plan. Set async: false to block until the plans are ready. Inside a subagent it always blocks.",
     parameters: Type.Object({
       task: Type.String({ description: "Task description to plan for" }),
+      async: Type.Optional(
+        Type.Boolean({ description: "Default true: run in the background and deliver plans as a follow-up message. False: block and return the plans." }),
+      ),
     }),
     async execute(_id, params, signal, onUpdate, ctx) {
-      const result = await runDualPlan(params.task, ctx.cwd, signal, onUpdate);
-      const message = buildReviewMessage(params.task, result);
-      return { content: [{ type: "text", text: message }], details: {} };
+      if (shouldRunAsync(params.async)) {
+        const run = runInBackground(params.task, ctx.cwd);
+        return { content: [{ type: "text", text: startedText(run) }], details: { async: true, run: run.id } };
+      }
+      const { run, done } = startPlan(params.task, ctx.cwd, signal, onUpdate);
+      const message = await done;
+      if (!message) throw new Error(`Plan run ${run.id} was cancelled.`);
+      return { content: [{ type: "text", text: message }], details: { async: false, run: run.id } };
     },
     renderCall(args, theme) {
       const preview = (args.task || "").slice(0, 60);
@@ -447,11 +409,12 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       );
     },
     renderResult(result, _opts, theme) {
+      const details = result.details as { async?: boolean; run?: string } | undefined;
+      if (details?.async) {
+        return new Text(theme.fg("warning", "⏳ planning in background") + theme.fg("dim", ` — run ${details.run}`), 0, 0);
+      }
       const text = result.content[0]?.type === "text" ? result.content[0].text : "";
-      const hasA = text.includes("## Plan A");
-      const hasB = text.includes("## Plan B");
-      const hasC = text.includes("## Plan C");
-      const count = [hasA, hasB, hasC].filter(Boolean).length;
+      const count = (text.match(/^## Plan [A-Z] \(.*\)\n\n(?!⚠️ Failed)/gm) ?? []).length;
       const label = count > 0 ? `${count} plan${count === 1 ? "" : "s"} ready` : "plans generated";
       return new Text(
         theme.fg("success", `✓ ${label}`) + theme.fg("dim", " — review & decide"),
@@ -460,39 +423,75 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     },
   });
 
-  function buildReviewMessage(
-    task: string,
-    result: { planA: string; planB: string; planC: string; statusA: string; statusB: string; statusC: string },
-  ): string {
+  pi.registerTool({
+    name: "plan_followup",
+    label: "Plan Follow-up",
+    description:
+      "Continue one planner from the most recently delivered /plan run (or a given run id) with its full saved context, e.g. to revise Plan B. Returns that planner's updated plan.",
+    parameters: Type.Object({
+      key: Type.String({ description: "Planner letter: A (Opus 5.5), B (GPT 5.6 Sol), C (GLM 5.2), D (Opus 5)" }),
+      message: Type.String({ description: "What to change or ask" }),
+      run: Type.Optional(Type.String({ description: "Run id shown in the delivered plans; default: the most recently delivered /plan run in this directory" })),
+    }),
+    async execute(_id, params, signal, onUpdate, ctx) {
+      const follow: { live?: LiveRun; label: string } = { label: "" };
+      const result = await runFollowup({
+        kind: "plan",
+        key: params.key,
+        message: params.message,
+        runId: params.run,
+        cwd: ctx.cwd,
+        signal,
+        onStart: (run, member) => {
+          follow.live = tracker.begin(`${run.id}-${member.key.toLowerCase()}${member.followups + 1}`, signal, `plan ${run.id} follow-up`);
+          follow.label = member.label;
+          tracker.setAgent(follow.live, follow.label, { status: "running", activity: "starting" });
+          return follow.live.controller.signal;
+        },
+        onActivity: (activity) => {
+          if (follow.live) tracker.setAgent(follow.live, follow.label, { activity });
+          onUpdate?.({ content: [{ type: "text", text: `Plan ${params.key.toUpperCase()}: ${activity}` }], details: {} });
+        },
+      }).catch((err: unknown) => {
+        if (follow.live) tracker.finish(follow.live, follow.live.stopped ? "stopped" : "failed");
+        throw err;
+      });
+      if (follow.live) {
+        const outcome = result.ok ? "plan ready" : follow.live.stopped ? "stopped" : "failed";
+        tracker.setAgent(follow.live, follow.label, { status: result.ok ? "done" : "error", activity: outcome });
+        tracker.finish(follow.live, result.ok ? "done" : outcome);
+      }
+      const head = `## Plan ${result.member.key} (${result.member.label}), follow-up ${result.member.followups}`;
+      const text = result.ok ? `${head}\n\n${result.output}` : `${head}\n\n⚠️ Follow-up failed: ${result.output}`;
+      return { content: [{ type: "text", text }], details: { run: result.run.id, key: result.member.key, ok: result.ok } };
+    },
+    renderCall(args, theme) {
+      return new Text(
+        theme.fg("toolTitle", theme.bold(`plan_followup ${String(args.key ?? "").toUpperCase()} `)) + theme.fg("dim", String(args.message ?? "").slice(0, 60)),
+        0, 0,
+      );
+    },
+  });
+
+  function buildReviewMessage(task: string, results: PlanResult[], run: MultiRun): string {
     const parts: string[] = [];
     parts.push(`# Multi-Model Plan: ${task}\n`);
-    parts.push(`Three models explored the codebase and produced plans independently. Review all and decide.\n`);
+    parts.push(`${results.length} models explored the codebase and produced plans independently. Review all and decide.\n`);
 
-    if (result.statusA === "done") {
-      parts.push(`## Plan A (${MODEL_A_LABEL})\n\n${result.planA}\n`);
-    } else {
-      parts.push(`## Plan A (${MODEL_A_LABEL})\n\n⚠️ Failed to generate.\n`);
+    for (const r of results) {
+      parts.push(`## Plan ${r.key} (${r.label})\n\n${r.status === "done" ? r.plan : "⚠️ Failed to generate."}\n`);
     }
 
-    if (result.statusB === "done") {
-      parts.push(`## Plan B (${MODEL_B_LABEL})\n\n${result.planB}\n`);
-    } else {
-      parts.push(`## Plan B (${MODEL_B_LABEL})\n\n⚠️ Failed to generate.\n`);
-    }
-
-    if (result.statusC === "done") {
-      parts.push(`## Plan C (${MODEL_C_LABEL})\n\n${result.planC}\n`);
-    } else {
-      parts.push(`## Plan C (${MODEL_C_LABEL})\n\n⚠️ Failed to generate.\n`);
-    }
-
+    const keys = results.map((r) => r.key);
     parts.push(`---\n`);
     parts.push(`**What would you like to do?**`);
     parts.push(`- Compare the plans and highlight the key differences`);
-    parts.push(`- Pick one plan (A, B, or C) as-is`);
+    parts.push(`- Pick one plan (${keys.slice(0, -1).join(", ")}, or ${keys[keys.length - 1]}) as-is`);
     parts.push(`- Merge the best parts into a final plan`);
     parts.push(`- Suggest modifications before proceeding`);
+    parts.push(`- Ask one planner to revise its plan (plan_followup)`);
     parts.push(`- Approve the final plan and execute it`);
+    parts.push(followupHint(run));
 
     return parts.join("\n");
   }

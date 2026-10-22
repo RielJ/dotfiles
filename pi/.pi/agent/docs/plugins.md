@@ -78,7 +78,7 @@ Under `extensions/`, not installed from npm.
 
 | Extension | Purpose |
 |---|---|
-| `superpowers` | Multi-model planner and reviewer, plan executor, QMD search, web search |
+| `superpowers` | Multi-model planner and reviewer, QMD search, web search |
 | `git-worktrees` | Worktree provisioning, detached agents, heartbeat, status widget, tmux attach |
 | `adw` | AI Developer Workflows (in progress) |
 | `pi-tool-display` | Local tool display overrides |

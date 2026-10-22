@@ -126,7 +126,7 @@ function discoverModules(extensionDir: string): DiscoveredModule[] {
 			const fullPath = path.join(dir, entry);
 			const stat = fs.statSync(fullPath);
 
-			if (stat.isDirectory() && entry !== "node_modules" && !entry.startsWith(".")) {
+			if (stat.isDirectory() && entry !== "node_modules" && entry !== "test" && !entry.startsWith(".")) {
 				scanDir(fullPath, entry);
 				continue;
 			}
@@ -304,7 +304,7 @@ export default function (pi: ExtensionAPI) {
 		kind: "module" | "separator" | "action";
 		label: string;
 		moduleIdx?: number;
-		action?: "save" | "disable-all" | "enable-all";
+		action?: "save" | "disable-all" | "enable-all" | "close";
 	}
 
 	function buildRows(): Row[] {
@@ -373,7 +373,7 @@ export default function (pi: ExtensionAPI) {
 					} else if ((matchesKey(data, Key.down) || matchesKey(data, "j")) && cursor < selectable.length - 1) {
 						cursor++;
 						cachedWidth = undefined;
-					} else if (matchesKey(data, Key.enter) || matchesKey(data, " ") || matchesKey(data, "l")) {
+					} else if (matchesKey(data, Key.enter) || matchesKey(data, Key.space) || matchesKey(data, "l")) {
 						const rowIdx = selectable[cursor];
 						const row = rows[rowIdx];
 						if (row.kind === "module" && row.moduleIdx !== undefined) {

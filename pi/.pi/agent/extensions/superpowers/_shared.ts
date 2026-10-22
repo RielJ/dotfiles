@@ -1,7 +1,7 @@
 /**
  * Shared subagent runner for superpowers
  *
- * All superpowers (executor, planner, reviewer) spawn pi subagents.
+ * Superpowers (planner, reviewer) spawn pi subagents.
  * This module centralizes the spawning logic so token-saving fixes
  * (extensions, model config) only need to change in one place.
  *
@@ -24,8 +24,10 @@ export const MODELS = {
   build: "anthropic/claude-opus-4-8",
   /** For Phase 0 exploration — Sonnet is fast, cheap, follows instructions well */
   explore: "anthropic/claude-sonnet-4-6",
-  /** For planning and review writing — strongest reasoning */
-  plan: "anthropic/claude-opus-5",
+  /** For planning and review writing (Plan A and Review A) — strongest reasoning */
+  plan: "anthropic/claude-opus-5-5",
+  /** Second Anthropic opinion for planning and review (Plan D and Review D) */
+  planAlt: "anthropic/claude-opus-5",
   /** For checking (tests, lint, type-check) — Sonnet catches issues Haiku misses */
   check: "anthropic/claude-sonnet-4-6",
   /** For second-opinion diversity (different provider) */
@@ -64,8 +66,7 @@ export async function resolveTaskContext(
 
   const issueNums = new Set<string>();
   for (const pattern of issuePatterns) {
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(task)) !== null) {
+    for (const match of task.matchAll(pattern)) {
       issueNums.add(match[1]);
     }
   }
@@ -83,11 +84,11 @@ export async function resolveTaskContext(
       ).trim();
       if (result) {
         const issue = JSON.parse(result);
-        const labels = (issue.labels || []).map((l: any) => l.name).join(", ");
+        const labels = (issue.labels || []).map((l: { name?: string }) => l.name).join(", ");
         const comments = (issue.comments || [])
           .slice(-5) // last 5 comments
           .map(
-            (c: any) =>
+            (c: { author?: { login?: string }; body?: string }) =>
               `**${c.author?.login || "unknown"}**: ${(c.body || "").slice(0, 500)}`,
           )
           .join("\n\n");
@@ -115,8 +116,7 @@ export async function resolveTaskContext(
 
   const prNums = new Set<string>();
   for (const pattern of prPatterns) {
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(task)) !== null) {
+    for (const match of task.matchAll(pattern)) {
       // Avoid treating the same number as both issue and PR
       if (!issueNums.has(match[1])) {
         prNums.add(match[1]);
@@ -137,8 +137,8 @@ export async function resolveTaskContext(
       ).trim();
       if (result) {
         const pr = JSON.parse(result);
-        const labels = (pr.labels || []).map((l: any) => l.name).join(", ");
-        const files = (pr.files || []).map((f: any) => f.path).join("\n  ");
+        const labels = (pr.labels || []).map((l: { name?: string }) => l.name).join(", ");
+        const files = (pr.files || []).map((f: { path?: string }) => f.path).join("\n  ");
 
         let prContext = `### GitHub PR #${num}: ${pr.title || "Untitled"}\n`;
         prContext += `**State:** ${pr.state || "unknown"}`;
@@ -157,10 +157,9 @@ export async function resolveTaskContext(
 
   // ── URLs: fetch and convert to markdown ──
   const urlPattern = /https?:\/\/[^\s)>"]+/gi;
-  let urlMatch: RegExpExecArray | null;
   const seenUrls = new Set<string>();
 
-  while ((urlMatch = urlPattern.exec(task)) !== null) {
+  for (const urlMatch of task.matchAll(urlPattern)) {
     const url = urlMatch[0].replace(/[.,;:!?]+$/, ""); // strip trailing punctuation
     // Skip GitHub issue/PR URLs (already handled above)
     if (/github\.com\/[^/]+\/[^/]+\/(issues|pull)\/\d+/.test(url)) continue;
@@ -252,11 +251,6 @@ function phase1ExtensionArgs(): string[] {
   return _phase1ExtArgs;
 }
 
-// Executor builders/checkers: pi-fff + condensed-milk
-export function executorExtensionArgs(): string[] {
-  return phase1ExtensionArgs();
-}
-
 // ── Types ───────────────────────────────────────────────────────────
 
 export type ActivityCallback = (activity: string) => void;
@@ -325,6 +319,8 @@ export interface RunAgentOptions {
   maxToolCalls?: number;
   /** Tee the raw NDJSON stream to this file for drill-down viewing */
   logPath?: string;
+  /** Save the run to this Pi session file (created if missing, resumed if it exists). Default: no session. */
+  sessionFile?: string;
 }
 
 // ── Subagent Runner ─────────────────────────────────────────────────
@@ -344,6 +340,7 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     extensionArgs: extArgs,
     maxToolCalls,
     logPath,
+    sessionFile,
   } = opts;
 
   // Default to phase 1 extensions unless overridden
@@ -358,7 +355,7 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       "--mode",
       "json",
       "-p",
-      "--no-session",
+      ...(sessionFile ? ["--session", sessionFile] : ["--no-session"]),
       // Isolation: block ALL auto-discovery, then whitelist useful extensions
       "--no-extensions",
       "--no-skills",
@@ -382,15 +379,19 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       proc = spawn("pi", args, { cwd, stdio: ["pipe", "pipe", "pipe"] });
       // Close stdin immediately — subagents don't read from it
       proc.stdin?.end();
-    } catch (spawnErr: any) {
+    } catch (spawnErr: unknown) {
       try {
         fs.unlinkSync(promptFile);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       try {
         fs.rmdirSync(tmpDir);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       resolve({
-        output: `Spawn error: ${spawnErr.message}`,
+        output: `Spawn error: ${spawnErr instanceof Error ? spawnErr.message : String(spawnErr)}`,
         exitCode: 1,
         usage: {
           input: 0,
@@ -501,7 +502,9 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
               );
               try {
                 proc.kill("SIGTERM");
-              } catch {}
+              } catch {
+                // Best-effort cleanup: the file, dir, stream or process may already be gone.
+              }
             }
           } else if (t === "turn_start") {
             turnCount++;
@@ -528,7 +531,9 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
           // Reset incremental text tracker for next message
           currentMsgText = "";
         }
-      } catch {}
+      } catch {
+        // Not a JSON event line (partial chunk or plain output); skip it.
+      }
     }
 
     // Optional: tee raw NDJSON stream to a log file for drill-down viewing
@@ -546,7 +551,9 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     proc.stdout!.on("data", (chunk: string) => {
       try {
         logStream?.write(chunk);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       buffer += chunk;
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
@@ -562,10 +569,12 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     const killTimer = setTimeout(() => {
       try {
         proc.kill("SIGTERM");
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
     }, timeoutMs);
     if (typeof killTimer === "object" && "unref" in killTimer)
-      (killTimer as any).unref();
+      (killTimer as { unref?: () => void }).unref?.();
 
     proc.on("close", (code) => {
       clearTimeout(killTimer);
@@ -576,13 +585,19 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       }
       try {
         logStream?.end();
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       try {
         fs.unlinkSync(promptFile);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       try {
         fs.rmdirSync(tmpDir);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       const output = chunks.join("\n");
       if (!output && stderrBuf.trim()) {
         resolve({
@@ -599,13 +614,19 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       clearTimeout(killTimer);
       try {
         logStream?.end();
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       try {
         fs.unlinkSync(promptFile);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       try {
         fs.rmdirSync(tmpDir);
-      } catch {}
+      } catch {
+        // Best-effort cleanup: the file, dir, stream or process may already be gone.
+      }
       resolve({ output: `Error: ${err.message}`, exitCode: 1, usage });
     });
 
@@ -614,7 +635,9 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
         clearTimeout(killTimer);
         try {
           proc.kill("SIGTERM");
-        } catch {}
+        } catch {
+          // Best-effort cleanup: the file, dir, stream or process may already be gone.
+        }
       };
       if (signal.aborted) kill();
       else signal.addEventListener("abort", kill, { once: true });
@@ -630,6 +653,11 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
  */
 const EXPLORE_FOR_PLANNING_PROMPT = `You are a codebase explorer preparing context for a planning agent.
 Your job is to quickly understand the project and gather the information needed to write an implementation plan.
+
+## Document what exists today
+- Report facts about the codebase as it is: what exists, where it lives, how it connects.
+- Do not propose designs, approaches, or improvements, and do not critique the code. The planners decide what to build.
+- Back each claim with a file path (and line where useful).
 
 ## Available Tools
 You have access to:
@@ -667,14 +695,19 @@ For each relevant file found:
 - Import chains, API contracts, shared types
 
 ### Key Observations for Planning
-- Existing patterns the plan should follow
-- Potential gotchas or constraints
+- Existing patterns and conventions in the relevant code
+- Constraints and gotchas visible in the code
 - Testing patterns in use
 
-Be concise. Focus on what a planner NEEDS to know to write a good plan.`;
+Be concise. Focus on the facts a planner NEEDS to write a good plan, not on what the plan should be.`;
 
 const EXPLORE_FOR_REVIEW_PROMPT = `You are a codebase explorer preparing context for a code review agent.
 Your job is to quickly understand the changes and their impact.
+
+## Document what exists today
+- Report facts: what changed, what depends on it, which tests cover it.
+- Do not propose fixes or redesigns, and do not deliver review verdicts. The reviewers judge the change.
+- You may flag risky areas for reviewers to inspect (for example, untested callers or changed shared types). Say why each is worth a look and point to the file and line.
 
 ## Available Tools
 You have access to:
@@ -803,6 +836,10 @@ export async function runExploration(
  * Extract recent conversation context for subagent enrichment.
  * Capped at 2000 chars to save tokens.
  */
+/** Minimal shapes read from session entries (full types live in pi-coding-agent). */
+type TextBlock = { type: string; text?: string };
+type BranchEntry = { type: string; message?: { role?: string; content?: string | TextBlock[] } };
+
 export function extractConversationContext(
   ctx: ExtensionContext,
   maxChars = 2000,
@@ -813,7 +850,7 @@ export function extractConversationContext(
     let totalLen = 0;
 
     for (let i = entries.length - 1; i >= 0; i--) {
-      const entry = entries[i] as any;
+      const entry = entries[i] as BranchEntry;
       if (entry.type !== "message") continue;
       const msg = entry.message;
       if (!msg) continue;
@@ -826,16 +863,16 @@ export function extractConversationContext(
           text = msg.content;
         } else if (Array.isArray(msg.content)) {
           text = msg.content
-            .filter((c: any) => c.type === "text")
-            .map((c: any) => c.text)
+            .filter((c: TextBlock) => c.type === "text")
+            .map((c: TextBlock) => c.text ?? "")
             .join("\n");
         }
         if (text) text = `User: ${text}`;
       } else if (role === "assistant") {
         if (Array.isArray(msg.content)) {
           text = msg.content
-            .filter((c: any) => c.type === "text")
-            .map((c: any) => c.text)
+            .filter((c: TextBlock) => c.type === "text")
+            .map((c: TextBlock) => c.text ?? "")
             .join("\n");
         }
         if (text) text = `Assistant: ${text}`;
