@@ -60,6 +60,17 @@ Each lesson should recommend a primary source for the user to read or watch. Thi
 
 Each lesson should contain a reminder to ask followup questions to the agent. The agent is their teacher, and can assist with anything that's unclear.
 
+## HTML appearance
+
+All generated HTML, including lessons, reference documents, indexes, and interactive exercises, must default to dark mode regardless of the operating system's theme. Use light mode only when the user explicitly requests it.
+
+- Set `<meta name="color-scheme" content="dark">` in the document head and `color-scheme: dark` on the root element. Set explicit dark backgrounds and light foregrounds on both `html` and `body`; do not rely on `prefers-color-scheme` to enable dark mode.
+- Define shared CSS variables for backgrounds, surfaces, text, muted text, borders, and accent colors. Reuse them across every page and component. If an existing workspace stylesheet defaults to light mode, update it rather than copying its light palette into new pages.
+- Theme the whole page, including code blocks, syntax highlighting, tables, diagrams, quiz feedback, inputs, buttons, and embedded widgets. Avoid white panels and unreadable labels inside otherwise dark pages.
+- Keep normal text contrast at least 4.5:1 and large text contrast at least 3:1. Make links, keyboard focus, and selected, correct, incorrect, and disabled states distinguishable. Do not communicate quiz results through color alone.
+- Preserve printability with `@media print` styles that use `color-scheme: light`, white backgrounds, dark text, and legible code and diagrams. This print-only treatment must not change the screen default.
+- Before presenting a page, check it in a browser with a light OS/browser preference to confirm that it still opens in dark mode. Check interactive states and print preview when available; report any checks you could not perform.
+
 ## Assets
 
 Lessons are built from reusable **components**, stored in `./assets/`: stylesheets, quiz widgets, simulators, diagram helpers — anything a second lesson could reuse.
