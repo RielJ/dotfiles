@@ -119,11 +119,23 @@ export interface SubagentLoadout {
   /** Workspace isolation selected at spawn time. */
   isolation?: "shared" | "worktree";
   /** Worktree metadata when isolation is worktree. */
-  worktree?: { id: string; path: string; branch: string } | null;
+  worktree?: {
+    id: string;
+    path: string;
+    branch: string;
+    /** Main checkout; lets resume recreate a worktree removed on close. */
+    repoRoot?: string;
+    /** Commit the worktree started at. */
+    base?: string;
+    /** True when the subagents extension created `branch`. */
+    createdBranch?: boolean;
+  } | null;
   /** Curated context supplied by the orchestrator. */
   context?: string;
   /** Capability profile selected by the orchestrator. */
   profile?: string;
+  /** Skills the orchestrator injected into the first prompt. */
+  skills?: Array<{ name: string; scope: string; filePath: string }>;
 }
 
 /** Path of the loadout sidecar written next to a subagent session file. */

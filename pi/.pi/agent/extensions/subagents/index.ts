@@ -38,7 +38,21 @@ import {
   shellEscape,
   readScreen,
 } from "./tmux.ts";
-import { allocateSubagentWorktree } from "./worktree-isolation.ts";
+import { discoverSkillCandidates } from "./skill-discovery.ts";
+import { buildSubagentTaskMessage } from "./task-prompt.ts";
+import {
+  renderSkillBlocks,
+  resolveRequestedSkills,
+  type SkillCandidate,
+} from "./skill-injection.ts";
+import {
+  allocateSubagentWorktree,
+  describeWorktreeRelease,
+  reattachSubagentWorktree,
+  releaseSubagentWorktree,
+  type SubagentWorktree,
+  type WorktreeRelease,
+} from "./worktree-isolation.ts";
 import {
   consumeTurnSignal,
   loadKeepAliveConfig,
@@ -142,6 +156,26 @@ const SubagentParams = Type.Object({
   model: Type.Optional(
     Type.String({ description: "Model override (overrides profile default)." }),
   ),
+  skills: Type.Optional(
+    Type.Array(
+      Type.Union([
+        Type.String({ description: "Skill name; uses the skill Pi loads." }),
+        Type.Object({
+          name: Type.String({ description: "Exact skill name." }),
+          scope: Type.Optional(
+            Type.Union([Type.Literal("global"), Type.Literal("local")], {
+              description:
+                "global uses user-level skills; local uses the orchestrator project's skills.",
+            }),
+          ),
+        }),
+      ]),
+      {
+        description:
+          'Skills to inject into the child\'s first prompt. Use "principles" for Pi\'s active skill, or { name: "principles", scope: "global" | "local" } to choose a source. Pick skills that change how the child should work; profile skills still load.',
+      },
+    ),
+  ),
   cwd: Type.Optional(
     Type.String({
       description:
@@ -151,12 +185,16 @@ const SubagentParams = Type.Object({
   isolation: Type.Optional(
     Type.Union([Type.Literal("shared"), Type.Literal("worktree")], {
       description:
-        "shared (default) uses caller cwd; worktree allocates through the existing WorktreeManager.",
+        "shared (default) runs in the caller's cwd. worktree runs in a new git worktree at <repo>/.pi/git-worktrees/<name-slug> on a new branch (see branch). " +
+        "On close the worktree is removed if clean; if it has uncommitted or untracked files it is kept and the close result says so. The branch is never deleted.",
     }),
   ),
   branch: Type.Optional(
     Type.String({
-      description: "Optional target branch for worktree isolation.",
+      description:
+        "Worktree isolation only. Existing branch (or other commit-ish): the worktree starts at its tip on a NEW branch named after the subagent's name slug; the given branch is not checked out or moved. " +
+        "Branch that does not exist: it is created from the main checkout's HEAD and checked out in the worktree. " +
+        "Omitted: a branch named after the name slug is created from HEAD. An existing branch is never reset; a name collision is an error.",
     }),
   ),
   keepAlive: Type.Optional(
@@ -798,6 +836,10 @@ interface RunningSubagent {
   turnsDelivered?: number;
   /** Set when the orchestrator or the idle timeout closed the subagent. */
   closeReason?: "orchestrator" | "idle";
+  /** Worktree this subagent runs in (isolation: "worktree"). */
+  worktree?: SubagentWorktree;
+  /** Set once the worktree was released (removed or kept) on close. */
+  worktreeRelease?: WorktreeRelease;
 }
 
 const keepAliveConfig: KeepAliveConfig = loadKeepAliveConfig([
@@ -1448,13 +1490,21 @@ function closeSubagentByName(params: { name?: string; force?: boolean }) {
     };
   }
 
-  closeSubagent(running, "orchestrator");
+  const worktreeNote = closeSubagent(running, "orchestrator");
   const text =
     `Closed subagent "${running.name}"${busy ? " mid-turn" : ""}. Its session is saved; ` +
-    `subagent_message({ name: "${running.name}", message: "…" }) resumes it.`;
+    `subagent_message({ name: "${running.name}", message: "…" }) resumes it.` +
+    (worktreeNote ? `\n\n${worktreeNote}` : "");
   return {
     content: [{ type: "text" as const, text }],
-    details: { name: running.name, status: "closed", forced: busy },
+    details: {
+      name: running.name,
+      status: "closed",
+      forced: busy,
+      ...(running.worktreeRelease
+        ? { worktree: running.worktreeRelease }
+        : {}),
+    },
   };
 }
 
@@ -1536,6 +1586,10 @@ export const __test__ = {
   deliverTurnResult,
   resolveFinalDelivery,
   closeSubagentByName,
+  closeSubagent,
+  releaseRunningWorktree,
+  withWorktreeNote,
+  watchSubagent,
   borderLine,
   getShellReadyDelayMs,
   renderSubagentWidgetLines,
@@ -1595,7 +1649,11 @@ async function launchSubagent(
     };
     cwd: string;
   },
-  options?: { surface?: string },
+  options?: {
+    surface?: string;
+    skillBlock?: string;
+    selectedSkills?: readonly SkillCandidate[];
+  },
 ): Promise<RunningSubagent> {
   const startTime = Date.now();
   const id = Math.random().toString(16).slice(2, 10);
@@ -1632,12 +1690,11 @@ async function launchSubagent(
   let effectiveCwd = resolvedPaths.effectiveCwd;
   let localAgentDir = resolvedPaths.localAgentDir;
   let effectiveAgentDir = resolvedPaths.effectiveAgentDir;
-  let worktree: { id: string; path: string; branch: string } | null = null;
+  let worktree: SubagentWorktree | null = null;
 
   if (params.isolation === "worktree") {
-    worktree = await allocateSubagentWorktree({
+    worktree = allocateSubagentWorktree({
       cwd: effectiveCwd ?? ctx.cwd,
-      task: params.task,
       name: params.name,
       branch: params.branch,
     });
@@ -1713,14 +1770,15 @@ async function launchSubagent(
   const identity = agentDefs?.body ?? null;
   const systemPromptMode = agentDefs?.systemPromptMode;
   const identityInSystemPrompt = systemPromptMode && identity;
-  const roleBlock =
-    identity && !identityInSystemPrompt ? `\n\n${identity}` : "";
-  const contextBlock = params.context?.trim()
-    ? `\n\n## Curated context from orchestrator\n${params.context.trim()}`
-    : "";
-  const fullTask = inheritsConversationContext
-    ? `${params.task}${contextBlock}`
-    : `${roleBlock}\n\n${modeHint}\n\n${params.task}${contextBlock}\n\n${summaryInstruction}`;
+  const fullTask = buildSubagentTaskMessage({
+    task: params.task,
+    role: identity && !identityInSystemPrompt ? identity : null,
+    modeHint,
+    skillBlock: options?.skillBlock,
+    context: params.context,
+    summaryInstruction,
+    inheritsConversationContext,
+  });
   // ── Claude Code CLI path ──
   if (agentDefs?.cli === "claude") {
     const sentinelFile = `/tmp/pi-claude-${id}-done`;
@@ -1746,7 +1804,16 @@ async function launchSubagent(
 
     // Always pass the task as the prompt — even for resumed sessions,
     // the caller's task is the follow-up instruction.
-    cmdParts.push(shellEscape(params.task));
+    cmdParts.push(
+      shellEscape(
+        buildSubagentTaskMessage({
+          task: params.task,
+          skillBlock: options?.skillBlock,
+          context: params.context,
+          inheritsConversationContext: true,
+        }),
+      ),
+    );
 
     const cdPrefix = effectiveCwd ? `cd ${shellEscape(effectiveCwd)} && ` : "";
     const command = `${cdPrefix}${cmdParts.join(" ")}; echo '__SUBAGENT_DONE_'$?'__'`;
@@ -1786,6 +1853,7 @@ async function launchSubagent(
       cli: "claude",
       sentinelFile,
       interactive: effectiveInteractive,
+      ...(worktree ? { worktree } : {}),
       statusState: createStatusState({
         source: "claude",
         startTimeMs: startTime,
@@ -1840,6 +1908,11 @@ async function launchSubagent(
     worktree,
     context: params.context ?? "",
     profile: params.agent ?? "general",
+    skills: (options?.selectedSkills ?? []).map((skill) => ({
+      name: skill.name,
+      scope: skill.scope,
+      filePath: skill.filePath,
+    })),
   };
   writeSubagentLoadout(subagentSessionFile, loadout);
 
@@ -1957,6 +2030,7 @@ async function launchSubagent(
     keepAlive,
     deliveredEntryCount: 0,
     turnsDelivered: 0,
+    ...(worktree ? { worktree } : {}),
     statusState: createStatusState({
       source: "pi",
       startTimeMs: startTime,
@@ -2143,10 +2217,14 @@ function unparkIfActive(running: RunningSubagent): void {
  * stays resumable by name. The watcher's own completion path sees
  * `closeReason` and skips the duplicate result.
  */
+/**
+ * Close a subagent's window and release its worktree. Returns the worktree
+ * report (null for shared subagents).
+ */
 function closeSubagent(
   running: RunningSubagent,
   reason: "orchestrator" | "idle",
-): void {
+): string | null {
   running.closeReason = reason;
   runningSubagents.delete(running.id);
   try {
@@ -2155,7 +2233,29 @@ function closeSubagent(
     // Already gone.
   }
   running.abortController?.abort();
+  const worktreeNote = releaseRunningWorktree(running);
   updateWidget();
+  return worktreeNote;
+}
+
+/**
+ * Release the worktree of a subagent whose window is closed: remove it when
+ * clean, keep it when it has uncommitted or untracked files. Idempotent (every
+ * close path calls it, the watcher again after exit) and never throws.
+ * Returns the report for the orchestrator, or null without a worktree.
+ */
+function releaseRunningWorktree(running: RunningSubagent): string | null {
+  if (!running.worktree) return null;
+  if (!running.worktreeRelease) {
+    running.worktreeRelease = releaseSubagentWorktree(running.worktree);
+  }
+  return describeWorktreeRelease(running.worktreeRelease);
+}
+
+/** Append the worktree report (if any) to a message for the orchestrator. */
+function withWorktreeNote(text: string, running: RunningSubagent): string {
+  const note = releaseRunningWorktree(running);
+  return note ? `${text}\n\n${note}` : text;
 }
 
 type FinalDelivery =
@@ -2178,7 +2278,10 @@ function resolveFinalDelivery(
   if (running.closeReason === "idle") {
     return {
       kind: "notice",
-      text: `Sub-agent "${running.name}" closed after ${keepAliveConfig.idleCloseMinutes} idle minutes. ${resumeHint}`,
+      text: withWorktreeNote(
+        `Sub-agent "${running.name}" closed after ${keepAliveConfig.idleCloseMinutes} idle minutes. ${resumeHint}`,
+        running,
+      ),
     };
   }
   if (
@@ -2188,7 +2291,10 @@ function resolveFinalDelivery(
   ) {
     return {
       kind: "notice",
-      text: `Sub-agent "${running.name}" exited after delivering its last result. ${resumeHint}`,
+      text: withWorktreeNote(
+        `Sub-agent "${running.name}" exited after delivering its last result. ${resumeHint}`,
+        running,
+      ),
     };
   }
   return { kind: "deliver" };
@@ -2290,6 +2396,7 @@ async function watchSubagent(
 
       closeSurface(surface);
       runningSubagents.delete(running.id);
+      releaseRunningWorktree(running);
 
       return {
         name,
@@ -2329,6 +2436,7 @@ async function watchSubagent(
 
     closeSurface(surface);
     runningSubagents.delete(running.id);
+    releaseRunningWorktree(running);
 
     return {
       name,
@@ -2346,6 +2454,7 @@ async function watchSubagent(
       closeSurface(surface);
     } catch {}
     runningSubagents.delete(running.id);
+    releaseRunningWorktree(running);
 
     if (signal.aborted) {
       return {
@@ -2432,6 +2541,7 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       "This is a fire-and-forget async tool: the call returns immediately with only an acknowledgement. " +
       "When the sub-agent finishes, the harness AUTOMATICALLY delivers its result as a steer message that wakes you up and starts a new turn — you do not need to do anything to receive it. " +
       "The subagent then STAYS OPEN by default: send follow-up work with subagent_message, and call subagent_close once you have accepted its result. Pass keepAlive: false for a one-shot run that closes itself. " +
+      "Pass skills when the task needs specialized guidance, for example principles for an architecture choice or typescript-best-practices for TypeScript edits. Use { name, scope: 'global' | 'local' } to choose a skill source. " +
       "DO NOT write polling loops, sleep/wait commands, tail/watch scripts, or repeatedly read session/log files to detect completion. DO NOT call subagents_list or any other tool to 'check' status. All of that is wasted work — the harness handles delivery for you. " +
       "DO NOT fabricate, assume, or summarize results after calling this tool. " +
       "After spawning, either end your turn immediately, or work on other independent tasks (including spawning more subagents in parallel). The harness will wake you with the result when it is ready.",
@@ -2440,6 +2550,7 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       "This is a fire-and-forget async tool: the call returns immediately with only an acknowledgement. " +
       "When the sub-agent finishes, the harness AUTOMATICALLY delivers its result as a steer message that wakes you up and starts a new turn — you do not need to do anything to receive it. " +
       "The subagent then STAYS OPEN by default: send follow-up work with subagent_message, and call subagent_close once you have accepted its result. Pass keepAlive: false for a one-shot run that closes itself. " +
+      "Pass skills when the task needs specialized guidance, for example principles for an architecture choice or typescript-best-practices for TypeScript edits. Use { name, scope: 'global' | 'local' } to choose a skill source. " +
       "DO NOT write polling loops, sleep/wait commands, tail/watch scripts, or repeatedly read session/log files to detect completion. DO NOT call subagents_list or any other tool to 'check' status. All of that is wasted work — the harness handles delivery for you. " +
       "DO NOT fabricate, assume, or summarize results after calling this tool. " +
       "After spawning, either end your turn immediately, or work on other independent tasks (including spawning more subagents in parallel). The harness will wake you with the result when it is ready.",
@@ -2509,6 +2620,49 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         };
       }
 
+      let skillCandidates: SkillCandidate[] = [];
+      if (params.skills?.length) {
+        try {
+          skillCandidates = await discoverSkillCandidates({
+            cwd: ctx.cwd,
+            agentDir: getAgentConfigDir(),
+            projectTrusted: ctx.isProjectTrusted(),
+            activeCommands: pi.getCommands(),
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          return {
+            content: [
+              { type: "text", text: `Could not discover skills: ${message}` },
+            ],
+            details: { error: "skill discovery failed" },
+          };
+        }
+      }
+      const selectedSkills = resolveRequestedSkills(
+        params.skills,
+        skillCandidates,
+      );
+      if (!selectedSkills.ok) {
+        return {
+          content: [{ type: "text", text: selectedSkills.error }],
+          details: { error: "invalid skills" },
+        };
+      }
+      let skillBlock = "";
+      try {
+        skillBlock = renderSkillBlocks(selectedSkills.skills);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return {
+          content: [
+            { type: "text", text: `Could not read selected skill: ${message}` },
+          ],
+          details: { error: "skill read failed" },
+        };
+      }
+
       // Validate prerequisites (need mux + a session file to derive the
       // artifact dir that hosts this session's name registry).
       if (!isMuxAvailable()) {
@@ -2554,7 +2708,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       // from then on uniqueRunningName tracks it via the running map.
       let running;
       try {
-        running = await launchSubagent(params, ctx);
+        running = await launchSubagent(params, ctx, {
+          skillBlock,
+          selectedSkills: selectedSkills.skills,
+        });
       } finally {
         if (reservedName) reservedNames.delete(reservedName);
       }
@@ -2587,7 +2744,7 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           pi.sendMessage(
             {
               customType: "subagent_result",
-              content: presentation,
+              content: withWorktreeNote(presentation, running),
               display: true,
               details: {
                 name: running.name,
@@ -2615,7 +2772,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           pi.sendMessage(
             {
               customType: "subagent_result",
-              content: `Sub-agent "${running.name}" error: ${err?.message ?? String(err)}`,
+              content: withWorktreeNote(
+                `Sub-agent "${running.name}" error: ${err?.message ?? String(err)}`,
+                running,
+              ),
               display: true,
               details: {
                 name: running.name,
@@ -3014,6 +3174,30 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         };
       }
 
+      // A worktree subagent's clean worktree was removed when it closed; its
+      // branch was kept. Recreate the worktree at the same path on that branch
+      // so the resumed agent runs where it did before.
+      let resumeWorktree: SubagentWorktree | undefined;
+      const savedWorktree = loadout.worktree;
+      if (loadout.isolation === "worktree" && savedWorktree?.repoRoot) {
+        try {
+          resumeWorktree = reattachSubagentWorktree({
+            id: savedWorktree.id,
+            repoRoot: savedWorktree.repoRoot,
+            path: savedWorktree.path,
+            branch: savedWorktree.branch,
+          });
+        } catch (error) {
+          const err =
+            `Cannot resume "${requestedName}" in its worktree: ` +
+            (error instanceof Error ? error.message : String(error));
+          return {
+            content: [{ type: "text" as const, text: err }],
+            details: { error: err },
+          };
+        }
+      }
+
       const resumedSessionId =
         entry.sessionId ?? getSessionId(sessionPath) ?? requestedName;
 
@@ -3156,6 +3340,7 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         keepAlive: resumeKeepAlive,
         deliveredEntryCount: entryCountBefore,
         turnsDelivered: 0,
+        ...(resumeWorktree ? { worktree: resumeWorktree } : {}),
         statusState: createStatusState({
           source: "pi",
           startTimeMs: startTime,
@@ -3195,7 +3380,7 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           pi.sendMessage(
             {
               customType: "subagent_result",
-              content: presentation,
+              content: withWorktreeNote(presentation, running),
               display: true,
               details: {
                 name,
@@ -3218,7 +3403,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           pi.sendMessage(
             {
               customType: "subagent_result",
-              content: `Resume error: ${err?.message ?? String(err)}`,
+              content: withWorktreeNote(
+                `Resume error: ${err?.message ?? String(err)}`,
+                running,
+              ),
               display: true,
               details: { name, error: err?.message },
             },
