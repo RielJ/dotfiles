@@ -1,7 +1,7 @@
 {
   "lastChangelogVersion": "1.0.1",
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.6-sol",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-5-5",
   "defaultThinkingLevel": "high",
   "compaction": {
     "reserveTokens": 20000,
@@ -45,10 +45,10 @@
     "npm:pi-lens",
     "npm:@ayulab/pi-rewind",
     "npm:@llblab/pi-telegram",
-    "npm:@vigolium/piolium",
     "../../personal/contribs/pi-agent-browser-native"
   ],
   "extensions": [
-    "-builtin:mcp"
+    "-builtin:mcp",
+    "-extensions/git-worktrees/src/index.ts"
   ]
 }
