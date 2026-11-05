@@ -3,9 +3,13 @@ return {
     "dmtrKovalenko/fff",
     name = "fff.nvim",
     version = "v0.10.5",
-    build = function()
-      require("fff.download").download_or_build_binary()
-    end,
+    -- Build from source instead of downloading the release binary. Releases use
+    -- the zlob walker, which reads only .gitignore files and skips global
+    -- excludes (~/.config/git/ignore), .git/info/exclude and .ignore, so
+    -- globally ignored dirs like .pi/ leak into the picker. The default cargo
+    -- features select the ripgrep walker, which honours all of them; its file
+    -- watcher falls back to libgit2, which honours them too.
+    build = "cargo build --release",
     opts = {
       frecency = {
         enabled = true,
