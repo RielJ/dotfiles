@@ -58,6 +58,11 @@ local function pre_format(bufnr)
   end
 end
 
+-- conform calls this per run with the buffer's directory.
+local function ruff_command(_, ctx)
+  return require("rielj.lsp.venv_bin").resolve("ruff", ctx.dirname)
+end
+
 local conform = require("conform")
 
 conform.setup({
@@ -95,6 +100,10 @@ conform.setup({
     rustywind = {
       append_args = { "--config", "rustywind.toml" },
     },
+    -- Same pinned ruff as the LSP and `make lint`. See rielj/lsp/venv_bin.lua.
+    ruff_fix = { command = ruff_command },
+    ruff_format = { command = ruff_command },
+    ruff_organize_imports = { command = ruff_command },
   },
   formatters_by_ft = {
     sql = { "sql_formatter" },
