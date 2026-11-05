@@ -42,6 +42,7 @@ Welcome to my dotfiles repository! This collection includes configurations for a
 ### Other Files
 
 - `user.js` - Firefox user.js configuration
+- `zen` - Zen browser user.js and mod list (link with `scripts/zen-link.sh`)
 - `packages.txt` - List of installed packages
 
 ## 🚀 Installation
