@@ -20,7 +20,9 @@ export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
 export PATH="/opt/homebrew/opt/postgresql@18/bin:$PATH"
 
-# fnm (Fast Node Manager) — must come AFTER homebrew PATH so fnm shims win
+# fnm (Fast Node Manager) is the only Node source; Homebrew's node is not installed.
+# Global CLIs: dotfiles/node/globals.txt, installed by scripts/node-globals.sh.
+# Must come AFTER homebrew PATH so fnm's bin wins.
 eval "$(fnm env --use-on-cd --shell zsh)"
 fnm use default --silent-if-unchanged 2>/dev/null
 

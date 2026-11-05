@@ -1,0 +1,33 @@
+# Global npm packages, installed into fnm's default Node by scripts/node-globals.sh.
+# Node comes only from fnm; Homebrew's node is not installed.
+# One pinned package per line.
+#
+# ~/.npmrc disables install scripts. npm 11 runs a dependency's install script
+# only when it is named in the allow-scripts line below (native builds and
+# binary downloads). @scarf/scarf is left out on purpose: it is analytics.
+allow-scripts: pnpm,agent-browser,rustywind,gitnexus,better-sqlite3,node-llama-cpp,onnxruntime-node,@ladybugdb/core,protobufjs,tree-sitter,tree-sitter-c,tree-sitter-c-sharp,tree-sitter-cpp,tree-sitter-dart,tree-sitter-go,tree-sitter-java,tree-sitter-javascript,tree-sitter-kotlin,tree-sitter-php,tree-sitter-proto,tree-sitter-python,tree-sitter-ruby,tree-sitter-rust,tree-sitter-typescript
+
+# Agent tooling
+@earendil-works/pi-coding-agent@1.5.0
+@tobilu/qmd@2.0.1
+agent-browser@0.38.2
+
+# Package managers and deploy CLIs
+pnpm@12.16.1
+vercel@53.3.2
+wrangler@4.146.0
+
+# Language servers and TypeScript (Mason provides the rest)
+typescript@7.0.2
+typescript-language-server@4.3.4
+vscode-langservers-extracted@4.10.0
+@nomicfoundation/solidity-language-server@0.8.22
+rustywind@0.24.3
+
+# Other CLIs
+@graphprotocol/graph-cli@0.97.1
+dmux@5.1.0
+gitnexus@1.6.2
+localtunnel@2.0.2
+puppeteer@24.40.0
+wscat@6.1.0

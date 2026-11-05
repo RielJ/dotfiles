@@ -143,3 +143,17 @@ kp() {
 }
 
 alias py='python'
+
+# fnm is the only Node on PATH. Homebrew may install `node` as a dependency of
+# another formula; keep it unlinked so that formula still works (it uses
+# /opt/homebrew/opt/node) but nothing else picks it up. Homebrew keeps an
+# unlinked keg unlinked across upgrades.
+brew() {
+  command brew "$@"
+  local brew_exit=$?
+  if [[ -e /opt/homebrew/bin/node ]]; then
+    command brew unlink node >/dev/null 2>&1 &&
+      print -u2 "brew: unlinked node (fnm is the only Node on PATH)"
+  fi
+  return $brew_exit
+}
