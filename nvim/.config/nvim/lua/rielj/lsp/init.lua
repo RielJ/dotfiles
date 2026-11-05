@@ -29,7 +29,12 @@ require("rielj.lsp.mason").setup()
 
 -- Applies to every server, before lspconfig's defaults and our after/lsp files.
 vim.lsp.config("*", {
-  capabilities = handlers.common_capabilities(),
+  capabilities = vim.tbl_deep_extend("force", handlers.common_capabilities(), {
+    -- Offer only UTF-16, the one encoding every server must support, so
+    -- buffers with several clients (tsc + biome + oxlint, pyrefly + ruff)
+    -- agree on column positions. Otherwise :checkhealth vim.lsp warns.
+    general = { positionEncodings = { "utf-16" } },
+  }),
   on_init = function(client)
     client.config.flags = client.config.flags or {}
     client.config.flags.allow_incremental_sync = true
@@ -52,8 +57,11 @@ vim.lsp.enable({
   "tailwindcss",
   -- TypeScript 7 native server (`tsc --lsp`). See after/lsp/tsc.lua.
   "tsc",
-  -- astral's Python type checker.
-  "ty",
+  -- Meta's Rust Python type checker. Fast (~2 ms per edit); strictness comes
+  -- from the project's [tool.pyrefly] config.
+  "pyrefly",
+  -- Ruff lint diagnostics and fix-all code actions. See after/lsp/ruff.lua.
+  "ruff",
   "yamlls",
 })
 

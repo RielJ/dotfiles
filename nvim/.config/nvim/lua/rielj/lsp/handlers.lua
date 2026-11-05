@@ -168,9 +168,9 @@ local function lsp_keymaps(client, bufnr)
     end, { desc = "Signature help" })
   end
   if has("textDocument/rename") then
-    bufmap(bufnr, "n", "<leader>lr", function()
-      vim.lsp.buf.rename(nil, { filter = M.rename_filter })
-    end, { desc = "Rename symbol" })
+    -- No `filter`: `vim.lsp.buf.rename` already restricts itself to clients
+    -- advertising textDocument/rename.
+    bufmap(bufnr, "n", "<leader>lr", vim.lsp.buf.rename, { desc = "Rename symbol" })
   end
   bufmap(bufnr, "n", "<leader>lf", function()
     vim.cmd.Format()
@@ -208,16 +208,6 @@ function M.common_on_attach(client, bufnr)
   lsp_keymaps(client, bufnr)
   lsp_highlight_document(client, bufnr)
   lsp_codelens(client, bufnr)
-end
-
---- Only offer rename to clients that implement it.
----
---- Note the colon: `client.supports_method(...)` passes the method name as
---- `self`, which throws and made the pcall below swallow every client.
-function M.rename_filter(clients)
-  return vim.tbl_filter(function(client)
-    return client:supports_method("textDocument/rename")
-  end, clients)
 end
 
 function M.common_capabilities()

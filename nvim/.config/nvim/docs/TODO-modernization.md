@@ -142,6 +142,18 @@ What it did surface:
       as "found existing packages". Verified **not** on `'runtimepath'` and `require("mini.pick")`
       fails, so nothing loads them — pure dead disk. Safe to `rm -rf`.
 
+  *Correction:* not entirely dead. `site/queries/` held 323 **symlinks into
+  `site/pack/core/opt/nvim-treesitter/runtime/queries`**, left by that experiment's main-branch
+  installer, and `site/` *is* on the runtimepath. Deleting the pack tree left 319 of them
+  dangling, so no language had a `highlights.scm` and every buffer rendered as plain text
+  (first noticed on `package.json`). The `'runtimepath'` check missed it because the pack
+  dir itself was never on it — only the links pointing in were. Fixed by relinking each to
+  `lazy/nvim-treesitter/runtime/queries/<lang>` (309; 10 had no source and were removed),
+  then rebuilding the 30 parsers whose old `.so` no longer matched the newer queries
+  (`lua`, `vim`, `sql`, `diff`, `kotlin`, `swift`, …) with
+  `require("nvim-treesitter").install(langs, { force = true })`. Result: 317/317 languages
+  load their highlights query.
+
 - [x] **17 treesitter query errors from stale parsers.** — root cause was *not* nvim-treesitter.
       A second parser directory, `$XDG_DATA_HOME/nvim/site/parser`, held **320 stale `.so`
       files (233 MB)**, 314 of them duplicating the managed set, installed by the same
@@ -398,6 +410,14 @@ dot, which passes the method name as `self` and throws; the surrounding `pcall` 
 error and returned false for every client. Same dot-vs-colon bug that was fixed in
 `tsgo-tools.lua` earlier. Fixed, and the now-pointless `pcall` and `null-ls` exclusion
 (null-ls is not installed) went with it.
+
+*Follow-up:* that fix was still wrong. `vim.lsp.buf.rename`'s `filter` is a per-client
+predicate (`fun(client): boolean`) that Neovim hands to `vim.tbl_filter`, but `rename_filter`
+was written as a list transformer. It got a single client, ran `tbl_filter` over that client's
+*fields*, and called `:supports_method` on a field value, so `<leader>lr` raised E5108. The
+filter was redundant anyway: `rename` already calls
+`get_clients({ method = "textDocument/rename" })`. Both the filter and `M.rename_filter` are
+gone, and `<leader>lr` maps straight to `vim.lsp.buf.rename`.
 
 ### Incidental cleanups
 
