@@ -1,6 +1,7 @@
 ---
 name: planner
 description: Architecture and implementation planning
+model: anthropic/claude-opus-5-5
 tools: read, grep, find, ls, bash
 thinking: high
 systemPromptMode: replace

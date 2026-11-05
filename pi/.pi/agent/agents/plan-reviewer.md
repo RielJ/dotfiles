@@ -1,6 +1,7 @@
 ---
 name: plan-reviewer
 description: Plan critic — reviews, challenges, and validates implementation plans
+model: anthropic/claude-opus-5-5
 tools: read, grep, find, ls, bash
 thinking: high
 systemPromptMode: replace

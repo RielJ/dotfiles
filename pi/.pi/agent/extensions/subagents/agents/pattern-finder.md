@@ -1,7 +1,7 @@
 ---
 name: pattern-finder
 description: Read-only pattern librarian. Finds existing implementations, usage examples, and test patterns similar to what the task describes, with code snippets
-model: anthropic/claude-sonnet-4-6
+model: anthropic/claude-sonnet-5-5
 tools: read, ls, ffgrep, fffind, symbol_search, module_report, read_symbol, read_enclosing
 system-prompt: append
 auto-exit: true

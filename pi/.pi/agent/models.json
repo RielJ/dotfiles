@@ -2,7 +2,28 @@
   "providers": {
     "openai-codex": {
       "modelOverrides": {
+        "gpt-5.6-luna": {
+          "contextWindow": 200000
+        },
+        "gpt-5.6-sol": {
+          "contextWindow": 200000
+        },
+        "gpt-5.6-terra": {
+          "contextWindow": 200000
+        },
+        "gpt-6-astra": {
+          "contextWindow": 200000
+        },
+        "gpt-6-luna": {
+          "contextWindow": 200000
+        },
+        "gpt-6-sol": {
+          "contextWindow": 200000
+        },
         "gpt-6.1-sol": {
+          "contextWindow": 200000
+        },
+        "gpt-6.1-terra": {
           "contextWindow": 200000
         }
       }
@@ -22,6 +43,9 @@
           "maxTokens": 64000
         },
         "claude-opus-5-5": {
+          "contextWindow": 200000
+        },
+        "claude-sonnet-5-5": {
           "contextWindow": 200000
         },
         "claude-fable-5": {

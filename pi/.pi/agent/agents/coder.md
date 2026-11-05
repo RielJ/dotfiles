@@ -2,7 +2,7 @@
 name: coder
 description: General-purpose coding agent for implementing features, fixing bugs, and writing code
 tools: read, write, edit, bash, grep, find, ls
-model: anthropic/claude-opus-4-6
+model: anthropic/claude-opus-5-5
 thinking: high
 systemPromptMode: replace
 inheritProjectContext: true

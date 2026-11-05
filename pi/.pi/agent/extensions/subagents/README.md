@@ -32,15 +32,17 @@ Every child prompt ends with final-report rules. The child leads with the result
 
 ## Models
 
-Subagents run on Claude regardless of the session default in `settings.json`. Each bundled profile pins a model, and `DEFAULT_SUBAGENT_MODEL` (`anthropic/claude-sonnet-4-6`) catches any profile that omits one.
+Subagents run on Claude regardless of the session default in `settings.json`. Each bundled profile pins a model, and `DEFAULT_SUBAGENT_MODEL` (`anthropic/claude-sonnet-5-5`) catches any profile that omits one.
 
 | Profile | Model |
 |---|---|
-| `general` | `anthropic/claude-sonnet-4-6` |
-| `explore` | `anthropic/claude-sonnet-4-6` |
-| `research` | `anthropic/claude-sonnet-4-6` |
+| `general` | `anthropic/claude-opus-5-5` |
+| `explore` | `anthropic/claude-sonnet-5-5` |
+| `research` | `anthropic/claude-sonnet-5-5` |
 | `review` | `anthropic/claude-opus-5-5` |
 | `implement` | `anthropic/claude-opus-5-5` |
+
+Profiles that write code, review, plan or red-team run on Opus 5.5. Read-only lookup, recon and research run on Sonnet 5.5.
 
 Precedence is `params.model`, then the profile's `model:` frontmatter, then `DEFAULT_SUBAGENT_MODEL`. Profiles in `~/.pi/agent/agents/` shadow bundled ones of the same name. Agents with `cli: claude` are exempt, since the Claude Code CLI uses its own model naming.
 

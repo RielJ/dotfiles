@@ -1,7 +1,7 @@
 ---
 name: locator
 description: Read-only file finder. Reports where code for a feature or topic lives, grouped by purpose, without reading file contents
-model: anthropic/claude-sonnet-4-6
+model: anthropic/claude-sonnet-5-5
 tools: ls, ffgrep, fffind
 system-prompt: append
 auto-exit: true

@@ -2,7 +2,7 @@
 name: scout
 description: Fast codebase recon — explores files, finds patterns, maps architecture
 tools: read, grep, find, ls
-model: anthropic/claude-sonnet-4-6
+model: anthropic/claude-sonnet-5-5
 thinking: low
 system-prompt: append
 auto-exit: true

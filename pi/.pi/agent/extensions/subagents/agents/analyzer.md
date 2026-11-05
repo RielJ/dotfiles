@@ -1,7 +1,7 @@
 ---
 name: analyzer
 description: Read-only implementation analyst. Explains how specific code works today, tracing data flow with file:line references
-model: anthropic/claude-sonnet-4-6
+model: anthropic/claude-sonnet-5-5
 tools: read, ls, ffgrep, fffind, symbol_search, module_report, read_symbol, read_enclosing
 system-prompt: append
 auto-exit: true

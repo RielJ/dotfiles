@@ -1,6 +1,7 @@
 ---
 name: reviewer
 description: Code review and quality checks
+model: anthropic/claude-opus-5-5
 tools: read, bash, grep, find, ls
 thinking: high
 systemPromptMode: replace

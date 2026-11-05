@@ -1,6 +1,7 @@
 ---
 name: builder
 description: Implementation and code generation
+model: anthropic/claude-opus-5-5
 tools: read, write, edit, bash, grep, find, ls
 thinking: high
 systemPromptMode: replace

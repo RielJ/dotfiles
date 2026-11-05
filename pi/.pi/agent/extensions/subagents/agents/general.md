@@ -1,7 +1,7 @@
 ---
 name: general
 description: General coding agent with read, write, shell, search, and diagnostics tools
-model: anthropic/claude-sonnet-4-6
+model: anthropic/claude-opus-5-5
 tools: read, write, edit, bash, ls, ffgrep, fffind, lens_diagnostics, symbol_search, module_report, read_symbol, read_enclosing
 system-prompt: append
 auto-exit: true

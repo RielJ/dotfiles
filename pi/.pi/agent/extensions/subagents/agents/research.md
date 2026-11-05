@@ -1,7 +1,7 @@
 ---
 name: research
 description: Read-only web and local knowledge-base research
-model: anthropic/claude-sonnet-4-6
+model: anthropic/claude-sonnet-5-5
 tools: read, ls, ffgrep, fffind, web_search, web_read, qmd_search, qmd_query, qmd_get
 system-prompt: append
 auto-exit: true

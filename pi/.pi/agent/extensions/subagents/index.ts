@@ -1095,7 +1095,7 @@ function updateWidget() {
 const SUBAGENT_CONTROL_TOOLS = ["ask_question"] as const;
 
 /** Model used when neither the caller nor the profile picks one. */
-export const DEFAULT_SUBAGENT_MODEL = "anthropic/claude-sonnet-4-6";
+export const DEFAULT_SUBAGENT_MODEL = "anthropic/claude-sonnet-5-5";
 
 /**
  * Build the child --tools allowlist.
