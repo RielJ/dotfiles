@@ -1,5 +1,7 @@
 ---@diagnostic disable: undefined-global
 local utils = require("rielj.luasnip")
+local rep = require("luasnip.extras").rep
+
 return {
   s(
     {
@@ -132,6 +134,42 @@ return {
     )
   ),
 }, {
+  s(
+    {
+      trig = "for(let i = 0",
+      dscr = "Indexed array loop",
+      priority = 2000,
+      wordTrig = false,
+      resolveExpandParams = function(_, line_to_cursor, matched_trigger, captures)
+        local row = vim.api.nvim_win_get_cursor(0)[1] - 1
+        local col = #line_to_cursor
+        local next_char = vim.api.nvim_get_current_line():sub(col + 1, col + 1)
+
+        return {
+          trigger = matched_trigger,
+          captures = captures,
+          clear_region = {
+            from = { row, col - #matched_trigger },
+            to = { row, col + (next_char == ")" and 1 or 0) },
+          },
+        }
+      end,
+    },
+    fmt(
+      [[
+for(let i = 0; i < {array}.length; i++) {{
+  const {element} = {array_ref}[i];
+  {body}
+}}
+]],
+      {
+        array = i(1, "array"),
+        element = i(2, "element"),
+        array_ref = rep(1),
+        body = i(0),
+      }
+    )
+  ),
   s(
     "/**",
     fmt(

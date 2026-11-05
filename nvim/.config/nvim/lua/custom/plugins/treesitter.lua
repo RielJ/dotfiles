@@ -42,7 +42,15 @@ return {
       local highlight_disabled = { latex = true }
 
       -- Languages where the treesitter indentexpr should NOT be used.
-      local indent_disabled = { yaml = true, python = true }
+      -- Neovim's runtime indent scripts handle JS/TS more reliably than the
+      -- experimental treesitter indenter, including LeetCode scratch buffers.
+      local indent_disabled = {
+        javascript = true,
+        typescript = true,
+        tsx = true,
+        yaml = true,
+        python = true,
+      }
 
       -- Detect buffers flagged as "big file" by whatever bigfile plugin is in use.
       local function is_bigfile(buf)
