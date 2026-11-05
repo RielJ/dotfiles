@@ -31,6 +31,54 @@ return {
 
       vim.api.nvim_set_hl(0, "GhostText", { fg = "#777777", bg = "#333333" })
 
+      --- Commit characters: with an item highlighted (via Tab), typing
+      --- punctuation or space inserts the item first, then the character.
+      --- `heap.` + Tab to `pop` + `(` gives `heap.pop(`, not `heap.(`.
+      ---
+      --- Tab navigates with SelectBehavior.Select, which leaves the buffer alone
+      --- until something commits. Without this, typing would discard the
+      --- highlighted item. Letters and digits still filter the list.
+      ---
+      --- cmp has a built-in commit path (core.lua `on_keymap`), but it only runs
+      --- for keys in `mapping` that have no handler for the mode, and only for
+      --- the server's `commitCharacters`, so in practice it never fires.
+      --- `cmp.core:confirm` is called directly rather than `cmp.confirm()`
+      --- because the public API drops `commit_character`. autopairs reads that
+      --- field to skip its own `()` insertion; without it, committing a
+      --- function with `(` produced `pop(()`.
+      ---@return table<string, cmp.Mapping>
+      local function commit_mappings()
+        -- Key notation for characters that cannot be written literally.
+        local notation = { ["<"] = "<lt>", ["|"] = "<Bar>", ["\\"] = "<Bslash>", [" "] = "<Space>" }
+        local maps = {}
+
+        local chars = { " " }
+        for byte = 33, 126 do
+          local char = string.char(byte)
+          -- `$` is an identifier character in JS/TS; `_` and alphanumerics are
+          -- keyword characters everywhere. Those keep filtering.
+          if not char:match("[%w_$]") then
+            table.insert(chars, char)
+          end
+        end
+
+        for _, char in ipairs(chars) do
+          maps[notation[char] or char] = cmp.mapping(function(fallback)
+            local entry = cmp.visible() and cmp.get_active_entry()
+            -- Per-buffer 'iskeyword' wins: `-` is part of a word in CSS and Lisp.
+            if not entry or vim.fn.match(char, [[\k]]) == 0 then
+              return fallback()
+            end
+            cmp.core:confirm(entry, {
+              behavior = cmp.ConfirmBehavior.Insert,
+              commit_character = char,
+            }, fallback)
+          end, { "i" })
+        end
+
+        return maps
+      end
+
       cmp.setup({
         -- enabled = true,
         -- matching = {},
@@ -173,103 +221,115 @@ return {
           { name = "treesitter" },
           { name = "crates" },
         },
-        mapping = cmp.mapping.preset.insert({
-          ["<C-d>"] = cmp.mapping.scroll_docs(-4),
-          ["<C-f>"] = cmp.mapping.scroll_docs(4),
-          -- TODO: potentially fix emmet nonsense
-          -- ["<C-j>"] = cmp.mapping(function(fallback)
-          --   if luasnip.expand_or_jumpable() then
-          --     luasnip.expand_or_jump()
-          --   end
-          -- end, {
-          --   "i",
-          --   "s",
-          -- }),
-          ["<C-l"] = cmp.mapping(function()
-            if luasnip.choice_active() then
-              luasnip.chane_choice(1)
-            end
-          end, {
-            "i",
-          }),
-          ["<Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_locally_jumpable()
-            elseif has_words_before() then
-              cmp.complete()
-            elseif check_backspace() then
-              fallback()
-            -- elseif is_emmet_active() then
-            --   return vim.fn["cmp#complete"]()
-            else
-              fallback()
-            end
-          end, {
-            "i",
-            "s",
-          }),
-          ["<S-Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            elseif luasnip.jumpable(-1) then
-              luasnip.jump(-1)
-            else
-              fallback()
-            end
-          end, {
-            "i",
-            "s",
-          }),
-          -- ["<C-Space>"] = cmp.mapping.complete(),
-          ["<C-Space>"] = cmp.mapping({
-            i = function()
+        -- Explicit maps first; commit characters only fill the gaps ("keep").
+        mapping = vim.tbl_extend(
+          "keep",
+          cmp.mapping.preset.insert({
+            ["<C-d>"] = cmp.mapping.scroll_docs(-4),
+            ["<C-f>"] = cmp.mapping.scroll_docs(4),
+            -- TODO: potentially fix emmet nonsense
+            -- ["<C-j>"] = cmp.mapping(function(fallback)
+            --   if luasnip.expand_or_jumpable() then
+            --     luasnip.expand_or_jump()
+            --   end
+            -- end, {
+            --   "i",
+            --   "s",
+            -- }),
+            ["<C-l"] = cmp.mapping(function()
+              if luasnip.choice_active() then
+                luasnip.chane_choice(1)
+              end
+            end, {
+              "i",
+            }),
+            -- Navigate with `Select`, not the default `Insert`. Insert writes each
+            -- highlighted item into the buffer as you pass it, and an item whose
+            -- edit replaces the trigger character (TypeScript's
+            -- `[Symbol.iterator]` turns `heap.` into `heap[Symbol`) destroys the
+            -- completion context: the menu closes and the next Tab re-opens a
+            -- fresh one instead of moving down. Ghost text still previews the
+            -- selection; <CR> commits it.
+            ["<Tab>"] = cmp.mapping(function(fallback)
               if cmp.visible() then
-                if #cmp.get_entries() > 1 then
+                cmp.select_next_item({ behavior = cmp.SelectBehavior.Select })
+              elseif luasnip.expand_or_jumpable() then
+                luasnip.expand_or_locally_jumpable()
+              elseif has_words_before() then
+                cmp.complete()
+              elseif check_backspace() then
+                fallback()
+              -- elseif is_emmet_active() then
+              --   return vim.fn["cmp#complete"]()
+              else
+                fallback()
+              end
+            end, {
+              "i",
+              "s",
+            }),
+            ["<S-Tab>"] = cmp.mapping(function(fallback)
+              if cmp.visible() then
+                cmp.select_prev_item({ behavior = cmp.SelectBehavior.Select })
+              elseif luasnip.jumpable(-1) then
+                luasnip.jump(-1)
+              else
+                fallback()
+              end
+            end, {
+              "i",
+              "s",
+            }),
+            -- ["<C-Space>"] = cmp.mapping.complete(),
+            ["<C-Space>"] = cmp.mapping({
+              i = function()
+                if cmp.visible() then
+                  if #cmp.get_entries() > 1 then
+                    cmp.confirm({
+                      behavior = cmp.ConfirmBehavior.Replace,
+                      select = true,
+                    })
+                  else
+                    cmp.complete()
+                  end
+                else
+                  cmp.complete()
+                end
+              end,
+              s = cmp.mapping.confirm({ select = true }),
+              c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+            }),
+            -- ["<C-Space>"] = cmp.mapping(function()
+            --   if cmp.visible() then
+            --     cmp.confirm({
+            --       behavior = cmp.ConfirmBehavior.Replace,
+            --       select = true,
+            --     })
+            --   else
+            --     cmp.complete()
+            --   end
+            -- end),
+            ["<C-e>"] = cmp.mapping({
+              i = cmp.mapping.abort(),
+              c = cmp.mapping.close(),
+            }),
+            ["<CR>"] = cmp.mapping({
+              i = function(fallback)
+                if cmp.visible() and cmp.get_active_entry() then
                   cmp.confirm({
                     behavior = cmp.ConfirmBehavior.Replace,
                     select = true,
                   })
                 else
-                  cmp.complete()
+                  fallback()
                 end
-              else
-                cmp.complete()
-              end
-            end,
-            s = cmp.mapping.confirm({ select = true }),
-            c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+              end,
+              s = cmp.mapping.confirm({ select = true }),
+              c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+            }),
           }),
-          -- ["<C-Space>"] = cmp.mapping(function()
-          --   if cmp.visible() then
-          --     cmp.confirm({
-          --       behavior = cmp.ConfirmBehavior.Replace,
-          --       select = true,
-          --     })
-          --   else
-          --     cmp.complete()
-          --   end
-          -- end),
-          ["<C-e>"] = cmp.mapping({
-            i = cmp.mapping.abort(),
-            c = cmp.mapping.close(),
-          }),
-          ["<CR>"] = cmp.mapping({
-            i = function(fallback)
-              if cmp.visible() and cmp.get_active_entry() then
-                cmp.confirm({
-                  behavior = cmp.ConfirmBehavior.Replace,
-                  select = true,
-                })
-              else
-                fallback()
-              end
-            end,
-            s = cmp.mapping.confirm({ select = true }),
-            c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
-          }),
-        }),
+          commit_mappings()
+        ),
       })
       -- The autopairs `confirm_done` hook lives in the autopairs spec, which is
       -- its one home. Registering it here as well ran it twice per completion,
