@@ -40,28 +40,77 @@ return {
     end,
   },
   {
-    "supermaven-inc/supermaven-nvim",
-    -- Inline completion only matters while typing.
+    -- Inline AI completion (ghost text) powered by Windsurf, formerly Codeium.
+    -- Replaces supermaven-nvim, whose backend stopped serving completions in
+    -- 2026. First use needs a free Windsurf account: run `:NeoCodeium auth`.
+    "monkoose/neocodeium",
+    -- Inline completion only matters while typing; the commands are needed
+    -- before that for `:NeoCodeium auth`.
     event = "InsertEnter",
-    config = function()
-      require("supermaven-nvim").setup({
-        keymaps = {
-          accept_suggestion = "<M-p>",
-          clear_suggestion = "<C-]>",
-          accept_word = "<C-j>",
-        },
-        ignore_filetypes = { cpp = true }, -- or { "cpp", }
-        color = {
-          suggestion_color = "#ffffff",
-          cterm = 244,
-        },
-        log_level = "info", -- set to "off" to disable logging completely
-        disable_inline_completion = false, -- disables inline completion for use with cmp
-        disable_keymaps = false, -- disables built in keymaps for more manual control
-        condition = function()
+    cmd = "NeoCodeium",
+    opts = {
+      filetypes = {
+        cpp = false,
+        help = false,
+        gitcommit = false,
+        gitrebase = false,
+        TelescopePrompt = false,
+        ["dap-repl"] = false,
+        ["."] = false,
+      },
+      filter = function(bufnr)
+        local path = vim.api.nvim_buf_get_name(bufnr)
+        local name = vim.fs.basename(path)
+        -- Never send secrets files to the server.
+        if name == ".env" or vim.startswith(name, ".env.") then
           return false
-        end, -- condition to check for stopping supermaven, `true` means to stop supermaven when the condition is true.
-      })
-    end,
+        end
+        -- No hints while solving LeetCode problems. `:NeoCodeium enable_buffer`
+        -- still overrides this for one buffer.
+        return not require("rielj.leetcode").contains(path)
+      end,
+    },
+    keys = {
+      {
+        "<M-p>",
+        function()
+          require("neocodeium").accept()
+        end,
+        mode = "i",
+        desc = "AI: accept suggestion",
+      },
+      {
+        "<C-j>",
+        function()
+          require("neocodeium").accept_word()
+        end,
+        mode = "i",
+        desc = "AI: accept word",
+      },
+      {
+        "<C-]>",
+        function()
+          require("neocodeium").clear()
+        end,
+        mode = "i",
+        desc = "AI: clear suggestion",
+      },
+      {
+        "<M-]>",
+        function()
+          require("neocodeium").cycle_or_complete()
+        end,
+        mode = "i",
+        desc = "AI: next suggestion",
+      },
+      {
+        "<M-[>",
+        function()
+          require("neocodeium").cycle_or_complete(-1)
+        end,
+        mode = "i",
+        desc = "AI: previous suggestion",
+      },
+    },
   },
 }
