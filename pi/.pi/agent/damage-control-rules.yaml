@@ -1,12 +1,13 @@
+# Enforced by extensions/damage-control (every session, including subagents).
+# A match shows an approval prompt; no answer within 2 minutes blocks it.
+# `hard: true` refuses without asking (the absolute rules in AGENTS.md).
+# Patterns are JavaScript regexes matched against the whole bash command.
+#
+# rm -r / rm -f are checked in code (extensions/damage-control/policy.ts):
+# deletes inside /tmp, /private/tmp, /var/folders or $TMPDIR and non-recursive
+# rm -f run without a prompt; recursive deletes elsewhere and $VAR targets ask.
+# The pkill/pgrep checks live there too.
 bashToolPatterns:
-  - pattern: '\brm\s+(-[^\s]*)*-[rRf]'
-    reason: rm with recursive or force flags
-  - pattern: '\brm\s+-[rRf]'
-    reason: rm with recursive or force flags
-  - pattern: '\brm\s+--recursive'
-    reason: rm with --recursive flag
-  - pattern: '\brm\s+--force'
-    reason: rm with --force flag
   - pattern: '\bsudo\s+rm\b'
     reason: sudo rm
   - pattern: '\brmdir\s+--ignore-fail-on-non-empty'
@@ -18,15 +19,19 @@ bashToolPatterns:
   - pattern: '\bchown\s+-[Rr].*\broot\b'
     reason: recursive chown to root
   - pattern: '\bgit\s+reset\s+--hard\b'
-    reason: git reset --hard (use --soft or stash)
+    reason: git reset --hard is forbidden (use --soft or stash)
+    hard: true
   - pattern: '\bgit\s+clean\s+(-[^\s]*)*-[fd]'
     reason: git clean with force/directory flags
   - pattern: '\bgit\s+push\s+.*--force'
     reason: git push --force is forbidden — never force-push
+    hard: true
   - pattern: '\bgit\s+push\s+(-[^\s]*)*-f\b'
     reason: git push -f is forbidden — never force-push
+    hard: true
   - pattern: '\bgit\s+commit\s+.*--amend\b'
     reason: git commit --amend is forbidden on pushed commits — make a new commit instead
+    hard: true
   - pattern: '\bgit\s+stash\s+clear\b'
     reason: git stash clear (deletes ALL stashes)
   - pattern: '\bgit\s+reflog\s+expire\b'
@@ -34,7 +39,8 @@ bashToolPatterns:
   - pattern: '\bgit\s+gc\s+.*--prune=now'
     reason: git gc --prune=now (can lose dangling commits)
   - pattern: '\bgit\s+filter-branch\b'
-    reason: git filter-branch (rewrites entire history)
+    reason: git filter-branch is forbidden (rewrites entire history)
+    hard: true
   - pattern: '\bgit\s+checkout\s+--\s*\.'
     reason: Discards all uncommitted changes
     ask: true

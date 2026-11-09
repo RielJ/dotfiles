@@ -62,7 +62,8 @@
 
 | Rule | Enforced by |
 |---|---|
-| No force push, `--amend`, `filter-branch`, `reset --hard` | `damage-control-rules.yaml` (blocked) |
+| No force push, `--amend`, `filter-branch`, `reset --hard` | `extensions/damage-control` (`hard: true` rules in `damage-control-rules.yaml`: blocked, no prompt) |
+| Other risky commands and protected paths (rm -r outside temp, `pkill -f`, secrets, read-only paths) | `extensions/damage-control`: Block/Allow once prompt; no answer in 2 min blocks |
 | No `git commit` / `git push` unless asked | text only; `/commit` and `/pr` ask for confirmation |
 | ffgrep/fffind instead of grep/find | text only |
 | Prefer `@/` alias imports | text only (project lint where configured) |
