@@ -11,17 +11,32 @@
  *   Main agent synthesizes both reviews.
  */
 
-import * as fs from "node:fs";
 import type {
   ExtensionAPI,
   ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { runAgent, runExploration, resolveTaskContext, extractConversationContext, MODELS } from "./_shared.js";
 import { parseWaitFlag, shouldRunAsync } from "./_async.js";
 import { type LiveRun, RunTracker } from "./_background.js";
-import { addMember, createRun, followupHint, markDelivered, type MultiRun, readOutput, runFollowup, saveRun } from "./multirun.js";
+import {
+  extractConversationContext,
+  MODELS,
+  resolveTaskContext,
+  runAgent,
+  runExploration,
+} from "./_shared.js";
+import {
+  addMember,
+  createRun,
+  followupHint,
+  MEMBER_LIMITS,
+  type MultiRun,
+  markDelivered,
+  runFollowup,
+  saveRun,
+  settleOutput,
+} from "./multirun.js";
 
 // ── Module Metadata ─────────────────────────────────────────────────
 
@@ -57,8 +72,8 @@ with its full context. Without run, it targets the most recently delivered run.`
 
 // ── Config ──────────────────────────────────────────────────────────
 
-const PHASE_0_TIMEOUT_MS = 60_000;  // 60s for exploration
-const PHASE_1_TIMEOUT_MS = 360_000; // 6 min for review
+const PHASE_0_TIMEOUT_MS = 60_000; // 60s for exploration
+// Phase 1 limits live in MEMBER_LIMITS (multirun.ts), shared with follow-ups.
 
 // Phase 1 prompts — reviewers get Phase 0 context, do targeted verification, write review
 
@@ -136,10 +151,31 @@ interface Reviewer {
 
 // Letters stay stable: adding a reviewer appends a new letter.
 const REVIEWERS: Reviewer[] = [
-  { key: "A", label: "Opus 5.5", model: MODELS.plan, prompt: REVIEWER_PROMPT_A },
-  { key: "B", label: "GPT 5.6 Sol", model: MODELS.diversity, prompt: REVIEWER_PROMPT_B, thinking: "low" },
-  { key: "C", label: "GLM 5.2", model: MODELS.diversity2, prompt: REVIEWER_PROMPT_B },
-  { key: "D", label: "Opus 5", model: MODELS.planAlt, prompt: REVIEWER_PROMPT_A },
+  {
+    key: "A",
+    label: "Opus 5.5",
+    model: MODELS.plan,
+    prompt: REVIEWER_PROMPT_A,
+  },
+  {
+    key: "B",
+    label: "GPT 5.6 Sol",
+    model: MODELS.diversity,
+    prompt: REVIEWER_PROMPT_B,
+    thinking: "low",
+  },
+  {
+    key: "C",
+    label: "GLM 5.2",
+    model: MODELS.diversity2,
+    prompt: REVIEWER_PROMPT_B,
+  },
+  {
+    key: "D",
+    label: "Opus 5",
+    model: MODELS.planAlt,
+    prompt: REVIEWER_PROMPT_A,
+  },
 ];
 
 /** One reviewer's outcome. The review text stays in `file` for the main agent to read. */
@@ -165,7 +201,11 @@ async function detectReviewTarget(
   let base = "main";
   const mainCheck = await pi.exec("git", ["rev-parse", "--verify", "main"]);
   if (mainCheck.code !== 0) {
-    const masterCheck = await pi.exec("git", ["rev-parse", "--verify", "master"]);
+    const masterCheck = await pi.exec("git", [
+      "rev-parse",
+      "--verify",
+      "master",
+    ]);
     if (masterCheck.code === 0) base = "master";
   }
 
@@ -174,8 +214,16 @@ async function detectReviewTarget(
       return { target: "", error: "Switch to a feature branch for PR review" };
     }
 
-    const { stdout: diffStat } = await pi.exec("git", ["diff", "--stat", `${base}...${branchName}`]);
-    const { stdout: changedFiles } = await pi.exec("git", ["diff", "--name-only", `${base}...${branchName}`]);
+    const { stdout: diffStat } = await pi.exec("git", [
+      "diff",
+      "--stat",
+      `${base}...${branchName}`,
+    ]);
+    const { stdout: changedFiles } = await pi.exec("git", [
+      "diff",
+      "--name-only",
+      `${base}...${branchName}`,
+    ]);
 
     return {
       target: [
@@ -190,7 +238,11 @@ async function detectReviewTarget(
 
   // Auto-detect
   if (branchName && !["main", "master", "develop"].includes(branchName)) {
-    const { stdout: changedFiles } = await pi.exec("git", ["diff", "--name-only", `${base}...${branchName}`]);
+    const { stdout: changedFiles } = await pi.exec("git", [
+      "diff",
+      "--name-only",
+      `${base}...${branchName}`,
+    ]);
     if (changedFiles.trim()) {
       return {
         target: [
@@ -221,7 +273,12 @@ async function detectReviewTarget(
 
 export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   let currentCtx: ExtensionContext | undefined;
-  const tracker = new RunTracker({ widgetKey: "dual-review", title: "Review", noun: "review", isEnabled });
+  const tracker = new RunTracker({
+    widgetKey: "dual-review",
+    title: "Review",
+    noun: "review",
+    isEnabled,
+  });
 
   pi.on("session_start", async (_ev, ctx) => {
     currentCtx = ctx;
@@ -250,14 +307,18 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     tracker.setPhase(live, "resolving refs");
 
     let reviewTarget = inputReviewTarget;
-    const { resolvedTask: resolvedTarget, references } = await resolveTaskContext(cwd, reviewTarget);
+    const { resolvedTask: resolvedTarget, references } =
+      await resolveTaskContext(cwd, reviewTarget);
     if (references.length > 0) {
       reviewTarget = resolvedTarget;
     }
 
     // ── Phase 0: Exploration (Sonnet + gitnexus + code-review-graph) ──
     tracker.setPhase(live, "exploring");
-    tracker.setAgent(live, "Explorer", { status: "running", activity: "starting" });
+    tracker.setAgent(live, "Explorer", {
+      status: "running",
+      activity: "starting",
+    });
 
     const explorationFindings = await runExploration({
       cwd,
@@ -266,7 +327,8 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       preContext: userContext ? `Focus: ${userContext}` : undefined,
       timeoutMs: PHASE_0_TIMEOUT_MS,
       signal,
-      onActivity: (activity) => tracker.setAgent(live, "Explorer", { activity }),
+      onActivity: (activity) =>
+        tracker.setAgent(live, "Explorer", { activity }),
     });
 
     tracker.setAgent(live, "Explorer", {
@@ -302,7 +364,14 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     // Starts are staggered by a second to avoid a burst of simultaneous spawns.
     const tools = "read,write,grep,find,ls,bash";
     const members = REVIEWERS.map((reviewer) =>
-      addMember(run, { key: reviewer.key, label: reviewer.label, model: reviewer.model, thinking: reviewer.thinking, tools, prompt: reviewer.prompt }),
+      addMember(run, {
+        key: reviewer.key,
+        label: reviewer.label,
+        model: reviewer.model,
+        thinking: reviewer.thinking,
+        tools,
+        prompt: reviewer.prompt,
+      }),
     );
     saveRun(run);
     const runs: Promise<ReviewResult>[] = [];
@@ -311,7 +380,10 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       if (signal.aborted) break;
       const member = members[i];
       const file = member.outputFile;
-      tracker.setAgent(live, reviewer.label, { status: "running", activity: "starting" });
+      tracker.setAgent(live, reviewer.label, {
+        status: "running",
+        activity: "starting",
+      });
       runs.push(
         runAgent({
           cwd,
@@ -321,15 +393,20 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
           task: `${enrichedTask}\n\n## Output File\nWrite your FULL review to: ${file}`,
           ...(reviewer.thinking ? { thinking: reviewer.thinking } : {}),
           sessionFile: member.sessionFile,
-          timeoutMs: PHASE_1_TIMEOUT_MS,
+          ...MEMBER_LIMITS,
           signal,
-          onActivity: (activity) => tracker.setAgent(live, reviewer.label, { activity }),
+          onActivity: (activity) =>
+            tracker.setAgent(live, reviewer.label, { activity }),
         }).then((r) => {
-          // Keep stdout as the review when the model didn't write the file.
-          if (!readOutput(file) && r.output) fs.writeFileSync(file, r.output, "utf-8");
-          const status = r.exitCode === 0 && readOutput(file) ? "done" : "error";
+          // A written review counts even if the process was killed after writing it.
+          const { status, failure } = settleOutput(file, r);
           member.status = status;
-          tracker.setAgent(live, reviewer.label, { status, activity: status === "done" ? "review ready" : "failed" });
+          if (failure) member.failure = failure;
+          tracker.setAgent(live, reviewer.label, {
+            status,
+            activity:
+              status === "done" ? "review ready" : (failure ?? "failed"),
+          });
           return { key: reviewer.key, label: reviewer.label, file, status };
         }),
       );
@@ -351,7 +428,11 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     external?: AbortSignal,
   ): { run: MultiRun; done: Promise<string | undefined> } {
     // Every reviewer's session and review are saved so review_followup can resume one later.
-    const run = createRun("review", userContext || reviewTarget.slice(0, 200), cwd);
+    const run = createRun(
+      "review",
+      userContext || reviewTarget.slice(0, 200),
+      cwd,
+    );
     const live = tracker.begin(run.id, external);
     const done = runDualReview(run, reviewTarget, userContext, cwd, live).then(
       (results) => {
@@ -373,13 +454,22 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   /** Wake the main agent after its current turn with the combined result. */
   function deliver(content: string, runId: string): void {
     pi.sendMessage(
-      { customType: "multi_review_result", content, display: true, details: { run: runId } },
+      {
+        customType: "multi_review_result",
+        content,
+        display: true,
+        details: { run: runId },
+      },
       { triggerTurn: true, deliverAs: "followUp" },
     );
   }
 
   /** Detach a run: deliver its result (or failure) when it finishes. */
-  function runInBackground(reviewTarget: string, userContext: string, cwd: string): MultiRun {
+  function runInBackground(
+    reviewTarget: string,
+    userContext: string,
+    cwd: string,
+  ): MultiRun {
     const { run, done } = startReview(reviewTarget, userContext, cwd);
     done.then(
       (message) => {
@@ -402,7 +492,10 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   ): Promise<void> {
     if (shouldRunAsync(!wait)) {
       const run = runInBackground(reviewTarget, userContext, ctx.cwd);
-      ctx.ui.notify(`Review run ${run.id} started in the background. Cancel with /review-stop ${run.id}.`, "info");
+      ctx.ui.notify(
+        `Review run ${run.id} started in the background. Cancel with /review-stop ${run.id}.`,
+        "info",
+      );
       return;
     }
     const { run, done } = startReview(reviewTarget, userContext, ctx.cwd);
@@ -421,7 +514,11 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
   // ── Build synthesis message ─────────────────────────────────────
 
-  function buildSynthesisMessage(userContext: string, results: ReviewResult[], run: MultiRun): string {
+  function buildSynthesisMessage(
+    userContext: string,
+    results: ReviewResult[],
+    run: MultiRun,
+  ): string {
     const parts: string[] = [];
     parts.push(`# Multi-Model Code Review Complete\n`);
     if (userContext) {
@@ -442,12 +539,24 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     parts.push(`---\n`);
     parts.push(`**Synthesize all reviews:**`);
     parts.push(`1. Read all review files above using the read tool`);
-    parts.push(`2. Check each reported issue against the code before accepting it. Drop issues you can refute and say why.`);
-    parts.push(`3. 🔴 **Consensus blockers** — Merge-blocking issues found by MULTIPLE reviewers (file:line, why, how to show it fails)`);
-    parts.push(`4. 🟡 **Single-reviewer blockers** — Issues found by only ONE reviewer, marked confirmed or unconfirmed after your check`);
-    parts.push(`5. ❓ **Unconfirmed** — What nobody could confirm, and where reviewers looked`);
-    parts.push(`6. 📋 **Verdict** — APPROVE or REQUEST CHANGES, with the blocking fixes required`);
-    parts.push(`7. To ask one reviewer to clarify or re-check a finding, use review_followup.`);
+    parts.push(
+      `2. Check each reported issue against the code before accepting it. Drop issues you can refute and say why.`,
+    );
+    parts.push(
+      `3. 🔴 **Consensus blockers** — Merge-blocking issues found by MULTIPLE reviewers (file:line, why, how to show it fails)`,
+    );
+    parts.push(
+      `4. 🟡 **Single-reviewer blockers** — Issues found by only ONE reviewer, marked confirmed or unconfirmed after your check`,
+    );
+    parts.push(
+      `5. ❓ **Unconfirmed** — What nobody could confirm, and where reviewers looked`,
+    );
+    parts.push(
+      `6. 📋 **Verdict** — APPROVE or REQUEST CHANGES, with the blocking fixes required`,
+    );
+    parts.push(
+      `7. To ask one reviewer to clarify or re-check a finding, use review_followup.`,
+    );
     parts.push(followupHint(run));
 
     return parts.join("\n");
@@ -499,11 +608,16 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   // ── /review-stop command ────────────────────────────────────────
 
   pi.registerCommand("review-stop", {
-    description: "Cancel background review runs: /review-stop [run-id|all] (default: newest)",
+    description:
+      "Cancel background review runs: /review-stop [run-id|all] (default: newest)",
     handler: async (args, ctx) => {
       const { stopped, error } = tracker.stop(args ?? "");
       if (error) ctx.ui.notify(error, "warning");
-      else ctx.ui.notify(`Stopped review run${stopped.length === 1 ? "" : "s"}: ${stopped.join(", ")}. Partial output stays on disk.`, "info");
+      else
+        ctx.ui.notify(
+          `Stopped review run${stopped.length === 1 ? "" : "s"}: ${stopped.join(", ")}. Partial output stays on disk.`,
+          "info",
+        );
     },
   });
 
@@ -522,44 +636,79 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       ),
       pr: Type.Optional(
         Type.Boolean({
-          description: "If true, review current branch as PR against main/master",
+          description:
+            "If true, review current branch as PR against main/master",
         }),
       ),
       async: Type.Optional(
-        Type.Boolean({ description: "Default true: run in the background and deliver reviews as a follow-up message. False: block and return the reviews." }),
+        Type.Boolean({
+          description:
+            "Default true: run in the background and deliver reviews as a follow-up message. False: block and return the reviews.",
+        }),
       ),
     }),
     async execute(_id, params, signal, _onUpdate, ctx) {
-      const { target, error } = await detectReviewTarget(pi, params.pr ?? false);
+      const { target, error } = await detectReviewTarget(
+        pi,
+        params.pr ?? false,
+      );
       if (error) throw new Error(error);
 
       if (shouldRunAsync(params.async)) {
         const run = runInBackground(target, params.focus || "", ctx.cwd);
-        return { content: [{ type: "text", text: startedText(run) }], details: { async: true, run: run.id } };
+        return {
+          content: [{ type: "text", text: startedText(run) }],
+          details: { async: true, run: run.id },
+        };
       }
-      const { run, done } = startReview(target, params.focus || "", ctx.cwd, signal);
+      const { run, done } = startReview(
+        target,
+        params.focus || "",
+        ctx.cwd,
+        signal,
+      );
       const message = await done;
       if (!message) throw new Error(`Review run ${run.id} was cancelled.`);
-      return { content: [{ type: "text", text: message }], details: { async: false, run: run.id } };
+      return {
+        content: [{ type: "text", text: message }],
+        details: { async: false, run: run.id },
+      };
     },
     renderCall(args, theme) {
       const preview = (args.focus || "auto-detect changes").slice(0, 60);
       return new Text(
-        theme.fg("toolTitle", theme.bold("review_multi ")) + theme.fg("dim", preview),
-        0, 0,
+        theme.fg("toolTitle", theme.bold("review_multi ")) +
+          theme.fg("dim", preview),
+        0,
+        0,
       );
     },
     renderResult(result, _opts, theme) {
-      const details = result.details as { async?: boolean; run?: string } | undefined;
+      const details = result.details as
+        | { async?: boolean; run?: string }
+        | undefined;
       if (details?.async) {
-        return new Text(theme.fg("warning", "⏳ reviewing in background") + theme.fg("dim", ` — run ${details.run}`), 0, 0);
+        return new Text(
+          theme.fg("warning", "⏳ reviewing in background") +
+            theme.fg("dim", ` — run ${details.run}`),
+          0,
+          0,
+        );
       }
-      const text = result.content[0]?.type === "text" ? result.content[0].text : "";
-      const count = (text.match(/^## Review [A-Z] \(.*\)\nFull review written to:/gm) ?? []).length;
-      const label = count > 0 ? `${count} review${count === 1 ? "" : "s"} ready` : "reviews generated";
+      const text =
+        result.content[0]?.type === "text" ? result.content[0].text : "";
+      const count = (
+        text.match(/^## Review [A-Z] \(.*\)\nFull review written to:/gm) ?? []
+      ).length;
+      const label =
+        count > 0
+          ? `${count} review${count === 1 ? "" : "s"} ready`
+          : "reviews generated";
       return new Text(
-        theme.fg("success", `✓ ${label}`) + theme.fg("dim", " — synthesize below"),
-        0, 0,
+        theme.fg("success", `✓ ${label}`) +
+          theme.fg("dim", " — synthesize below"),
+        0,
+        0,
       );
     },
   });
@@ -572,9 +721,17 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     description:
       "Continue one reviewer from the most recently delivered /review run (or a given run id) with its full saved context, e.g. to ask Review D to justify or re-check a finding. Returns that reviewer's answer.",
     parameters: Type.Object({
-      key: Type.String({ description: "Reviewer letter: A (Opus 5.5), B (GPT 5.6 Sol), C (GLM 5.2), D (Opus 5)" }),
+      key: Type.String({
+        description:
+          "Reviewer letter: A (Opus 5.5), B (GPT 5.6 Sol), C (GLM 5.2), D (Opus 5)",
+      }),
       message: Type.String({ description: "What to ask or re-check" }),
-      run: Type.Optional(Type.String({ description: "Run id shown in the delivered reviews; default: the most recently delivered /review run in this directory" })),
+      run: Type.Optional(
+        Type.String({
+          description:
+            "Run id shown in the delivered reviews; default: the most recently delivered /review run in this directory",
+        }),
+      ),
     }),
     async execute(_id, params, signal, onUpdate, ctx) {
       const follow: { live?: LiveRun; label: string } = { label: "" };
@@ -586,32 +743,70 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
         cwd: ctx.cwd,
         signal,
         onStart: (run, member) => {
-          follow.live = tracker.begin(`${run.id}-${member.key.toLowerCase()}${member.followups + 1}`, signal, `review ${run.id} follow-up`);
+          follow.live = tracker.begin(
+            `${run.id}-${member.key.toLowerCase()}${member.followups + 1}`,
+            signal,
+            `review ${run.id} follow-up`,
+          );
           follow.label = member.label;
-          tracker.setAgent(follow.live, follow.label, { status: "running", activity: "starting" });
+          tracker.setAgent(follow.live, follow.label, {
+            status: "running",
+            activity: "starting",
+          });
           return follow.live.controller.signal;
         },
         onActivity: (activity) => {
-          if (follow.live) tracker.setAgent(follow.live, follow.label, { activity });
-          onUpdate?.({ content: [{ type: "text", text: `Review ${params.key.toUpperCase()}: ${activity}` }], details: {} });
+          if (follow.live)
+            tracker.setAgent(follow.live, follow.label, { activity });
+          onUpdate?.({
+            content: [
+              {
+                type: "text",
+                text: `Review ${params.key.toUpperCase()}: ${activity}`,
+              },
+            ],
+            details: {},
+          });
         },
       }).catch((err: unknown) => {
-        if (follow.live) tracker.finish(follow.live, follow.live.stopped ? "stopped" : "failed");
+        if (follow.live)
+          tracker.finish(
+            follow.live,
+            follow.live.stopped ? "stopped" : "failed",
+          );
         throw err;
       });
       if (follow.live) {
-        const outcome = result.ok ? "review ready" : follow.live.stopped ? "stopped" : "failed";
-        tracker.setAgent(follow.live, follow.label, { status: result.ok ? "done" : "error", activity: outcome });
+        const outcome = result.ok
+          ? "review ready"
+          : follow.live.stopped
+            ? "stopped"
+            : "failed";
+        tracker.setAgent(follow.live, follow.label, {
+          status: result.ok ? "done" : "error",
+          activity: outcome,
+        });
         tracker.finish(follow.live, result.ok ? "done" : outcome);
       }
       const head = `## Review ${result.member.key} (${result.member.label}), follow-up ${result.member.followups}`;
-      const text = result.ok ? `${head}\n\n${result.output}` : `${head}\n\n⚠️ Follow-up failed: ${result.output}`;
-      return { content: [{ type: "text", text }], details: { run: result.run.id, key: result.member.key, ok: result.ok } };
+      const text = result.ok
+        ? `${head}\n\n${result.output}`
+        : `${head}\n\n⚠️ Follow-up failed: ${result.output}`;
+      return {
+        content: [{ type: "text", text }],
+        details: { run: result.run.id, key: result.member.key, ok: result.ok },
+      };
     },
     renderCall(args, theme) {
       return new Text(
-        theme.fg("toolTitle", theme.bold(`review_followup ${String(args.key ?? "").toUpperCase()} `)) + theme.fg("dim", String(args.message ?? "").slice(0, 60)),
-        0, 0,
+        theme.fg(
+          "toolTitle",
+          theme.bold(
+            `review_followup ${String(args.key ?? "").toUpperCase()} `,
+          ),
+        ) + theme.fg("dim", String(args.message ?? "").slice(0, 60)),
+        0,
+        0,
       );
     },
   });
@@ -619,7 +814,8 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
   // ── Ctrl+Shift+R shortcut ──────────────────────────────────────
 
   pi.registerShortcut("ctrl+shift+r", {
-    description: "Multi-model review of git changes (Claude Opus 5.5 + GPT 5.6 Sol + GLM 5.2 + Opus 5)",
+    description:
+      "Multi-model review of git changes (Claude Opus 5.5 + GPT 5.6 Sol + GLM 5.2 + Opus 5)",
     handler: async () => {
       pi.sendUserMessage("/review-changes", { deliverAs: "followUp" });
     },

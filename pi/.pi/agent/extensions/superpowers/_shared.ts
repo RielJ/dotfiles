@@ -6,9 +6,9 @@
  * (extensions, model config) only need to change in one place.
  *
  * Architecture:
- * - Phase 0: Sonnet explorer with gitnexus + code-review-graph (cheap, shared)
+ * - Phase 0: Sonnet explorer with pi-fff + graph CLIs via bash (cheap, shared)
  * - Phase 1: Opus + GPT planners/reviewers (parallel, both get Phase 0 output)
- * - Subagents run with --no-extensions + selective whitelist
+ * - Subagents run with --no-extensions + selective whitelist (_subagent-extensions.ts)
  */
 
 import { execSync, spawn } from "node:child_process";
@@ -16,6 +16,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { mergeToolAllowlist, resolveExtensions, type SubagentExtension } from "./_subagent-extensions.js";
 
 // ── Models ──────────────────────────────────────────────────────────
 
@@ -195,61 +196,10 @@ export async function resolveTaskContext(
 
 // ── Extension Whitelisting ──────────────────────────────────────────
 
-/**
- * Extension paths that provide material benefit to subagents.
- * Resolved once per session and cached.
- */
-const EXTENSION_PATHS = {
-  /** pi-fff: SIMD-accelerated grep/find with frecency ranking */
-  piFff: path.join(
-    os.homedir(),
-    ".pi/agent/git/github.com/SamuelLHuber/pi-fff/src/index.ts",
-  ),
-  /** condensed-milk: semantic compression of bash output (token savings) */
-  condensedMilk: (() => {
-    try {
-      const npmRoot = execSync("npm root -g", {
-        encoding: "utf-8",
-        timeout: 5_000,
-      }).trim();
-      return path.join(npmRoot, "@tomooshi/condensed-milk-pi/index.ts");
-    } catch {
-      return "";
-    }
-  })(),
-  /** gitnexus: knowledge graph with execution flows, symbol context, blast radius */
-  gitnexus: path.join(
-    os.homedir(),
-    ".pi/agent/git/github.com/tintinweb/pi-gitnexus/src/index.ts",
-  ),
-} as const;
-
-function buildExtensionArgs(keys: (keyof typeof EXTENSION_PATHS)[]): string[] {
-  const args: string[] = [];
-  for (const key of keys) {
-    const p = EXTENSION_PATHS[key];
-    if (p && fs.existsSync(p)) {
-      args.push("-e", p);
-    }
-  }
-  return args;
-}
-
-// Phase 0 explorer: gitnexus (graph queries) + pi-fff (search) + condensed-milk (compression)
-let _phase0ExtArgs: string[] | undefined;
-function phase0ExtensionArgs(): string[] {
-  if (!_phase0ExtArgs)
-    _phase0ExtArgs = buildExtensionArgs(["gitnexus", "piFff", "condensedMilk"]);
-  return _phase0ExtArgs;
-}
-
-// Phase 1 planners/reviewers: pi-fff (search) + condensed-milk (compression) — NO gitnexus (they get its output from Phase 0)
-let _phase1ExtArgs: string[] | undefined;
-function phase1ExtensionArgs(): string[] {
-  if (!_phase1ExtArgs)
-    _phase1ExtArgs = buildExtensionArgs(["piFff", "condensedMilk"]);
-  return _phase1ExtArgs;
-}
+/** Phase 0 explorer: search + output compression. Planners get its findings. */
+export const PHASE_0_EXTENSIONS: readonly SubagentExtension[] = ["piFff", "condensedMilk"];
+/** Phase 1 planners/reviewers and follow-ups. */
+export const PHASE_1_EXTENSIONS: readonly SubagentExtension[] = ["piFff", "condensedMilk"];
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -276,6 +226,8 @@ export interface AgentResult {
   output: string;
   exitCode: number;
   usage: AgentUsage;
+  /** Set when runAgent killed the process: "idle" = no events for idleTimeoutMs, "hard" = timeoutMs elapsed. */
+  timedOut?: "idle" | "hard";
 }
 
 /** Structured per-event callback (richer than ActivityCallback) for live widgets. */
@@ -303,8 +255,14 @@ export interface RunAgentOptions {
   tools: string;
   /** The task/prompt to send to the subagent */
   task: string;
-  /** Kill after this many ms (default: 360_000 = 6 min) */
+  /** Hard cap: kill after this many ms even if the agent is still streaming (default: 360_000 = 6 min) */
   timeoutMs?: number;
+  /**
+   * Kill after this many ms with no output events. Thinking, text and tool-call
+   * deltas all count, so a model that is slowly writing a long plan stays alive.
+   * Default: off (only the hard cap applies).
+   */
+  idleTimeoutMs?: number;
   /** Thinking level override (off, minimal, low, medium, high) */
   thinking?: string;
   /** AbortSignal for cancellation */
@@ -313,8 +271,8 @@ export interface RunAgentOptions {
   onActivity?: ActivityCallback;
   /** Structured per-event callback for richer widgets (tokens, files, tools) */
   onEvent?: EventCallback;
-  /** Override extension args (default: phase1ExtensionArgs) */
-  extensionArgs?: string[];
+  /** Extensions to load (default: PHASE_1_EXTENSIONS). Their tools are added to `tools`. */
+  extensions?: readonly SubagentExtension[];
   /** Kill process after this many tool executions (default: unlimited) */
   maxToolCalls?: number;
   /** Tee the raw NDJSON stream to this file for drill-down viewing */
@@ -333,18 +291,22 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     tools,
     task,
     timeoutMs = 360_000,
+    idleTimeoutMs,
     thinking,
     signal,
     onActivity,
     onEvent,
-    extensionArgs: extArgs,
+    extensions = PHASE_1_EXTENSIONS,
     maxToolCalls,
     logPath,
     sessionFile,
   } = opts;
 
-  // Default to phase 1 extensions unless overridden
-  const resolvedExtArgs = extArgs ?? phase1ExtensionArgs();
+  // Loading an extension also allows its tools: pi drops extension tools the
+  // --tools allowlist does not name.
+  const resolved = resolveExtensions(extensions);
+  const allowedTools = mergeToolAllowlist(tools, resolved.tools);
+  if (resolved.missing.length > 0) onActivity?.(`missing extensions: ${resolved.missing.join(", ")}`);
 
   return new Promise((resolve) => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-superpower-"));
@@ -363,11 +325,11 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       "--no-prompt-templates",
       "--no-themes",
       // Selectively load whitelisted extensions
-      ...resolvedExtArgs,
+      ...resolved.args,
       "--model",
       model,
       "--tools",
-      tools,
+      allowedTools,
       ...(thinking ? ["--thinking", thinking] : []),
       "--append-system-prompt",
       promptFile,
@@ -547,8 +509,30 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       }
     }
 
+    let timedOut: AgentResult["timedOut"];
+    const killFor = (reason: "idle" | "hard") => {
+      timedOut ??= reason;
+      try {
+        proc.kill("SIGTERM");
+      } catch {
+        // Best-effort cleanup: the process may already be gone.
+      }
+    };
+
+    // Inactivity watchdog: re-armed on every stdout chunk.
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
+    const armIdle = () => {
+      if (!idleTimeoutMs) return;
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => killFor("idle"), idleTimeoutMs);
+      if (typeof idleTimer === "object" && "unref" in idleTimer)
+        (idleTimer as { unref?: () => void }).unref?.();
+    };
+    armIdle();
+
     proc.stdout!.setEncoding("utf-8");
     proc.stdout!.on("data", (chunk: string) => {
+      armIdle();
       try {
         logStream?.write(chunk);
       } catch {
@@ -565,19 +549,14 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
       stderrBuf += chunk;
     });
 
-    // Auto-kill after timeout
-    const killTimer = setTimeout(() => {
-      try {
-        proc.kill("SIGTERM");
-      } catch {
-        // Best-effort cleanup: the file, dir, stream or process may already be gone.
-      }
-    }, timeoutMs);
+    // Hard cap, regardless of activity
+    const killTimer = setTimeout(() => killFor("hard"), timeoutMs);
     if (typeof killTimer === "object" && "unref" in killTimer)
       (killTimer as { unref?: () => void }).unref?.();
 
     proc.on("close", (code) => {
       clearTimeout(killTimer);
+      if (idleTimer) clearTimeout(idleTimer);
       if (buffer.trim()) processLine(buffer);
       // If killed mid-message, capture whatever text was streaming
       if (currentMsgText.trim()) {
@@ -604,14 +583,16 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
           output: `(stderr: ${stderrBuf.trim().slice(0, 200)})`,
           exitCode: code ?? 1,
           usage,
+          timedOut,
         });
       } else {
-        resolve({ output, exitCode: code ?? 1, usage });
+        resolve({ output, exitCode: code ?? 1, usage, timedOut });
       }
     });
 
     proc.on("error", (err) => {
       clearTimeout(killTimer);
+      if (idleTimer) clearTimeout(idleTimer);
       try {
         logStream?.end();
       } catch {
@@ -633,6 +614,7 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     if (signal) {
       const kill = () => {
         clearTimeout(killTimer);
+        if (idleTimer) clearTimeout(idleTimer);
         try {
           proc.kill("SIGTERM");
         } catch {
@@ -649,7 +631,8 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
 
 /**
  * Phase 0 exploration prompts.
- * The explorer gets gitnexus tools + code-review-graph (bash) + read/grep/find.
+ * The explorer gets pi-fff search, read/ls, and bash for the gitnexus and
+ * code-review-graph CLIs (no gitnexus extension is installed).
  */
 const EXPLORE_FOR_PLANNING_PROMPT = `You are a codebase explorer preparing context for a planning agent.
 Your job is to quickly understand the project and gather the information needed to write an implementation plan.
@@ -660,20 +643,18 @@ Your job is to quickly understand the project and gather the information needed 
 - Back each claim with a file path (and line where useful).
 
 ## Available Tools
-You have access to:
-- **gitnexus_query** — Search the knowledge graph for execution flows, symbols, and dependencies related to the task
-- **gitnexus_context** — Get a 360° view of a specific symbol (callers, callees, related flows)
-- **code-review-graph** — Run via bash: \`code-review-graph status\` for project structure
-- **read/grep/find/ls** — Standard file exploration
+- **ffgrep / fffind** — fast content and path search (prefer these over grep/find)
+- **read / ls** — read files and list directories
+- **bash** — git commands, plus two optional graph CLIs:
+  - \`gitnexus status\`: if the repo is indexed, use \`gitnexus query "<keywords>"\` for execution flows and \`gitnexus context <symbol>\` for callers and callees
+  - \`code-review-graph status\`: project structure, if the repo has a graph
 
 ## Workflow — BUDGET: ~12 tool calls, then STOP
 Be efficient. Prioritize high-signal tools first:
-1. \`gitnexus_query\` with keywords from the task (1-2 calls)
-2. \`gitnexus_context\` on 1-2 key symbols if gitnexus worked (1-2 calls)
-3. If gitnexus unavailable: \`bash\` \`code-review-graph status\` (1 call)
-4. \`find\` or \`grep\` to locate relevant files (2-3 calls)
-5. \`read\` to examine 3-4 key files (3-4 calls)
-6. STOP and write your findings. Do NOT keep exploring endlessly.
+1. \`bash\`: \`gitnexus status\` (1 call). If indexed, \`gitnexus query\` with task keywords (1-2 calls)
+2. \`fffind\` / \`ffgrep\` to locate relevant files (2-3 calls)
+3. \`read\` to examine 3-4 key files (3-4 calls)
+4. STOP and write your findings. Do NOT keep exploring endlessly.
 
 Once you have a reasonable picture, output your findings immediately.
 
@@ -710,20 +691,19 @@ Your job is to quickly understand the changes and their impact.
 - You may flag risky areas for reviewers to inspect (for example, untested callers or changed shared types). Say why each is worth a look and point to the file and line.
 
 ## Available Tools
-You have access to:
-- **gitnexus_query** — Search the knowledge graph for execution flows related to changes
-- **gitnexus_context** — Get a 360° view of a symbol (callers, callees, related flows)
-- **gitnexus_impact** — Blast radius analysis: what breaks if you change a symbol
-- **code-review-graph** — Run via bash: \`code-review-graph detect-changes\` for impact analysis
-- **read/grep/find/ls/bash** — Standard file exploration + git commands
+- **ffgrep / fffind** — fast content and path search (prefer these over grep/find)
+- **read / ls** — read files and list directories
+- **bash** — git commands, plus two optional graph CLIs:
+  - \`code-review-graph detect-changes\`: impact analysis of the current changes
+  - \`gitnexus status\`: if the repo is indexed, \`gitnexus impact <symbol>\` gives blast radius and \`gitnexus context <symbol>\` gives callers and callees
 
 ## Workflow — BUDGET: ~12 tool calls, then STOP
 Be efficient. Prioritize impact analysis first:
 1. \`bash\`: \`git diff --stat\` to see what changed (1 call)
 2. \`bash\`: \`code-review-graph detect-changes\` for blast radius (1 call)
-3. \`gitnexus_impact\` on 1-2 key changed symbols (1-2 calls)
+3. If \`gitnexus status\` shows an index: \`gitnexus impact\` on 1-2 key changed symbols (1-3 calls)
 4. \`read\` the 3-4 most important changed files (3-4 calls)
-5. \`grep\` for callers of changed functions (1-2 calls)
+5. \`ffgrep\` for callers of changed functions (1-2 calls)
 6. Check related test files (1-2 calls)
 7. STOP and write your findings. Do NOT keep exploring endlessly.
 
@@ -764,14 +744,25 @@ export interface ExplorationOptions {
   preContext?: string;
   /** Kill after this many ms (default: 60_000 = 60s) */
   timeoutMs?: number;
+  /** Give the explorer web_search + web_read for facts outside the repo. */
+  web?: boolean;
   /** AbortSignal for cancellation */
   signal?: AbortSignal;
   /** Activity callback for live widget updates */
   onActivity?: ActivityCallback;
 }
 
+/** Appended to the explorer prompt when `web` is on. */
+const EXPLORER_WEB_ADDENDUM = `
+
+## Web Research
+You also have web_search and web_read. Use them only for facts the codebase cannot answer and the task depends on: current library versions, maintenance status, platform API support, known blocking issues. Cite the URL for every external claim and add a "### External Research" section. Do not research anything already covered by Pre-gathered Context. Spend at most half your tool calls on the web.`;
+
+/** Extra budget for web lookups, which are slower than local search. */
+export const WEB_EXPLORER_TOOL_CALLS = 30;
+
 /**
- * Phase 0: Run a Sonnet exploration agent with gitnexus + code-review-graph.
+ * Phase 0: Run a Sonnet exploration agent (pi-fff search + graph CLIs via bash).
  *
  * Spawns a cheap, fast agent that uses graph tools to understand the codebase,
  * then outputs a structured context package for Phase 1 planners/reviewers.
@@ -788,12 +779,14 @@ export async function runExploration(
     mode,
     preContext,
     timeoutMs = 60_000,
+    web = false,
     signal,
     onActivity,
   } = opts;
 
-  const prompt =
+  const basePrompt =
     mode === "plan" ? EXPLORE_FOR_PLANNING_PROMPT : EXPLORE_FOR_REVIEW_PROMPT;
+  const prompt = web ? basePrompt + EXPLORER_WEB_ADDENDUM : basePrompt;
 
   let explorationTask = task;
   if (preContext) {
@@ -810,10 +803,9 @@ export async function runExploration(
     thinking: "off",
     signal,
     onActivity,
-    // Phase 0 gets gitnexus for graph queries + pi-fff + condensed-milk
-    extensionArgs: phase0ExtensionArgs(),
-    // Hard limit: kill after 15 tool calls to prevent over-exploration
-    maxToolCalls: 15,
+    extensions: web ? [...PHASE_0_EXTENSIONS, "webSearch"] : PHASE_0_EXTENSIONS,
+    // Hard limit to prevent over-exploration; web lookups get a bigger budget
+    maxToolCalls: web ? WEB_EXPLORER_TOOL_CALLS : 15,
   });
 
   // Accept output even if process was killed (timeout or maxToolCalls)
