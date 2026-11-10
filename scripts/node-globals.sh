@@ -2,7 +2,7 @@
 # Install the global npm packages in node/globals.txt into fnm's default Node.
 #
 # fnm keeps globals per Node version, so run this after switching versions:
-#   fnm install 24 && fnm default 24 && ./scripts/node-globals.sh
+#   fnm install 26 && fnm default 26 && ./scripts/node-globals.sh
 set -euo pipefail
 
 manifest="$(cd "$(dirname "$0")/.." && pwd)/node/globals.txt"
