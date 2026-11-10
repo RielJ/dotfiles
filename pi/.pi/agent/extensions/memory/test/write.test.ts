@@ -111,7 +111,7 @@ describe("saveMemory", () => {
 	it("rejects missing why and secrets", () => {
 		const { root, index } = setup();
 		assert.equal(saveMemory({ ...base, why: " " }, { root, index, tainted: false }).status, "rejected");
-		const r = saveMemory({ ...base, body: "api_key=abcd1234efgh5678" }, { root, index, tainted: false });
+		const r = saveMemory({ ...base, body: "api_key=abcd1234efgh5678" }, { root, index, tainted: false }); // gitleaks:allow (fake key fixture)
 		assert.equal(r.status, "rejected");
 		assert.equal(listNotes(root).length, 0);
 	});
