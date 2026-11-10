@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""Search the web from inside the sandbox (DuckDuckGo HTML endpoint).
+
+Usage: web-search QUERY... [-n N]
+
+Prints numbered results: title, real target URL, snippet.
+"""
+import argparse
+import html.parser
+import subprocess
+import sys
+import urllib.parse
+
+
+class Results(html.parser.HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.items = []
+        self.field = None
+
+    def handle_starttag(self, tag, attrs):
+        cls = dict(attrs).get("class", "")
+        if tag == "a" and "result__a" in cls:
+            href = dict(attrs).get("href", "")
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(href).query)
+            url = qs.get("uddg", [href])[0]
+            self.items.append({"title": "", "url": url, "snippet": ""})
+            self.field = "title"
+        elif tag == "a" and "result__snippet" in cls and self.items:
+            self.field = "snippet"
+
+    def handle_endtag(self, tag):
+        if tag == "a":
+            self.field = None
+
+    def handle_data(self, data):
+        if self.field and self.items:
+            self.items[-1][self.field] += data
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("query", nargs="+")
+    p.add_argument("-n", type=int, default=10)
+    args = p.parse_args()
+    q = " ".join(args.query)
+    proc = subprocess.run(
+        ["curl", "-sS", "--max-time", "30", "-A", "Mozilla/5.0",
+         "--data-urlencode", f"q={q}", "https://html.duckduckgo.com/html/"],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        sys.exit(f"web-search: curl failed: {proc.stderr.strip()}")
+    parser = Results()
+    parser.feed(proc.stdout)
+    if not parser.items:
+        sys.exit("web-search: no results (or the search page changed)")
+    for i, item in enumerate(parser.items[: args.n], 1):
+        print(f"{i}. {item['title'].strip()}\n   {item['url']}\n   {' '.join(item['snippet'].split())}\n")
+
+
+if __name__ == "__main__":
+    main()

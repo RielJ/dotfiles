@@ -1,5 +1,7 @@
 // @ts-nocheck -- focused runtime tests use a minimal structural ExtensionAPI mock.
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { stripVTControlCharacters } from "node:util";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -14,7 +16,14 @@ import {
   writeSubagentLoadout,
   type SubagentLoadout,
 } from "../session.ts";
-import { shellEscape } from "../tmux.ts";
+import {
+  exitStatusFile,
+  lastErrorLine,
+  pollForExit,
+  sendLongCommand,
+  shellEscape,
+  wrapSubagentCommand,
+} from "../tmux.ts";
 import {
   POOL_SESSION,
   capturePane,
@@ -65,6 +74,192 @@ describe("tmux pool", () => {
       assert.equal(sendMessage(name, "should not be delivered"), false);
     },
   );
+});
+
+// Regression: a subagent killed by SIGTERM (exit 143) left its tmux window at
+// a shell prompt with no .exit sidecar and no sentinel line, so pollForExit
+// reported it as running forever. Each case launches a wrapped command in a
+// real window, ends it the given way, and checks what the watcher reports.
+describe("crash detection", () => {
+  const launch = (label: string, command: string) => {
+    const dir = mkdtempSync(join(tmpdir(), "subagent-crash-"));
+    tempDirs.push(dir);
+    const name = `pi-crash-test-${label}-${process.pid}`;
+    const session = join(dir, "child.jsonl");
+    const surface = createWindow(name, dir);
+    sendLongCommand(surface, wrapSubagentCommand(command, exitStatusFile(session)), {
+      scriptPath: join(dir, "launch.sh"),
+    });
+    return { name, surface, session };
+  };
+  const killJob = async (name: string, signal: "TERM" | "KILL") => {
+    // Wait until the shell runs the launch script, then signal its process group.
+    for (let i = 0; i < 50; i++) {
+      const panePid = execFileSync(
+        "tmux",
+        ["list-panes", "-t", windowTarget(name), "-F", "#{pane_pid}"],
+        { encoding: "utf8" },
+      ).trim();
+      try {
+        const child = execFileSync("pgrep", ["-P", panePid], { encoding: "utf8" })
+          .trim()
+          .split("\n")[0];
+        await new Promise((r) => setTimeout(r, 300));
+        execFileSync("kill", [`-${signal}`, `-${child}`]);
+        return;
+      } catch {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+    }
+    throw new Error("launch script never started");
+  };
+  const watch = (surface: string, session: string) =>
+    pollForExit(surface, AbortSignal.timeout(10_000), {
+      interval: 200,
+      sessionFile: session,
+    });
+
+  it(
+    "reports SIGTERM as a crash with the last error line",
+    { skip: !tmuxAvailable() },
+    async () => {
+      const { name, surface, session } = launch(
+        "term",
+        "echo 'Error: extension ctx is stale after session replacement or reload' >&2; sleep 30",
+      );
+      try {
+        await killJob(name, "TERM");
+        const result = await watch(surface, session);
+        assert.equal(result.reason, "crashed");
+        assert.equal(result.exitCode, 143);
+        assert.match(result.errorMessage ?? "", /signal 15/);
+        assert.match(result.errorMessage ?? "", /extension ctx is stale/);
+      } finally {
+        killWindow(name);
+      }
+    },
+  );
+
+  it(
+    "reports SIGKILL as a crash even though no exit status is written",
+    { skip: !tmuxAvailable() },
+    async () => {
+      const { name, surface, session } = launch("kill", "sleep 30");
+      try {
+        await killJob(name, "KILL");
+        const result = await watch(surface, session);
+        assert.equal(result.reason, "crashed");
+        assert.equal(existsSync(exitStatusFile(session)), false);
+        assert.match(result.errorMessage ?? "", /without reporting an exit status/);
+      } finally {
+        killWindow(name);
+      }
+    },
+  );
+
+  it(
+    "reports a non-zero exit as a crash and a zero exit as done",
+    { skip: !tmuxAvailable() },
+    async () => {
+      const failed = launch("fail", "sleep 0.5; (exit 3)");
+      const clean = launch("clean", "sleep 0.5");
+      try {
+        const [bad, good] = await Promise.all([
+          watch(failed.surface, failed.session),
+          watch(clean.surface, clean.session),
+        ]);
+        assert.equal(bad.reason, "crashed");
+        assert.equal(bad.exitCode, 3);
+        assert.deepEqual(good, { reason: "sentinel", exitCode: 0 });
+        // The status file is consumed so a later resume can't reread it.
+        assert.equal(existsSync(exitStatusFile(clean.session)), false);
+      } finally {
+        killWindow(failed.name);
+        killWindow(clean.name);
+      }
+    },
+  );
+
+  it("prefers real error output over the shell's signal notice", () => {
+    const screen = [
+      "working…",
+      "Error: extension ctx is stale after session replacement or reload",
+      "zsh: terminated  pi --session x",
+      "__SUBAGENT_DONE_143__",
+    ].join("\n");
+    assert.equal(
+      lastErrorLine(screen),
+      "Error: extension ctx is stale after session replacement or reload",
+    );
+    assert.equal(lastErrorLine("zsh: killed  bash launch.sh"), "zsh: killed  bash launch.sh");
+    assert.equal(lastErrorLine("all good"), null);
+  });
+
+  it("presents a crash as a crash, not as a completed result", () => {
+    const text = __test__.resolveResultPresentation(
+      {
+        exitCode: 143,
+        elapsed: 42,
+        summary: "Halfway through the refactor.",
+        errorMessage: "Sub-agent process exited with code 143 (signal 15).",
+        crashed: true,
+      },
+      "lane-a",
+    );
+    assert.match(text, /^Sub-agent "lane-a" crashed after/);
+    assert.match(text, /exit code 143/);
+    assert.match(text, /Last message before the crash:\nHalfway through the refactor\./);
+    assert.doesNotMatch(text, /auto-retry exhausted|completed/);
+  });
+});
+
+describe("automatic resume after a crash", () => {
+  const { shouldAutoResume, crashResumeMessage, MAX_CRASH_RESUMES } = __test__;
+  const piChild = {
+    interactive: false,
+    artifactDir: "/tmp/artifacts",
+    crashResumes: 0,
+  };
+  const crash = { crashed: true, exitCode: 143 };
+
+  it("resumes a pi child that crashed mid-turn", () => {
+    assert.equal(shouldAutoResume(piChild, crash), true);
+  });
+
+  it("stops after MAX_CRASH_RESUMES attempts in a row", () => {
+    assert.equal(MAX_CRASH_RESUMES, 2);
+    assert.equal(shouldAutoResume({ ...piChild, crashResumes: 1 }, crash), true);
+    assert.equal(
+      shouldAutoResume({ ...piChild, crashResumes: MAX_CRASH_RESUMES }, crash),
+      false,
+    );
+  });
+
+  it("leaves clean exits, closes, Ctrl+C, user-driven and Claude children alone", () => {
+    assert.equal(shouldAutoResume(piChild, { crashed: false, exitCode: 0 }), false);
+    assert.equal(shouldAutoResume(piChild, { exitCode: 1 }), false);
+    assert.equal(shouldAutoResume(piChild, { crashed: true, exitCode: 130 }), false);
+    assert.equal(
+      shouldAutoResume({ ...piChild, closeReason: "orchestrator" }, crash),
+      false,
+    );
+    assert.equal(shouldAutoResume({ ...piChild, interactive: true }, crash), false);
+    assert.equal(shouldAutoResume({ ...piChild, cli: "claude" }, crash), false);
+    assert.equal(
+      shouldAutoResume({ ...piChild, artifactDir: undefined }, crash),
+      false,
+    );
+  });
+
+  it("tells the resumed child why it restarted and to re-check its work", () => {
+    const text = crashResumeMessage({
+      exitCode: 143,
+      errorMessage: "Sub-agent process exited with code 143 (signal 15).",
+    });
+    assert.match(text, /crashed \(exit 143\)/);
+    assert.match(text, /git status/);
+    assert.match(text, /continue the original task/);
+  });
 });
 
 describe("profiles and sandbox loadout", () => {
@@ -315,7 +510,7 @@ describe("extension registration", () => {
 });
 
 describe("external widget rows", () => {
-  const strip = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
+  const strip = (s: string) => stripVTControlCharacters(s);
   const { renderSubagentWidgetLines, externalRowsHost, collectExternalRows } = __test__;
 
   afterEach(() => {

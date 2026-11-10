@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""Filtering HTTP(S) proxy for web-mode sandboxes.
+
+The sandbox container sits on an internal Docker network with no route out.
+This proxy is its only way to the internet, and it only allows:
+
+  * ports 80 and 443;
+  * hosts whose every resolved address is a public (global) address, so the
+    sandbox cannot reach the Mac, the LAN, Docker's VM or cloud metadata.
+
+It connects to the address it checked, not to the hostname again, so a DNS
+answer that changes between check and connect (DNS rebinding) cannot slip a
+private address through. Every request is logged as one JSON line on stdout
+(`docker logs`).
+"""
+import asyncio
+import ipaddress
+import json
+import socket
+import sys
+import time
+
+LISTEN_PORT = 3128
+ALLOWED_PORTS = {80, 443}
+IDLE_TIMEOUT = 120
+MAX_HEADER = 64 * 1024
+
+
+def log(**fields):
+    fields["t"] = round(time.time(), 3)
+    print(json.dumps(fields), flush=True)
+
+
+def is_public(addr: str) -> bool:
+    ip = ipaddress.ip_address(addr.split("%")[0])
+    if ip.version == 6 and ip.ipv4_mapped:
+        ip = ip.ipv4_mapped
+    return ip.is_global and not ip.is_multicast
+
+
+async def resolve_public(host: str, port: int) -> list:
+    """All addresses for host, IPv4 first. Refuses if any one is non-public,
+    so a name that mixes public and private records can't be used to pivot."""
+    loop = asyncio.get_running_loop()
+    infos = await loop.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    addrs = sorted({info[4][0] for info in infos}, key=lambda a: (":" in a, a))
+    if not addrs:
+        raise PermissionError("no address")
+    blocked = [a for a in addrs if not is_public(a)]
+    if blocked:
+        raise PermissionError(f"non-public address {blocked[0]}")
+    return addrs
+
+
+async def connect_any(addrs: list, port: int):
+    """Connect to the first address that answers. Docker networks usually have
+    no IPv6 route, so IPv6 addresses are tried last."""
+    last_error = None
+    for addr in addrs:
+        try:
+            reader, writer = await asyncio.wait_for(asyncio.open_connection(addr, port), 10)
+            return addr, reader, writer
+        except Exception as error:
+            last_error = error
+    raise last_error or OSError("no address")
+
+
+async def pipe(reader, writer):
+    try:
+        while True:
+            data = await asyncio.wait_for(reader.read(65536), IDLE_TIMEOUT)
+            if not data:
+                break
+            writer.write(data)
+            await writer.drain()
+    except Exception:
+        pass
+    finally:
+        try:
+            writer.close()
+        except Exception:
+            pass
+
+
+async def refuse(writer, status: str, reason: str):
+    body = f"pi-sandbox proxy refused: {reason}\n".encode()
+    writer.write(
+        f"HTTP/1.1 {status}\r\nContent-Type: text/plain\r\n"
+        f"Content-Length: {len(body)}\r\nConnection: close\r\n\r\n".encode() + body
+    )
+    try:
+        await writer.drain()
+    finally:
+        writer.close()
+
+
+def split_host_port(authority: str, default_port: int):
+    if authority.startswith("["):
+        host, _, rest = authority[1:].partition("]")
+        port = int(rest[1:]) if rest.startswith(":") else default_port
+        return host, port
+    host, sep, port = authority.rpartition(":")
+    if sep and port.isdigit():
+        return host, int(port)
+    return authority, default_port
+
+
+async def handle(reader, writer):
+    try:
+        head = await asyncio.wait_for(reader.readuntil(b"\r\n\r\n"), 30)
+    except Exception:
+        writer.close()
+        return
+    if len(head) > MAX_HEADER:
+        return await refuse(writer, "431 Request Header Fields Too Large", "headers too large")
+
+    lines = head.decode("latin-1").split("\r\n")
+    try:
+        method, target, version = lines[0].split(" ", 2)
+    except ValueError:
+        return await refuse(writer, "400 Bad Request", "malformed request line")
+
+    if method == "CONNECT":
+        host, port = split_host_port(target, 443)
+        path = ""
+    else:
+        if not target.startswith("http://"):
+            return await refuse(writer, "400 Bad Request", "absolute http:// URL required")
+        rest = target[len("http://"):]
+        authority, slash, path = rest.partition("/")
+        host, port = split_host_port(authority, 80)
+        path = "/" + path if slash else "/"
+
+    if port not in ALLOWED_PORTS:
+        log(action="deny", method=method, host=host, port=port, reason="port")
+        return await refuse(writer, "403 Forbidden", f"port {port} not allowed")
+
+    try:
+        addrs = await resolve_public(host, port)
+    except PermissionError as error:
+        log(action="deny", method=method, host=host, port=port, reason=str(error))
+        return await refuse(writer, "403 Forbidden", str(error))
+    except Exception as error:
+        log(action="error", method=method, host=host, port=port, reason=str(error))
+        return await refuse(writer, "502 Bad Gateway", "cannot resolve host")
+
+    try:
+        addr, up_reader, up_writer = await connect_any(addrs, port)
+    except Exception as error:
+        log(action="error", method=method, host=host, port=port, addr=",".join(addrs), reason=str(error))
+        return await refuse(writer, "502 Bad Gateway", "cannot connect")
+
+    log(action="allow", method=method, host=host, port=port, addr=addr, path=path[:200])
+
+    if method == "CONNECT":
+        writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
+        await writer.drain()
+    else:
+        # Rewrite to origin form and drop proxy-only and hop-by-hop headers.
+        out = [f"{method} {path} {version}"]
+        for line in lines[1:]:
+            if not line:
+                continue
+            name = line.split(":", 1)[0].strip().lower()
+            if name in ("proxy-connection", "proxy-authorization", "connection", "keep-alive"):
+                continue
+            out.append(line)
+        out.append("Connection: close")
+        up_writer.write(("\r\n".join(out) + "\r\n\r\n").encode("latin-1"))
+        await up_writer.drain()
+
+    await asyncio.gather(pipe(reader, up_writer), pipe(up_reader, writer))
+
+
+async def main():
+    server = await asyncio.start_server(handle, "0.0.0.0", LISTEN_PORT)
+    log(action="listen", port=LISTEN_PORT)
+    async with server:
+        await server.serve_forever()
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        sys.exit(0)

@@ -1,0 +1,18 @@
+{
+  "BrowserSignin": 0,
+  "SyncDisabled": true,
+  "ComponentUpdatesEnabled": false,
+  "MetricsReportingEnabled": false,
+  "SafeBrowsingProtectionLevel": 0,
+  "SearchSuggestEnabled": false,
+  "NetworkPredictionOptions": 2,
+  "BackgroundModeEnabled": false,
+  "TranslateEnabled": false,
+  "SpellCheckServiceEnabled": false,
+  "UrlKeyedAnonymizedDataCollectionEnabled": false,
+  "PromotionalTabsEnabled": false,
+  "DefaultBrowserSettingEnabled": false,
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "PasswordManagerEnabled": false
+}

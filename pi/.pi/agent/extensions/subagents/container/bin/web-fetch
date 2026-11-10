@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Fetch a URL through the sandbox proxy and print what an auditor needs.
+
+Usage: web-fetch URL [--raw] [--max-bytes N]
+
+Prints the redirect chain, final URL, status, content type, then the page as
+readable text followed by every link and script/iframe/form target. --raw
+prints the body as received instead. Nothing is executed; use web-shot to see
+the page as a browser renders it.
+"""
+import argparse
+import html.parser
+import subprocess
+import sys
+import urllib.parse
+
+UA = "Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
+
+
+class Extract(html.parser.HTMLParser):
+    SKIP = {"script", "style", "noscript", "template", "svg"}
+
+    def __init__(self, base):
+        super().__init__(convert_charrefs=True)
+        self.base = base
+        self.text = []
+        self.links = []
+        self.resources = []
+        self.skip = 0
+        self.title = ""
+        self.in_title = False
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag in self.SKIP:
+            self.skip += 1
+        if tag == "title":
+            self.in_title = True
+        if tag == "a" and a.get("href"):
+            self.links.append(urllib.parse.urljoin(self.base, a["href"]))
+        for attr, kind in (("src", tag), ("action", "form"), ("data", "object")):
+            if a.get(attr) and tag in ("script", "iframe", "form", "object", "embed", "img", "source"):
+                self.resources.append(f"{kind}: {urllib.parse.urljoin(self.base, a[attr])}")
+        if tag == "meta" and a.get("http-equiv", "").lower() == "refresh":
+            self.resources.append(f"meta-refresh: {a.get('content', '')}")
+        if tag in ("p", "div", "br", "li", "h1", "h2", "h3", "h4", "tr", "section", "article"):
+            self.text.append("\n")
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP and self.skip:
+            self.skip -= 1
+        if tag == "title":
+            self.in_title = False
+
+    def handle_data(self, data):
+        if self.in_title:
+            self.title += data
+        elif not self.skip:
+            self.text.append(data)
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("url")
+    p.add_argument("--raw", action="store_true")
+    p.add_argument("--max-bytes", type=int, default=3_000_000)
+    args = p.parse_args()
+
+    if not args.url.startswith(("http://", "https://")):
+        sys.exit("web-fetch: only http:// and https:// URLs")
+
+    proc = subprocess.run(
+        ["curl", "-sS", "-L", "--max-redirs", "10", "--max-time", "45",
+         "--max-filesize", str(args.max_bytes), "-A", UA,
+         "-D", "/tmp/.web-fetch-headers", "-o", "/tmp/.web-fetch-body",
+         "-w", "%{url_effective}\n%{http_code}\n%{content_type}\n%{num_redirects}",
+         "--", args.url],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        sys.exit(f"web-fetch: curl failed ({proc.returncode}): {proc.stderr.strip()}")
+    final_url, status, ctype, redirects = (proc.stdout.split("\n") + ["", "", "", ""])[:4]
+
+    chain = [line.split(":", 1)[1].strip() for line in open("/tmp/.web-fetch-headers", encoding="latin-1")
+             if line.lower().startswith("location:")]
+    print(f"requested: {args.url}")
+    for hop in chain:
+        print(f"redirect:  {hop}")
+    print(f"final:     {final_url}\nstatus:    {status}\ntype:      {ctype}\nredirects: {redirects}\n")
+
+    body = open("/tmp/.web-fetch-body", "rb").read()
+    if args.raw or "html" not in ctype:
+        sys.stdout.write(body.decode("utf-8", "replace"))
+        return
+    page = Extract(final_url)
+    page.feed(body.decode("utf-8", "replace"))
+    text = "\n".join(line.strip() for line in "".join(page.text).splitlines() if line.strip())
+    print(f"title: {page.title.strip()}\n\n{text}\n\n--- links ({len(page.links)}) ---")
+    for link in dict.fromkeys(page.links):
+        print(link)
+    print(f"\n--- scripts, frames, forms ({len(page.resources)}) ---")
+    for res in dict.fromkeys(page.resources):
+        print(res)
+
+
+if __name__ == "__main__":
+    main()

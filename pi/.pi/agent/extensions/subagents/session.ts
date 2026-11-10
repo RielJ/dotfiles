@@ -117,7 +117,15 @@ export interface SubagentLoadout {
   /** PI_CODING_AGENT_DIR the subagent resolved config/extensions from, or null. */
   agentDir: string | null;
   /** Workspace isolation selected at spawn time. */
-  isolation?: "shared" | "worktree";
+  isolation?: "shared" | "worktree" | "container";
+  /**
+   * Container isolation: what resume needs to build an equivalent sandbox.
+   * The container itself is removed on close, so resume starts a fresh one.
+   */
+  container?: {
+    network: "offline" | "web";
+    source: { kind: "git"; url: string } | { kind: "path"; path: string } | null;
+  } | null;
   /** Worktree metadata when isolation is worktree. */
   worktree?: {
     id: string;

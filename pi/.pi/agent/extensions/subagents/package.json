@@ -8,7 +8,7 @@
     "extensions": ["./index.ts"]
   },
   "scripts": {
-    "test": "bun test test/*.test.ts",
+    "test": "bun test test/*.test.ts --timeout 180000",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

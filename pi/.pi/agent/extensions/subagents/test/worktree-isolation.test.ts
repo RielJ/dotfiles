@@ -406,14 +406,14 @@ describe("closing a worktree subagent", () => {
     const running = fakeRunning(wt, { keepAlive: false, turnsDelivered: 0 });
 
     // What watchSubagent does when the process exits on its own.
-    const first = __test__.releaseRunningWorktree(running);
-    const second = __test__.releaseRunningWorktree(running);
+    const first = __test__.releaseRunningResources(running);
+    const second = __test__.releaseRunningResources(running);
 
     assert.ok(first);
     assert.match(first, /Removed worktree .*one-shot/);
     assert.equal(second, first);
     assert.equal(__test__.resolveFinalDelivery(running, 1).kind, "deliver");
-    assert.match(__test__.withWorktreeNote("result", running), /^result\n\nRemoved worktree /);
+    assert.match(__test__.withReleaseNote("result", running), /^result\n\nRemoved worktree /);
     assert.ok(branches(repo).includes("one-shot"));
   });
 
@@ -422,7 +422,7 @@ describe("closing a worktree subagent", () => {
     const running = fakeRunning(undefined);
     const result = __test__.closeSubagentByName({ name: running.name });
     assert.doesNotMatch(result.content[0].text, /worktree/i);
-    assert.equal(__test__.withWorktreeNote("result", running), "result");
+    assert.equal(__test__.withReleaseNote("result", running), "result");
   });
 
   it("a closed worktree subagent resumed and closed again removes its worktree again", async () => {

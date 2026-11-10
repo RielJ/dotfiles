@@ -1,0 +1,33 @@
+#!/bin/sh
+# Render a URL in headless Chromium inside the sandbox.
+#
+# Usage: web-shot URL [OUT.png]
+#   Writes a 1280x2000 screenshot (default /tmp/shot.png; open it with the
+#   read tool) and the rendered DOM after JavaScript ran (OUT.png's name with
+#   .html). Chromium's own sandbox is off because the container is the
+#   sandbox: no capabilities, no host mounts, egress only through the proxy.
+set -eu
+url=${1:?usage: web-shot URL [OUT.png]}
+out=${2:-/tmp/shot.png}
+case $url in http://*|https://*) ;; *) echo "web-shot: only http(s) URLs" >&2; exit 2 ;; esac
+
+# The background-networking flags and the managed policy stop most of
+# Chromium's own calls to Google. Sign-in and component updates still try,
+# so those hosts bypass the proxy: a direct connection has no route out of
+# the sandbox and fails. The proxy log then shows only the page's requests.
+# (A side effect: web-shot cannot render pages on these two hosts.)
+browser_hosts="accounts.google.com;update.googleapis.com;clients2.google.com;clientservices.googleapis.com;optimizationguide-pa.googleapis.com"
+flags="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
+  --no-first-run --disable-extensions --disable-sync --hide-scrollbars \
+  --disable-background-networking --disable-component-update \
+  --disable-default-apps --disable-domain-reliability --no-pings \
+  --disable-features=OptimizationHints,MediaRouter,Translate,NetworkTimeServiceQuerying \
+  --user-data-dir=/tmp/chromium-profile --proxy-server=${HTTPS_PROXY:-} \
+  --proxy-bypass-list=$browser_hosts \
+  --window-size=1280,2000 --virtual-time-budget=8000 --timeout=30000"
+
+# shellcheck disable=SC2086
+timeout 60 chromium $flags --screenshot="$out" -- "$url" >/dev/null 2>&1 || true
+# shellcheck disable=SC2086
+timeout 60 chromium $flags --dump-dom -- "$url" >"${out%.png}.html" 2>/dev/null || true
+ls -la "$out" "${out%.png}.html" 2>/dev/null || { echo "web-shot: render failed" >&2; exit 1; }
