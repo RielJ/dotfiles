@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.0.1",
+  "lastChangelogVersion": "1.5.0",
   "defaultProvider": "anthropic",
   "defaultModel": "claude-opus-5-5",
   "defaultThinkingLevel": "high",
@@ -45,10 +45,24 @@
     "npm:pi-lens",
     "npm:@ayulab/pi-rewind",
     "npm:@llblab/pi-telegram",
-    "../../personal/contribs/pi-agent-browser-native"
+    "../../personal/contribs/pi-agent-browser-native",
+    "npm:pi-btw@0.8.1"
   ],
   "extensions": [
     "-builtin:mcp",
     "-extensions/git-worktrees/src/index.ts"
-  ]
+  ],
+  "extensionChangelogVersions": {
+    "{\"source\":\"npm:@sting8k/pi-vcc\",\"scope\":\"user\"}": "0.11.2",
+    "{\"source\":\"npm:@tomooshi/condensed-milk-pi\",\"scope\":\"user\"}": "1.13.1",
+    "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.4.11",
+    "{\"source\":\"npm:pi-token-burden\",\"scope\":\"user\"}": "0.6.5",
+    "{\"source\":\"npm:@tintinweb/pi-tasks\",\"scope\":\"user\"}": "0.9.1",
+    "{\"source\":\"npm:pi-mcp-adapter\",\"scope\":\"user\"}": "7.0.1",
+    "{\"source\":\"npm:@tmustier/pi-tab-status\",\"scope\":\"user\"}": "0.1.6",
+    "{\"source\":\"npm:pi-bash-bg\",\"scope\":\"user\"}": "0.1.1",
+    "{\"source\":\"npm:pi-tool-display\",\"scope\":\"user\"}": "0.5.0",
+    "{\"source\":\"npm:@llblab/pi-telegram\",\"scope\":\"user\"}": "0.58.3",
+    "{\"source\":\"../../personal/contribs/pi-agent-browser-native\",\"scope\":\"user\"}": "0.7.1"
+  }
 }
