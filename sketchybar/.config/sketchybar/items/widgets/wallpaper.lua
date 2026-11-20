@@ -96,13 +96,13 @@ end)
 
 -- Settings click → open GUI
 popup_settings:subscribe("mouse.clicked", function(env)
-	sbar.exec("wallpaperd settings 2>/dev/null || open ~/.local/share/wallpaperd/wallpaperd-settings.app 2>/dev/null &")
+	sbar.exec("$HOME/.local/bin/kakemono settings >/dev/null 2>&1 &")
 	hide_popup()
 end)
 
 -- Picker click → open picker
 popup_picker:subscribe("mouse.clicked", function(env)
-	sbar.exec("wallpaperd pick 2>/dev/null &")
+	sbar.exec("$HOME/.local/bin/kakemono pick >/dev/null 2>&1 &")
 	hide_popup()
 end)
 
