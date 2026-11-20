@@ -389,7 +389,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
           }
           ctx.ui.notify(
             result.stdout || `Added collection: ${collPath}`,
-            "success",
+            "info",
           );
           break;
         }
@@ -408,7 +408,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
           }
           ctx.ui.notify(
             result.stdout || "Embeddings generated",
-            "success",
+            "info",
           );
           break;
         }
