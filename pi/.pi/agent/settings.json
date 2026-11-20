@@ -42,7 +42,6 @@
     "npm:pi-vim",
     "npm:@juicesharp/rpiv-ask-user-question",
     "npm:pi-lens",
-    "npm:@ayulab/pi-rewind",
     "npm:@llblab/pi-telegram",
     "../../personal/contribs/pi-agent-browser-native",
     "npm:pi-btw@0.8.1"

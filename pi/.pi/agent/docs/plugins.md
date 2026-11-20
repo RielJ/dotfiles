@@ -56,7 +56,6 @@ Declared in `settings.json` under `packages`.
 | `@tintinweb/pi-tasks` | Task list and subagent execution |
 | `@llblab/pi-telegram` | Telegram bridge — remote approval surface |
 | `pi-agent-browser-native` | Browser automation |
-| `@ayulab/pi-rewind` | Session rewind |
 | `pi-vim` | Vim keybindings |
 | `@juicesharp/rpiv-ask-user-question` | Structured user questions |
 | `@tomooshi/condensed-milk-pi` | Tool-result masking for prompt cache stability |
