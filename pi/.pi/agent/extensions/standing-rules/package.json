@@ -1,0 +1,13 @@
+{
+  "name": "pi-standing-rules",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Re-inject the user's own standing rules, verbatim, after compaction",
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts"
+  }
+}
