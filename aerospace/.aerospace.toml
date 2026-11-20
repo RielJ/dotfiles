@@ -342,6 +342,20 @@ run = 'layout floating'
 if.app-id = 'com.rielj.wallpaperd-settings'
 run = 'layout floating'
 
+# Automation browsers (Playwright, agent-browser) open on workspace 3 so they
+# never cover the editor. check-further-callbacks keeps the borders hook below.
+# Chrome for Testing: Playwright chromium and agent-browser.
+[[on-window-detected]]
+if.app-id = 'com.google.chrome.for.testing'
+check-further-callbacks = true
+run = 'move-node-to-workspace 3'
+
+# Playwright firefox (Nightly)
+[[on-window-detected]]
+if.app-id = 'org.mozilla.nightlyunofficial'
+check-further-callbacks = true
+run = 'move-node-to-workspace 3'
+
 # =============================================================================
 # Update borders on any window detection
 # =============================================================================
