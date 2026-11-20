@@ -1,3 +1,4 @@
+import { DIALOG_PAUSE_MS, formatDuration } from "./pause.ts";
 import type { Decision } from "./policy.ts";
 
 export const APPROVAL_TIMEOUT_MS = 120_000;
@@ -9,6 +10,7 @@ export type ConfirmUI = {
 /** Block is listed first, so the focused default and a stray Enter never run the call. */
 export const BLOCK_OPTION = "Block";
 export const ALLOW_OPTION = "Allow once";
+export const PAUSE_OPTION = `Allow all for ${formatDuration(DIALOG_PAUSE_MS)}`;
 
 export type GateResult = { block: true; reason: string } | undefined;
 
@@ -18,6 +20,10 @@ type GateOptions = {
   signal?: AbortSignal;
   timeoutMs?: number;
   summary: string;
+  /** True while the user has paused prompts; "ask" decisions then run without a dialog. */
+  isPaused?: () => boolean;
+  /** Called when the user picks PAUSE_OPTION in the dialog. */
+  onPause?: () => void;
 };
 
 const NO_RETRY =
@@ -33,12 +39,14 @@ let queue: Promise<unknown> = Promise.resolve();
 /**
  * allow → run. block → refuse at once. ask → select dialog with a countdown;
  * anything but "Allow once" (Block, Escape, timeout, abort, no UI in print mode) → refuse.
+ * While paused, "ask" runs without a dialog; "block" (hard rules) never does.
  */
 export async function gate(decision: Decision, opts: GateOptions): Promise<GateResult> {
   if (decision.action === "allow") return undefined;
   if (decision.action === "block") {
     return { block: true, reason: `Blocked by damage-control (never allowed):\n${bullets(decision.reasons)}\n${NO_RETRY}` };
   }
+  if (opts.isPaused?.()) return undefined;
   if (!opts.hasUI) {
     return {
       block: true,
@@ -49,12 +57,18 @@ export async function gate(decision: Decision, opts: GateOptions): Promise<GateR
   const timeoutMs = opts.timeoutMs ?? APPROVAL_TIMEOUT_MS;
   const ask = async (): Promise<boolean> => {
     if (opts.signal?.aborted) return false;
+    // A queued call whose turn comes after the user paused prompts runs without asking.
+    if (opts.isPaused?.()) return true;
     try {
       const choice = await opts.ui.select(
         `Damage control: allow this?\n${opts.summary}\n\n${bullets(decision.reasons)}\n\nNo answer in ${Math.round(timeoutMs / 1000)}s blocks it.`,
-        [BLOCK_OPTION, ALLOW_OPTION],
+        opts.onPause ? [BLOCK_OPTION, ALLOW_OPTION, PAUSE_OPTION] : [BLOCK_OPTION, ALLOW_OPTION],
         { signal: opts.signal, timeout: timeoutMs },
       );
+      if (choice === PAUSE_OPTION && opts.onPause) {
+        opts.onPause();
+        return true;
+      }
       return choice === ALLOW_OPTION;
     } catch {
       return false;
