@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.5.2",
+  "lastChangelogVersion": "1.6.0",
   "defaultProvider": "anthropic",
   "defaultModel": "claude-opus-5-5",
   "defaultThinkingLevel": "high",
@@ -52,7 +52,7 @@
   ],
   "extensionChangelogVersions": {
     "{\"source\":\"npm:@sting8k/pi-vcc\",\"scope\":\"user\"}": "0.11.2",
-    "{\"source\":\"npm:@tomooshi/condensed-milk-pi\",\"scope\":\"user\"}": "1.13.1",
+    "{\"source\":\"npm:@tomooshi/condensed-milk-pi\",\"scope\":\"user\"}": "1.14.0",
     "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.1",
     "{\"source\":\"npm:pi-token-burden\",\"scope\":\"user\"}": "0.6.5",
     "{\"source\":\"npm:@tintinweb/pi-tasks\",\"scope\":\"user\"}": "0.9.1",
