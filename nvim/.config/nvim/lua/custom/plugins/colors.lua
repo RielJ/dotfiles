@@ -30,6 +30,13 @@ return {
         on_colors = function(colors)
           colors = vim.tbl_extend("force", colors, require("rielj.theme").colors.rose_pine_colors)
         end,
+        on_highlights = function(hl, c)
+          -- Unused code (diagnostics tagged "unnecessary") is drawn in this
+          -- colour. tokyonight's terminal_black (#414868) is nearly the same
+          -- as the LspReference*/Visual backgrounds, so an unused name under
+          -- the cursor highlight disappeared. dark5 stays muted but readable.
+          hl.DiagnosticUnnecessary = { fg = c.dark5, italic = true }
+        end,
       })
 
       -- Ensure termguicolors is enabled if not already
