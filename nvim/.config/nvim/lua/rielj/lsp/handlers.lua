@@ -53,9 +53,13 @@ M.setup = function()
   -- helpers clear their own autocommands first, so this is idempotent.
   local register_capability = vim.lsp.handlers["client/registerCapability"]
   vim.lsp.handlers["client/registerCapability"] = function(err, res, ctx)
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    if client and res then
+      M.drop_ancestor_watchers(client, res)
+    end
+
     local result = register_capability(err, res, ctx)
 
-    local client = vim.lsp.get_client_by_id(ctx.client_id)
     if client then
       for bufnr in pairs(client.attached_buffers) do
         if vim.api.nvim_buf_is_valid(bufnr) then
@@ -65,6 +69,66 @@ M.setup = function()
     end
 
     return result
+  end
+end
+
+local case_insensitive = vim.fn.has("mac") == 1 or vim.fn.has("win32") == 1
+
+local function norm(path)
+  path = vim.fs.normalize(path)
+  return case_insensitive and path:lower() or path
+end
+
+--- Base directory of a RelativePattern watcher, or nil for a plain glob string
+--- (Neovim roots those at the workspace folders, so they are always safe).
+local function watcher_base(watcher)
+  local glob = watcher.globPattern
+  if type(glob) ~= "table" then
+    return nil
+  end
+  local uri = type(glob.baseUri) == "table" and glob.baseUri.uri or glob.baseUri
+  return type(uri) == "string" and vim.uri_to_fname(uri) or nil
+end
+
+--- Drop `workspace/didChangeWatchedFiles` watchers rooted at a parent of the
+--- workspace, mutating `res` in place.
+---
+--- tsgo (7.0.2) registers `**/*` under `file:///users`, i.e. a recursive
+--- FSEvents watch on the whole home folder. Every write anywhere under ~ then
+--- reaches Neovim's watcher, which asserts on paths it cannot stat
+--- (`_watch.lua:90: ENOTDIR … Library/Caches/…`) and, under churn, rebuilds
+--- its FSEvents stream until macOS refuses (`_watch.lua:73: EMFILE`).
+--- Those parent-folder watches only cover failed module lookups such as
+--- ~/node_modules, so losing them costs nothing in practice.
+---@param client vim.lsp.Client
+---@param res lsp.RegistrationParams
+function M.drop_ancestor_watchers(client, res)
+  local folders = vim.tbl_map(function(f)
+    return norm(vim.uri_to_fname(f.uri))
+  end, client.workspace_folders or {})
+  if #folders == 0 then
+    return
+  end
+
+  for _, reg in ipairs(res.registrations or {}) do
+    local watchers = reg.method == "workspace/didChangeWatchedFiles"
+      and reg.registerOptions
+      and reg.registerOptions.watchers
+    if watchers then
+      reg.registerOptions.watchers = vim.tbl_filter(function(w)
+        local base = watcher_base(w)
+        if not base then
+          return true
+        end
+        base = norm(base)
+        for _, folder in ipairs(folders) do
+          if base ~= folder and vim.fs.relpath(base, folder) then
+            return false
+          end
+        end
+        return true
+      end, watchers)
+    end
   end
 end
 
@@ -92,28 +156,20 @@ local function lsp_highlight_document(client, bufnr)
   end
 end
 
---- Code lenses are pull-based: the server never volunteers them, so without a
---- refresh nothing is ever attached to the buffer and `vim.lsp.codelens.run`
+--- Code lenses are pull-based: the server never volunteers them, so unless
+--- they are enabled nothing is attached to the buffer and `vim.lsp.codelens.run`
 --- (<leader>lA) has nothing to run. gopls' `codelenses.test` was configured but
 --- invisible for exactly this reason.
 ---
---- Refresh is capability-gated and event-driven rather than on TextChanged,
---- which would fire a request per keystroke.
+--- Since Nvim 0.13 `enable` replaces the deprecated `refresh`: the built-in
+--- provider requests lenses on attach and re-requests on buffer changes.
+--- `rielj.lsp.codelens` moves them from a line above onto the code line.
 local function lsp_codelens(client, bufnr)
   if not client:supports_method("textDocument/codeLens", bufnr) then
     return
   end
-
-  local group = vim.api.nvim_create_augroup("rielj-lsp-codelens", { clear = false })
-  vim.api.nvim_clear_autocmds({ group = group, buffer = bufnr })
-  vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave", "BufWritePost" }, {
-    group = group,
-    buffer = bufnr,
-    callback = function()
-      vim.lsp.codelens.refresh({ bufnr = bufnr })
-    end,
-  })
-  vim.lsp.codelens.refresh({ bufnr = bufnr })
+  require("rielj.lsp.codelens").setup()
+  vim.lsp.codelens.enable(true, { bufnr = bufnr })
 end
 
 --- Buffer-local LSP keymaps.
