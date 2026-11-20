@@ -5,3 +5,6 @@ export PATH="$PATH:/home/rielj/.foundry/bin"
 . "$HOME/.cargo/env"
 
 
+
+# uv
+export PATH="$HOME/.config/local/bin:$PATH"
