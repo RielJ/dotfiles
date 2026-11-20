@@ -1,106 +1,101 @@
-# Dotfiles Repository
+# dotfiles
 
-Welcome to my dotfiles repository! This collection includes configurations for a variety of applications and tools, meticulously crafted to enhance your workflow and aesthetic experience. Below is a brief overview of the configurations included.
+My configuration for macOS and Linux, managed with [GNU Stow](https://www.gnu.org/software/stow/). Each top-level folder is one Stow package: its contents mirror where the files go under `$HOME`.
 
-## 🌟 Features
+I work on macOS now. The Linux folders are from my earlier Arch Linux setup, with i3 on X11 and Sway on Wayland.
 
-- **Beautifully customized terminal and editors**
-- **Efficient window management**
-- **Polished notifications and bars**
-- **Seamless integration with various applications**
+## What's here
 
-## 📂 Directory and File Structure
+### macOS (in use)
 
-### Active Configurations
+| Package | What it configures |
+|---|---|
+| `aerospace` | [AeroSpace](https://github.com/nikitabobko/AeroSpace), a tiling window manager set up to behave like Sway |
+| `borders` | [JankyBorders](https://github.com/FelixKratz/JankyBorders), window borders that show the focused window |
+| `sketchybar` | [SketchyBar](https://github.com/FelixKratz/SketchyBar), the status bar |
+| `karabiner` | [Karabiner-Elements](https://karabiner-elements.pqrs.org/), key remapping so macOS modifier keys match Linux |
+| `pi` | [Pi](https://github.com/earendil-works/pi), my AI coding agent: settings, extensions, skills and agents. See [AI coding setup](#ai-coding-setup) |
+| `nvim` | Neovim, with lazy.nvim and per-language LSP settings |
+| `tmux` | tmux, with a separate `macos.conf` |
+| `zsh` | zsh: prompt, aliases, key bindings and vi mode |
+| `lazygit` | lazygit |
+| `node` | `globals.txt`, the global npm CLIs I install with `scripts/node-globals.sh` |
 
-- `kitty` - Kitty terminal emulator configuration
-- `mako` - Mako notification daemon configuration
-- `mimeapps` - Default applications configuration
-- `nvim` - Neovim text editor configuration
-- `nwg-launchers` - nwg-launchers application launcher configuration
-- `ranger` - Ranger file manager configuration
-- `swappy` - Swappy screenshot editor configuration
-- `sway` - Sway window manager configuration
-- `swaylock` - Swaylock screen locker configuration
-- `tmux` - Tmux terminal multiplexer configuration
-- `wallpapers` - Collection of wallpapers
-- `waybar` - Waybar status bar configuration
-- `wofi` - Wofi application launcher configuration
-- `zathura` - Zathura document viewer configuration
-- `zsh` - Zsh shell configuration
+[MACOS_SETUP.md](MACOS_SETUP.md) lists the manual steps after stowing: accessibility permissions, the Raycast hotkey, and the macOS settings that make the Linux-style keys work.
 
-### Inactive Configurations
+### Linux
 
-- `alacritty` - Alacritty terminal emulator configuration
-- `dunst` - Dunst notification daemon configuration
-- `i3` - i3 window manager configuration
-- `picom` - Picom compositor configuration
-- `polybar` - Polybar status bar configuration
-- `rofi` - Rofi application launcher configuration
-- `x` - Xorg server configuration
+| Package | What it configures |
+|---|---|
+| `sway`, `swaylock`, `swappy` | Sway window manager, screen locker, screenshot editor |
+| `waybar`, `wofi`, `mako`, `nwg-launchers` | Bar, launcher, notifications and app menu for Sway |
+| `i3`, `polybar`, `rofi`, `picom`, `dunst`, `x` | The older X11 setup with i3 |
+| `mimeapps`, `zathura`, `ranger` | Default apps, PDF viewer, file manager |
 
-### Other Files
+### Either platform
 
-- `user.js` - Firefox user.js configuration
-- `zen` - Zen browser user.js and mod list (link with `scripts/zen-link.sh`)
-- `packages.txt` - List of installed packages
+- `kitty`, `alacritty`: terminal emulators.
+- `user.js`: Firefox preferences.
+- `zen`: Zen browser `user.js` and mod list. Link it with `scripts/zen-link.sh`.
+- `packages.txt`: packages from my Arch install.
 
-## 🚀 Installation
+## Install
 
-To use these configurations, follow these steps:
+```bash
+git clone https://github.com/RielJ/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+brew install stow          # macOS; on Arch: sudo pacman -S stow
+stow nvim tmux zsh         # link the packages you want
+```
 
-1. **Clone the repository**:
+Stow links each file in a package into your home directory. Existing files are not overwritten: Stow stops and reports the conflict, so move the old file first.
 
-   ```bash
-   git clone https://github.com/yourusername/dotfiles.git ~/.dotfiles
-   ```
+## AI coding setup
 
-2. **Navigate to the directory**:
+The `pi` package is my setup for [Pi](https://github.com/earendil-works/pi), the terminal coding agent I use every day. It links to `~/.pi`. Session data and long-term memories stay on my machine and are never committed.
 
-   ```bash
-   cd ~/.dotfiles
-   ```
+### Ground rules
 
-3. **Install GNU Stow** (if not already installed):
+[`AGENTS.md`](pi/.pi/agent/AGENTS.md) holds the rules every session loads. The main ones:
 
-   ```bash
-   sudo apt install stow   # For Debian-based systems
-   sudo pacman -S stow     # For Arch-based systems
-   sudo dnf install stow   # For Fedora-based systems
-   ```
+- The agent never commits or pushes unless I ask, and never force-pushes or rewrites pushed history.
+- Work goes in small vertical slices: read first, make the smallest complete change, test it, then move on.
+- When the agent repeats a mistake, the fix goes as high as it can: architecture, then types, then a lint or test, and only last a written rule. The table at the end of `AGENTS.md` records what enforces each rule.
 
-4. **Use Stow to manage your dotfiles**:
-   ```bash
-   stow alacritty
-   stow dunst
-   stow i3
-   stow kitty
-   stow <directory>  # Repeat for each directory you want to use
-   ...
-   ```
+### Extensions I wrote
 
-This will create symbolic links from your home directory to the configuration files in this repository.
+In [`pi/.pi/agent/extensions`](pi/.pi/agent/extensions):
 
-## 🛠 Customization
+- **superpowers**: runs several models side by side. `/plan` gets plans from four models, and `/review` gets four independent code reviews that report only merge-blocking problems. It also adds local knowledge-base search ([QMD](https://github.com/tobi/qmd)) and web search.
+- **damage-control**: checks every shell command against [`damage-control-rules.yaml`](pi/.pi/agent/damage-control-rules.yaml). Hard rules (force push, `--amend`, `reset --hard`) are blocked outright. Other risky commands ask Block or Allow once, and block if nobody answers within two minutes.
+- **memory**: long-term memory across sessions, stored as Markdown in a local git repository under `~/.pi/memory`, outside every project and never pushed.
+- **git-workflow**: `/commit`, `/pr` and `/commit-and-pr`, which group changes into conventional commits by logical change and open pull requests with `gh`. Commit messages never credit an AI.
+- **telegram-question-bridge**: lets the agent ask me questions over Telegram when I'm away from the terminal.
+- **usage**: `/usage`, a dashboard of usage per provider for today, this week, last week, the last 30 days and all time.
+- **pi-notify**: a desktop notification when the agent is waiting for me and the terminal isn't focused.
+- Smaller fixes: `anthropic-tool-schema-compat` and `image-media-type-guard` work around provider API errors; `session-utils` adds `/clear`; `shortcuts` lists every key binding in one place.
 
-Feel free to customize these configurations to suit your needs. Each directory contains a `README.md` file with more detailed information on the configurations and how to modify them.
+Two extensions are forks of [amosblomqvist](https://github.com/amosblomqvist)'s MIT-licensed projects, with my changes:
 
-## 📸 Screenshots
+- **subagents**, from [pi-interactive-subagents](https://github.com/amosblomqvist/pi-interactive-subagents): each subagent runs in its own tmux window, optionally in its own git worktree.
+- **prompt-snippets**, from [pi-config](https://github.com/amosblomqvist/pi-config): single-purpose prompt rules toggled per message.
 
-Here's a glimpse of what your setup could look like:
+### Skills and agents
 
-### Terminal (Kitty)
+- [`skills/`](pi/.pi/agent/skills): instructions the agent loads when a task matches, such as `systematic-debugging`, `tdd`, `blast-radius`, `correct`, `technical-writing` and `typescript-best-practices`.
+- [`agents/`](pi/.pi/agent/agents): role definitions for subagents, such as planner, builder, reviewer, red team and scout.
 
-![Terminal](./screenshots/terminal.png)
+### Packages
 
-### Window Manager (i3 / Sway)
+[`settings.json`](pi/.pi/agent/settings.json) lists the community packages I install, including [pi-lens](https://www.npmjs.com/package/pi-lens) for LSP diagnostics, [pi-fff](https://www.npmjs.com/package/@ff-labs/pi-fff) for fast file search, [pi-vcc](https://www.npmjs.com/package/@sting8k/pi-vcc) for context compaction, and [pi-mcp-adapter](https://www.npmjs.com/package/pi-mcp-adapter) for MCP servers.
 
-![Window Manager](./screenshots/window_manager.png)
+I also publish two Pi packages of my own:
 
-## 📝 Contributing
+- [pi-git-worktrees](https://github.com/RielJ/pi-git-worktrees): runs agent sessions in parallel, each in its own git worktree.
+- [pi-image-preview](https://github.com/RielJ/pi-image-preview): shows images inline in the terminal with the kitty graphics protocol, including inside tmux.
 
-Contributions are welcome! If you have improvements or fixes, please open a pull request. For major changes, please open an issue first to discuss what you would like to change.
+## Screenshots
 
----
+![Terminal](screenshots/terminal.png)
 
-Happy hacking! 🚀
+![Window manager](screenshots/window_manager.png)
