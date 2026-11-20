@@ -97,9 +97,6 @@ conform.setup({
     oxfmt = {
       require_cwd = true,
     },
-    rustywind = {
-      append_args = { "--config", "rustywind.toml" },
-    },
     -- Same pinned ruff as the LSP and `make lint`. See rielj/lsp/venv_bin.lua.
     ruff_fix = { command = ruff_command },
     ruff_format = { command = ruff_command },

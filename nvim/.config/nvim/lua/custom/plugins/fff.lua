@@ -2,7 +2,7 @@ return {
   {
     "dmtrKovalenko/fff",
     name = "fff.nvim",
-    version = "v0.10.5",
+    version = "v0.11.0",
     -- Build from source instead of downloading the release binary. Releases use
     -- the zlob walker, which reads only .gitignore files and skips global
     -- excludes (~/.config/git/ignore), .git/info/exclude and .ignore, so
