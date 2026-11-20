@@ -59,6 +59,7 @@ extensions/*.off
 # OS
 .DS_Store
 
-# Footer usage cache and MCP adapter version marker
+# Footer usage cache, MCP adapter version marker and per-project MCP approvals
 pi-minimal-footer/
 mcp-last-seen-version.json
+mcp-project-approvals.json
