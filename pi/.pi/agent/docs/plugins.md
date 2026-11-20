@@ -56,7 +56,6 @@ Declared in `settings.json` under `packages`.
 | `@tintinweb/pi-tasks` | Task list and subagent execution |
 | `@llblab/pi-telegram` | Telegram bridge — remote approval surface |
 | `pi-agent-browser-native` | Browser automation |
-| `@bytesbrains/pi-textbrowser` | Headless browser, DOM plus OCR text maps |
 | `@ayulab/pi-rewind` | Session rewind |
 | `pi-vim` | Vim keybindings |
 | `@juicesharp/rpiv-ask-user-question` | Structured user questions |
@@ -70,7 +69,7 @@ Declared in `settings.json` under `packages`.
 | `@ogulcancelik/pi-minimal-footer` | Footer UI |
 | `@tmustier/pi-tab-status` | Tab status |
 
-Note that `@bytesbrains/pi-textbrowser` was previously `pi-textbrowser`, which was unpublished from npm on 2026-07-21. Because npm installs atomically, the dead name blocked every other extension update until the rename was applied. Worth remembering as a failure mode: one unpublished package silently freezes the whole update batch.
+`@bytesbrains/pi-textbrowser` (removed 2026-11-10) duplicated the browser tools and wrote Tesseract's `eng.traineddata` into whatever project pi was running in, because it never set a tesseract.js `cachePath`. Before that it was named `pi-textbrowser`, which was unpublished from npm on 2026-07-21. Because npm installs atomically, the dead name blocked every other extension update until the rename was applied. Worth remembering as a failure mode: one unpublished package silently freezes the whole update batch.
 
 ### Local extensions
 
