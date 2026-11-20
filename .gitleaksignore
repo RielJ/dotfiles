@@ -1,0 +1,2 @@
+# Fake api_key fixture in the memory extension's secret-rejection test.
+5521bfbb337eec80ca8649c30c18b7adbd540d12:pi/.pi/agent/extensions/memory/test/write.test.ts:generic-api-key:114
