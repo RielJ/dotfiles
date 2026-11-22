@@ -57,25 +57,32 @@ function getSettingsPath(): string {
 }
 
 function loadSettings(): SuperpowersSettings {
+  const p = getSettingsPath();
   try {
-    const p = getSettingsPath();
     if (fs.existsSync(p)) {
       const raw = JSON.parse(fs.readFileSync(p, "utf-8"));
       if (raw[SETTINGS_KEY]) return raw[SETTINGS_KEY];
     }
-  } catch {}
+  } catch (err) {
+    console.error(
+      `[superpowers] Could not read ${p}; using default module toggles:`,
+      err,
+    );
+  }
   return { enabled: {} };
 }
 
 function saveSettings(settings: SuperpowersSettings): void {
+  const p = getSettingsPath();
   try {
-    const p = getSettingsPath();
     let raw: Record<string, unknown> = {};
     if (fs.existsSync(p)) raw = JSON.parse(fs.readFileSync(p, "utf-8"));
     raw[SETTINGS_KEY] = settings;
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, JSON.stringify(raw, null, 2) + "\n", "utf-8");
-  } catch {}
+  } catch (err) {
+    console.error(`[superpowers] Could not save module toggles to ${p}:`, err);
+  }
 }
 
 // ── Humanize module ID ───────────────────────────────────────────────
@@ -103,7 +110,9 @@ function extractDescription(filePath: string): string {
       if (cleaned && !cleaned.startsWith("@") && !cleaned.startsWith("Usage"))
         return cleaned;
     }
-  } catch {}
+  } catch {
+    // Unreadable file: fall through to the generic description.
+  }
   return "Pi extension";
 }
 
@@ -148,6 +157,7 @@ function discoverModules(extensionDir: string): DiscoveredModule[] {
       if (!stat.isFile() || !isExtensionFile(fullPath)) continue;
 
       try {
+        // pi-lens-ignore: ts-dynamic-require -- loads module files discovered in this extension's own directory
         const mod = require(fullPath);
 
         if (mod.module && typeof mod.init === "function") {
@@ -211,6 +221,7 @@ function createGatedProxy(
 ): ExtensionAPI {
   const handler: ProxyHandler<ExtensionAPI> = {
     get(target, prop, receiver) {
+      // pi-lens-ignore: no-reflect-get -- a Proxy get trap forwards arbitrary keys; Reflect.get keeps getter receivers correct
       const value = Reflect.get(target, prop, receiver);
 
       // ── registerTool: wrap execute() ─────────────────

@@ -244,7 +244,7 @@ export function createTelegramQuestionBridge(
       // search (interactive tool). Spread because the repo's dev typings (0.84) predate these fields.
       ...(TOOL_EXPOSURE as object),
       async execute(_toolCallId, params, signal) {
-        const typed = params as unknown as QuestionParams;
+        const typed: QuestionParams = params;
         if (!telegramRunActive) {
           return buildToolResult(
             `${TELEGRAM_QUESTION_TOOL} only works in Telegram-originated runs. Use ask_user_question instead.`,

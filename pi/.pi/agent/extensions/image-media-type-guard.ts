@@ -74,7 +74,9 @@ function log(line: string): void {
   if (!DEBUG) return;
   try {
     appendFileSync(LOG_PATH, `${new Date().toISOString()} ${line}\n`);
-  } catch {}
+  } catch {
+    // Debug log only: a failed write must never affect the request.
+  }
 }
 
 interface ImageSource {
@@ -93,29 +95,8 @@ interface Block {
   content?: Block[];
   [k: string]: unknown;
 }
-interface Msg {
-  role?: string;
-  content?: Block[];
-  [k: string]: unknown;
-}
-interface Wrapper {
-  message?: Msg;
-  content?: Block[];
-  [k: string]: unknown;
-}
-interface ContextEvent {
-  messages?: Wrapper[];
-  [k: string]: unknown;
-}
-type ContextResult = { messages: Wrapper[] } | undefined;
-// The runtime exposes a "context" event (used by condensed-milk etc.), but the
-// installed @earendil-works type union does not list it. Cast through a minimal
-// typed surface so this stays type-checked without `any`.
-interface ContextCapableApi {
-  on(
-    event: "context",
-    handler: (event: ContextEvent) => Promise<ContextResult> | ContextResult,
-  ): void;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 /** Return the first candidate that is a valid, supported media type (canonicalized). */
@@ -183,49 +164,51 @@ function guardBlock(block: Block): Block {
 }
 
 export default function imageMediaTypeGuard(pi: ExtensionAPI) {
-  (pi as unknown as ContextCapableApi).on(
-    "context",
-    async (event: ContextEvent) => {
-      const messages = event?.messages;
-      if (!Array.isArray(messages)) return undefined;
+  pi.on("context", async (event) => {
+    // Typed as AgentMessage[], but history can hold blocks from older sessions
+    // or other extensions, so walk it as unknown data and narrow each level.
+    const messages: readonly unknown[] = event.messages;
+    if (!Array.isArray(messages)) return undefined;
 
-      let repaired = 0;
-      for (const wrapper of messages) {
-        // Some pipelines wrap the message as { message: {...} }; handle both.
-        const msg = wrapper?.message ?? wrapper;
-        const content = msg?.content;
-        if (!Array.isArray(content)) continue;
+    let repaired = 0;
+    for (const wrapper of messages) {
+      if (!isRecord(wrapper)) continue;
+      // Some pipelines wrap the message as { message: {...} }; handle both.
+      const msg = isRecord(wrapper.message) ? wrapper.message : wrapper;
+      const content: unknown = msg.content;
+      if (!Array.isArray(content)) continue;
 
-        for (let i = 0; i < content.length; i++) {
-          const block = content[i];
-          // Top-level image blocks.
-          if (block?.type === "image") {
-            const fixed = guardBlock(block);
-            if (fixed !== block) {
-              content[i] = fixed;
-              repaired++;
-            }
-            continue;
+      for (let i = 0; i < content.length; i++) {
+        const block: unknown = content[i];
+        if (!isRecord(block)) continue;
+        // Top-level image blocks.
+        if (block.type === "image") {
+          const fixed = guardBlock(block);
+          if (fixed !== block) {
+            content[i] = fixed;
+            repaired++;
           }
-          // tool_result blocks carry their own nested content array of [text, image].
-          if (block?.type === "tool_result" && Array.isArray(block.content)) {
-            for (let j = 0; j < block.content.length; j++) {
-              const inner = block.content[j];
-              if (inner?.type === "image") {
-                const fixed = guardBlock(inner);
-                if (fixed !== inner) {
-                  block.content[j] = fixed;
-                  repaired++;
-                }
+          continue;
+        }
+        // tool_result blocks carry their own nested content array of [text, image].
+        const nested: unknown = block.content;
+        if (block.type === "tool_result" && Array.isArray(nested)) {
+          for (let j = 0; j < nested.length; j++) {
+            const inner: unknown = nested[j];
+            if (isRecord(inner) && inner.type === "image") {
+              const fixed = guardBlock(inner);
+              if (fixed !== inner) {
+                nested[j] = fixed;
+                repaired++;
               }
             }
           }
         }
       }
+    }
 
-      if (repaired > 0) log(`turn repaired ${repaired} image block(s)`);
-      // Return the (mutated) array so downstream serialization sees the fixes.
-      return { messages };
-    },
-  );
+    if (repaired > 0) log(`turn repaired ${repaired} image block(s)`);
+    // Return the (mutated) array so downstream serialization sees the fixes.
+    return { messages: event.messages };
+  });
 }
