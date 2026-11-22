@@ -33,6 +33,7 @@ import {
   MEMBER_LIMITS,
   type MultiRun,
   markDelivered,
+  memberStream,
   runFollowup,
   saveRun,
   settleOutput,
@@ -327,6 +328,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       preContext: userContext ? `Focus: ${userContext}` : undefined,
       timeoutMs: PHASE_0_TIMEOUT_MS,
       signal,
+      stream: memberStream(run, "explorer", "Explorer"),
       onActivity: (activity) =>
         tracker.setAgent(live, "Explorer", { activity }),
     });
@@ -393,6 +395,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
           task: `${enrichedTask}\n\n## Output File\nWrite your FULL review to: ${file}`,
           ...(reviewer.thinking ? { thinking: reviewer.thinking } : {}),
           sessionFile: member.sessionFile,
+          ...memberStream(run, reviewer.key, reviewer.label),
           ...MEMBER_LIMITS,
           signal,
           onActivity: (activity) =>

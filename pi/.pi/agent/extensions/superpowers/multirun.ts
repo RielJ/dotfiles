@@ -10,6 +10,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { pickLatestRun } from "./_async.js";
 import { type AgentResult, runAgent } from "./_shared.js";
+import { memberViewer, type ViewerTarget } from "./_tmux-viewer.js";
 
 export type RunKind = "plan" | "review";
 
@@ -130,6 +131,28 @@ export function createRun(
   fs.mkdirSync(path.join(root, id));
   pruneRuns(root);
   return { id, kind, task, cwd, createdAt: now.toISOString(), members: [] };
+}
+
+/**
+ * Where a worker's raw NDJSON stream goes, and its `_pi-agents` viewer window.
+ * `followup` numbers a follow-up turn so it keeps its own stream file; the
+ * window is reused (replaced) per member.
+ */
+export function memberStream(
+  run: Pick<MultiRun, "id" | "kind">,
+  key: string,
+  label: string,
+  followup?: number,
+): { logPath: string; viewer: ViewerTarget } {
+  const base = `${run.kind}-${key.toLowerCase()}${followup ? `-${followup}` : ""}`;
+  return {
+    logPath: path.join(runDir(run.id), `${base}.stream.ndjson`),
+    viewer: memberViewer(
+      run.id,
+      key,
+      followup ? `${label} · follow-up ${followup}` : label,
+    ),
+  };
 }
 
 export function runDir(id: string): string {
@@ -287,6 +310,7 @@ export async function runFollowup(opts: {
     task: `${opts.message}\n\n## Output File\nWrite your FULL updated ${noun} (or your answer, if no ${noun} change is needed) to: ${outputFile}`,
     ...(member.thinking ? { thinking: member.thinking } : {}),
     sessionFile: member.sessionFile,
+    ...memberStream(run, member.key, member.label, n),
     timeoutMs: opts.timeoutMs ?? MEMBER_LIMITS.timeoutMs,
     idleTimeoutMs: MEMBER_LIMITS.idleTimeoutMs,
     signal,

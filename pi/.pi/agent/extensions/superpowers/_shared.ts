@@ -16,7 +16,12 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { mergeToolAllowlist, resolveExtensions, type SubagentExtension } from "./_subagent-extensions.js";
+import {
+  mergeToolAllowlist,
+  resolveExtensions,
+  type SubagentExtension,
+} from "./_subagent-extensions.js";
+import { openViewer, type ViewerTarget } from "./_tmux-viewer.js";
 
 // ── Models ──────────────────────────────────────────────────────────
 
@@ -85,7 +90,9 @@ export async function resolveTaskContext(
       ).trim();
       if (result) {
         const issue = JSON.parse(result);
-        const labels = (issue.labels || []).map((l: { name?: string }) => l.name).join(", ");
+        const labels = (issue.labels || [])
+          .map((l: { name?: string }) => l.name)
+          .join(", ");
         const comments = (issue.comments || [])
           .slice(-5) // last 5 comments
           .map(
@@ -138,8 +145,12 @@ export async function resolveTaskContext(
       ).trim();
       if (result) {
         const pr = JSON.parse(result);
-        const labels = (pr.labels || []).map((l: { name?: string }) => l.name).join(", ");
-        const files = (pr.files || []).map((f: { path?: string }) => f.path).join("\n  ");
+        const labels = (pr.labels || [])
+          .map((l: { name?: string }) => l.name)
+          .join(", ");
+        const files = (pr.files || [])
+          .map((f: { path?: string }) => f.path)
+          .join("\n  ");
 
         let prContext = `### GitHub PR #${num}: ${pr.title || "Untitled"}\n`;
         prContext += `**State:** ${pr.state || "unknown"}`;
@@ -197,9 +208,15 @@ export async function resolveTaskContext(
 // ── Extension Whitelisting ──────────────────────────────────────────
 
 /** Phase 0 explorer: search + output compression. Planners get its findings. */
-export const PHASE_0_EXTENSIONS: readonly SubagentExtension[] = ["piFff", "condensedMilk"];
+export const PHASE_0_EXTENSIONS: readonly SubagentExtension[] = [
+  "piFff",
+  "condensedMilk",
+];
 /** Phase 1 planners/reviewers and follow-ups. */
-export const PHASE_1_EXTENSIONS: readonly SubagentExtension[] = ["piFff", "condensedMilk"];
+export const PHASE_1_EXTENSIONS: readonly SubagentExtension[] = [
+  "piFff",
+  "condensedMilk",
+];
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -277,6 +294,11 @@ export interface RunAgentOptions {
   maxToolCalls?: number;
   /** Tee the raw NDJSON stream to this file for drill-down viewing */
   logPath?: string;
+  /**
+   * Open a read-only window in the `_pi-agents` tmux session that live-renders
+   * the `logPath` stream. Needs `logPath`; skipped outside tmux.
+   */
+  viewer?: ViewerTarget;
   /** Save the run to this Pi session file (created if missing, resumed if it exists). Default: no session. */
   sessionFile?: string;
 }
@@ -299,6 +321,7 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
     extensions = PHASE_1_EXTENSIONS,
     maxToolCalls,
     logPath,
+    viewer,
     sessionFile,
   } = opts;
 
@@ -306,7 +329,8 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
   // --tools allowlist does not name.
   const resolved = resolveExtensions(extensions);
   const allowedTools = mergeToolAllowlist(tools, resolved.tools);
-  if (resolved.missing.length > 0) onActivity?.(`missing extensions: ${resolved.missing.join(", ")}`);
+  if (resolved.missing.length > 0)
+    onActivity?.(`missing extensions: ${resolved.missing.join(", ")}`);
 
   return new Promise((resolve) => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-superpower-"));
@@ -506,6 +530,9 @@ export function runAgent(opts: RunAgentOptions): Promise<AgentResult> {
         logStream = fs.createWriteStream(logPath, { flags: "w" });
       } catch {
         /* logging is best-effort */
+      }
+      if (logStream && viewer && proc.pid) {
+        openViewer({ ...viewer, logPath, pid: proc.pid, cwd });
       }
     }
 
@@ -746,6 +773,8 @@ export interface ExplorationOptions {
   timeoutMs?: number;
   /** Give the explorer web_search + web_read for facts outside the repo. */
   web?: boolean;
+  /** Tee the stream to `logPath` and show it in a `_pi-agents` viewer window. */
+  stream?: { logPath: string; viewer?: ViewerTarget };
   /** AbortSignal for cancellation */
   signal?: AbortSignal;
   /** Activity callback for live widget updates */
@@ -780,6 +809,7 @@ export async function runExploration(
     preContext,
     timeoutMs = 60_000,
     web = false,
+    stream,
     signal,
     onActivity,
   } = opts;
@@ -803,6 +833,7 @@ export async function runExploration(
     thinking: "off",
     signal,
     onActivity,
+    ...stream,
     extensions: web ? [...PHASE_0_EXTENSIONS, "webSearch"] : PHASE_0_EXTENSIONS,
     // Hard limit to prevent over-exploration; web lookups get a bigger budget
     maxToolCalls: web ? WEB_EXPLORER_TOOL_CALLS : 15,
@@ -830,7 +861,10 @@ export async function runExploration(
  */
 /** Minimal shapes read from session entries (full types live in pi-coding-agent). */
 type TextBlock = { type: string; text?: string };
-type BranchEntry = { type: string; message?: { role?: string; content?: string | TextBlock[] } };
+type BranchEntry = {
+  type: string;
+  message?: { role?: string; content?: string | TextBlock[] };
+};
 
 export function extractConversationContext(
   ctx: ExtensionContext,

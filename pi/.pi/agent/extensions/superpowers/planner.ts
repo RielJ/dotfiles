@@ -37,6 +37,7 @@ import {
   MEMBER_LIMITS,
   type MultiRun,
   markDelivered,
+  memberStream,
   runFollowup,
   saveRun,
   settleOutput,
@@ -262,6 +263,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       web: inputs.web,
       timeoutMs: inputs.web ? PHASE_0_WEB_TIMEOUT_MS : PHASE_0_TIMEOUT_MS,
       signal,
+      stream: memberStream(run, "explorer", "Explorer"),
       onActivity: (activity) =>
         tracker.setAgent(live, "Explorer", { activity }),
     });
@@ -332,6 +334,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
           task: `${enrichedTask}\n\n## Output File\nWrite your FULL plan to: ${file}`,
           ...(planner.thinking ? { thinking: planner.thinking } : {}),
           sessionFile: member.sessionFile,
+          ...memberStream(run, planner.key, planner.label),
           ...MEMBER_LIMITS,
           signal,
           onActivity: (activity) =>
