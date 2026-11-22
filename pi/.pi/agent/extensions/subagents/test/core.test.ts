@@ -1,20 +1,26 @@
 // @ts-nocheck -- focused runtime tests use a minimal structural ExtensionAPI mock.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { stripVTControlCharacters } from "node:util";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, it } from "node:test";
+import { stripVTControlCharacters } from "node:util";
 import subagentsExtension, {
-  DEFAULT_SUBAGENT_MODEL,
   __test__,
+  DEFAULT_SUBAGENT_MODEL,
 } from "../index.ts";
 import {
   loadoutSidecarPath,
   readSubagentLoadout,
-  writeSubagentLoadout,
   type SubagentLoadout,
+  writeSubagentLoadout,
 } from "../session.ts";
 import {
   exitStatusFile,
@@ -25,10 +31,10 @@ import {
   wrapSubagentCommand,
 } from "../tmux.ts";
 import {
-  POOL_SESSION,
   capturePane,
   createWindow,
   killWindow,
+  POOL_SESSION,
   sanitizeWindowName,
   sendMessage,
   tmuxAvailable,
@@ -49,8 +55,25 @@ describe("tmux pool", () => {
       sanitizeWindowName("OAuth Refresh: Worker #1"),
       "oauth-refresh-worker-1",
     );
-    assert.equal(windowTarget("OAuth Refresh"), "_pi-agents:oauth-refresh");
+    assert.equal(windowTarget("OAuth Refresh"), "=_pi-agents:=oauth-refresh");
   });
+
+  // Regression: without `=`, tmux resolves a missing window name as a prefix or
+  // glob, so killing `plan` removed an unrelated `plan-043707-a` window.
+  it(
+    "kills only the exact window name, never a prefix match",
+    { skip: !tmuxAvailable() },
+    () => {
+      const base = `pi-prefix-${process.pid}`;
+      const longer = createWindow(`${base}-a`, tmpdir());
+      try {
+        killWindow(base);
+        assert.equal(windowAlive(longer), true);
+      } finally {
+        killWindow(longer);
+      }
+    },
+  );
 
   it("shell-escapes single quotes", () => {
     assert.equal(shellEscape("it's fine"), "'it'\\''s fine'");
@@ -87,9 +110,13 @@ describe("crash detection", () => {
     const name = `pi-crash-test-${label}-${process.pid}`;
     const session = join(dir, "child.jsonl");
     const surface = createWindow(name, dir);
-    sendLongCommand(surface, wrapSubagentCommand(command, exitStatusFile(session)), {
-      scriptPath: join(dir, "launch.sh"),
-    });
+    sendLongCommand(
+      surface,
+      wrapSubagentCommand(command, exitStatusFile(session)),
+      {
+        scriptPath: join(dir, "launch.sh"),
+      },
+    );
     return { name, surface, session };
   };
   const killJob = async (name: string, signal: "TERM" | "KILL") => {
@@ -101,7 +128,9 @@ describe("crash detection", () => {
         { encoding: "utf8" },
       ).trim();
       try {
-        const child = execFileSync("pgrep", ["-P", panePid], { encoding: "utf8" })
+        const child = execFileSync("pgrep", ["-P", panePid], {
+          encoding: "utf8",
+        })
           .trim()
           .split("\n")[0];
         await new Promise((r) => setTimeout(r, 300));
@@ -150,7 +179,10 @@ describe("crash detection", () => {
         const result = await watch(surface, session);
         assert.equal(result.reason, "crashed");
         assert.equal(existsSync(exitStatusFile(session)), false);
-        assert.match(result.errorMessage ?? "", /without reporting an exit status/);
+        assert.match(
+          result.errorMessage ?? "",
+          /without reporting an exit status/,
+        );
       } finally {
         killWindow(name);
       }
@@ -191,7 +223,10 @@ describe("crash detection", () => {
       lastErrorLine(screen),
       "Error: extension ctx is stale after session replacement or reload",
     );
-    assert.equal(lastErrorLine("zsh: killed  bash launch.sh"), "zsh: killed  bash launch.sh");
+    assert.equal(
+      lastErrorLine("zsh: killed  bash launch.sh"),
+      "zsh: killed  bash launch.sh",
+    );
     assert.equal(lastErrorLine("all good"), null);
   });
 
@@ -208,7 +243,10 @@ describe("crash detection", () => {
     );
     assert.match(text, /^Sub-agent "lane-a" crashed after/);
     assert.match(text, /exit code 143/);
-    assert.match(text, /Last message before the crash:\nHalfway through the refactor\./);
+    assert.match(
+      text,
+      /Last message before the crash:\nHalfway through the refactor\./,
+    );
     assert.doesNotMatch(text, /auto-retry exhausted|completed/);
   });
 });
@@ -228,7 +266,10 @@ describe("automatic resume after a crash", () => {
 
   it("stops after MAX_CRASH_RESUMES attempts in a row", () => {
     assert.equal(MAX_CRASH_RESUMES, 2);
-    assert.equal(shouldAutoResume({ ...piChild, crashResumes: 1 }, crash), true);
+    assert.equal(
+      shouldAutoResume({ ...piChild, crashResumes: 1 }, crash),
+      true,
+    );
     assert.equal(
       shouldAutoResume({ ...piChild, crashResumes: MAX_CRASH_RESUMES }, crash),
       false,
@@ -236,14 +277,23 @@ describe("automatic resume after a crash", () => {
   });
 
   it("leaves clean exits, closes, Ctrl+C, user-driven and Claude children alone", () => {
-    assert.equal(shouldAutoResume(piChild, { crashed: false, exitCode: 0 }), false);
+    assert.equal(
+      shouldAutoResume(piChild, { crashed: false, exitCode: 0 }),
+      false,
+    );
     assert.equal(shouldAutoResume(piChild, { exitCode: 1 }), false);
-    assert.equal(shouldAutoResume(piChild, { crashed: true, exitCode: 130 }), false);
+    assert.equal(
+      shouldAutoResume(piChild, { crashed: true, exitCode: 130 }),
+      false,
+    );
     assert.equal(
       shouldAutoResume({ ...piChild, closeReason: "orchestrator" }, crash),
       false,
     );
-    assert.equal(shouldAutoResume({ ...piChild, interactive: true }, crash), false);
+    assert.equal(
+      shouldAutoResume({ ...piChild, interactive: true }, crash),
+      false,
+    );
     assert.equal(shouldAutoResume({ ...piChild, cli: "claude" }, crash), false);
     assert.equal(
       shouldAutoResume({ ...piChild, artifactDir: undefined }, crash),
@@ -431,8 +481,17 @@ describe("child sandbox", () => {
     const npm = join(agentDir, "npm", "node_modules");
     const vcc = join(npm, "@sting8k", "pi-vcc", "index.ts");
     const milk = join(npm, "@tomooshi", "condensed-milk-pi", "index.ts");
-    const imageGuard = join(agentDir, "extensions", "image-media-type-guard.ts");
-    const schemaCompat = join(agentDir, "extensions", "anthropic-tool-schema-compat", "index.ts");
+    const imageGuard = join(
+      agentDir,
+      "extensions",
+      "image-media-type-guard.ts",
+    );
+    const schemaCompat = join(
+      agentDir,
+      "extensions",
+      "anthropic-tool-schema-compat",
+      "index.ts",
+    );
     const bashBg = join(npm, "pi-bash-bg", "dist", "index.js");
     for (const file of [vcc, milk, imageGuard, schemaCompat, bashBg]) {
       mkdirSync(dirname(file), { recursive: true });
@@ -462,7 +521,10 @@ describe("child sandbox", () => {
     const previous = process.env.PI_CODING_AGENT_DIR;
     process.env.PI_CODING_AGENT_DIR = agentDir;
     try {
-      assert.deepEqual(spawn("read,bash,ask_question"), [...base, shellEscape(bashBg)]);
+      assert.deepEqual(spawn("read,bash,ask_question"), [
+        ...base,
+        shellEscape(bashBg),
+      ]);
       assert.deepEqual(spawn("read,ls,ask_question"), base);
       // A missing extension is skipped rather than passed to pi as a bad -e.
       rmSync(milk);
@@ -511,7 +573,8 @@ describe("extension registration", () => {
 
 describe("external widget rows", () => {
   const strip = (s: string) => stripVTControlCharacters(s);
-  const { renderSubagentWidgetLines, externalRowsHost, collectExternalRows } = __test__;
+  const { renderSubagentWidgetLines, externalRowsHost, collectExternalRows } =
+    __test__;
 
   afterEach(() => {
     externalRowsHost().sources.clear();
@@ -522,23 +585,54 @@ describe("external widget rows", () => {
       [],
       70,
       [
-        { status: "running", startedAt: 0, name: "Opus 5.5", tag: "plan r3k2", detail: "read plan.ts" },
-        { status: "done", startedAt: 0, elapsedMs: 41_000, name: "Explorer", tag: "plan r3k2", detail: "context 3.2KB" },
-        { status: "error", startedAt: 0, elapsedMs: 5_000, name: "GLM 5.2", tag: "plan r3k2 follow-up", detail: "stopped" },
+        {
+          status: "running",
+          startedAt: 0,
+          name: "Opus 5.5",
+          tag: "plan r3k2",
+          detail: "read plan.ts",
+        },
+        {
+          status: "done",
+          startedAt: 0,
+          elapsedMs: 41_000,
+          name: "Explorer",
+          tag: "plan r3k2",
+          detail: "context 3.2KB",
+        },
+        {
+          status: "error",
+          startedAt: 0,
+          elapsedMs: 5_000,
+          name: "GLM 5.2",
+          tag: "plan r3k2 follow-up",
+          detail: "stopped",
+        },
       ],
       72_000,
     ).map(strip);
     assert.equal(lines.length, 5);
     assert.match(lines[0] ?? "", /^╭─ Subagents ─+ 1 running ─╮$/);
-    assert.match(lines[1] ?? "", /^│ ⟳ 01:12  Opus 5\.5 \(plan r3k2\) +read plan\.ts │$/);
-    assert.match(lines[2] ?? "", /^│ ✓ 00:41  Explorer \(plan r3k2\) +context 3\.2KB │$/);
-    assert.match(lines[3] ?? "", /^│ ✗ 00:05  GLM 5\.2 \(plan r3k2 follow-up\) +stopped │$/);
+    assert.match(
+      lines[1] ?? "",
+      /^│ ⟳ 01:12 {2}Opus 5\.5 \(plan r3k2\) +read plan\.ts │$/,
+    );
+    assert.match(
+      lines[2] ?? "",
+      /^│ ✓ 00:41 {2}Explorer \(plan r3k2\) +context 3\.2KB │$/,
+    );
+    assert.match(
+      lines[3] ?? "",
+      /^│ ✗ 00:05 {2}GLM 5\.2 \(plan r3k2 follow-up\) +stopped │$/,
+    );
     for (const line of lines) assert.equal(line.length, 70);
   });
 
   it("collects rows from every provider and survives a throwing one", () => {
     const host = externalRowsHost();
-    host.sources.set("a", () => [{ status: "running", startedAt: 0, name: "x" }]);
+    host.sources.set("a", () => [
+      { status: "running", startedAt: 0, name: "x" },
+    ]);
     host.sources.set("b", () => {
       throw new Error("boom");
     });

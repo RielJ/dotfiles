@@ -22,10 +22,10 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
 
 /** The single shared, hidden session that hosts every subagent window. */
 export const POOL_SESSION = "_pi-agents";
@@ -64,10 +64,20 @@ export function sanitizeWindowName(name: string): string {
   return slug || "subagent";
 }
 
-/** Build a fully-qualified `session:window` tmux target for an agent. */
+/**
+ * Build an exact `=session:=window` tmux target for an agent. Without `=`,
+ * tmux falls back to prefix and glob matching when the name is missing, so
+ * killing `plan` would remove `plan-043707-a`.
+ */
 export function windowTarget(name: string): string {
-  return `${POOL_SESSION}:${sanitizeWindowName(name)}`;
+  return `=${POOL_SESSION}:=${sanitizeWindowName(name)}`;
 }
+
+/** Exact session target, so `_pi-agents` never matches `_pi-agents-old`. */
+const POOL_TARGET = `=${POOL_SESSION}`;
+
+/** Target for creating a new window at the next free index in the pool. */
+const POOL_NEW_WINDOW = `${POOL_TARGET}:`;
 
 // ── Ready-file signaling (called from the child's session_start) ─────
 
@@ -82,13 +92,35 @@ export function signalReady(): void {
 // ── Pool session management ─────────────────────────────────────────
 
 /**
+ * Placeholder window the pool session is created with. Removed as soon as a
+ * real window is spawned. sanitizeWindowName never returns a leading `_`, so
+ * no agent window can share this name. superpowers/_tmux-viewer.ts uses it too.
+ */
+export const IDLE_WINDOW = "_idle";
+
+/** Remove the placeholder window once a real window exists. */
+function dropIdleWindow(): void {
+  try {
+    execFileSync(
+      "tmux",
+      ["kill-window", "-t", `${POOL_TARGET}:=${IDLE_WINDOW}`],
+      {
+        stdio: "ignore",
+      },
+    );
+  } catch {
+    // Already gone, or the pool predates the placeholder name.
+  }
+}
+
+/**
  * Ensure the `_pi-agents` session exists WITHOUT changing whatever the user is
  * currently attached to. `new-session -d` creates it detached; if it already
  * exists this is a no-op.
  */
 export function ensurePoolSession(): void {
   try {
-    execFileSync("tmux", ["has-session", "-t", POOL_SESSION], {
+    execFileSync("tmux", ["has-session", "-t", POOL_TARGET], {
       stdio: "ignore",
     });
   } catch {
@@ -97,6 +129,8 @@ export function ensurePoolSession(): void {
       "-d",
       "-s",
       POOL_SESSION,
+      "-n",
+      IDLE_WINDOW,
       "-x",
       "220",
       "-y",
@@ -107,7 +141,7 @@ export function ensurePoolSession(): void {
     try {
       execFileSync(
         "tmux",
-        ["set-option", "-t", POOL_SESSION, "destroy-unattached", "off"],
+        ["set-option", "-t", POOL_TARGET, "destroy-unattached", "off"],
         { stdio: "ignore" },
       );
     } catch {
@@ -131,12 +165,13 @@ export function createWindow(name: string, cwd = process.cwd()): string {
     "new-window",
     "-d",
     "-t",
-    `${POOL_SESSION}:`,
+    POOL_NEW_WINDOW,
     "-n",
     window,
     "-c",
     cwd,
   ]);
+  dropIdleWindow();
   return window;
 }
 
@@ -178,13 +213,17 @@ export function spawnWindow(opts: SpawnWindowOptions): boolean {
       "new-window",
       "-d",
       "-t",
-      `${POOL_SESSION}:`,
+      POOL_NEW_WINDOW,
       "-n",
       sanitizeWindowName(opts.name),
       "-c",
       opts.cwd,
       ...envArgs,
     ]);
+
+    // tmux needs a window to create a session; drop that placeholder once a
+    // real window exists so the pool never shows an idle shell.
+    dropIdleWindow();
 
     // Leading space keeps the command out of shell history where possible.
     execFileSync("tmux", [
@@ -267,7 +306,7 @@ export function listWindows(): string[] {
   try {
     const out = execFileSync(
       "tmux",
-      ["list-windows", "-t", POOL_SESSION, "-F", "#{window_name}"],
+      ["list-windows", "-t", POOL_TARGET, "-F", "#{window_name}"],
       { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
     );
     return out.split("\n").filter(Boolean);
