@@ -1,14 +1,13 @@
+import { realpathSync } from "node:fs";
+import { dirname } from "node:path";
+
 import {
   DefaultPackageManager,
   SettingsManager,
   loadSkills,
 } from "@earendil-works/pi-coding-agent";
-import { realpathSync } from "node:fs";
-import { dirname } from "node:path";
-import type {
-  SkillCandidate,
-  SkillCandidateScope,
-} from "./skill-injection.ts";
+
+import type { SkillCandidate, SkillCandidateScope } from "./skill-injection.ts";
 
 export interface ActiveSkillCommand {
   name: string;

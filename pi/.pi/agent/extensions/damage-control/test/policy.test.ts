@@ -3,14 +3,22 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
+
 import { Evaluator, type Decision } from "../policy.ts";
 import { parseRules } from "../rules.ts";
 import { simpleCommands } from "../shell.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const yaml = readFileSync(join(here, "../../../damage-control-rules.yaml"), "utf8");
+const yaml = readFileSync(
+  join(here, "../../../damage-control-rules.yaml"),
+  "utf8",
+);
 const rules = parseRules(yaml);
-const env = { cwd: "/Users/u/project", home: "/Users/u", tempRoots: ["/tmp", "/private/tmp", "/var/folders"] };
+const env = {
+  cwd: "/Users/u/project",
+  home: "/Users/u",
+  tempRoots: ["/tmp", "/private/tmp", "/var/folders"],
+};
 const ev = new Evaluator(rules, env);
 const bash = (command: string): Decision => ev.evaluate("bash", { command });
 const action = (command: string) => bash(command).action;
@@ -26,27 +34,44 @@ describe("rules loader", () => {
     assert.equal(hard.length, 5);
   });
   test("rejects typos instead of skipping them", () => {
-    assert.throws(() => parseRules("bashToolPatterns:\n  - pattern: 'x'\n    reasn: y\n"), /unknown key reasn/);
-    assert.throws(() => parseRules("bashToolPatterns:\n  - pattern: '('\n    reason: y\n"), /invalid regex/);
-    assert.throws(() => parseRules("bashToolPatterns:\n  - pattern: 'x'\n"), /pattern and reason/);
-    assert.throws(() => parseRules("zeroAcessPaths:\n  - .env\n"), /unknown section/);
+    assert.throws(
+      () => parseRules("bashToolPatterns:\n  - pattern: 'x'\n    reasn: y\n"),
+      /unknown key reasn/,
+    );
+    assert.throws(
+      () => parseRules("bashToolPatterns:\n  - pattern: '('\n    reason: y\n"),
+      /invalid regex/,
+    );
+    assert.throws(
+      () => parseRules("bashToolPatterns:\n  - pattern: 'x'\n"),
+      /pattern and reason/,
+    );
+    assert.throws(
+      () => parseRules("zeroAcessPaths:\n  - .env\n"),
+      /unknown section/,
+    );
   });
   test("'' inside a single-quoted pattern is one quote", () => {
-    const r = parseRules("bashToolPatterns:\n  - pattern: 'it''s'\n    reason: q\n");
+    const r = parseRules(
+      "bashToolPatterns:\n  - pattern: 'it''s'\n    reason: q\n",
+    );
     assert.equal(r.bash[0].source, "it's");
   });
 });
 
 describe("shell splitting", () => {
   test("splits on separators and keeps quoted text together", () => {
-    assert.deepEqual(simpleCommands(`cd /tmp && rm -rf "a b"; echo 'x;y' | wc`), [
-      ["cd", "/tmp"],
-      ["rm", "-rf", "a b"],
-      ["echo", "x;y"],
-      ["wc"],
+    assert.deepEqual(
+      simpleCommands(`cd /tmp && rm -rf "a b"; echo 'x;y' | wc`),
+      [["cd", "/tmp"], ["rm", "-rf", "a b"], ["echo", "x;y"], ["wc"]],
+    );
+    assert.deepEqual(simpleCommands("echo $(rm -rf x)"), [
+      ["echo"],
+      ["rm", "-rf", "x"],
     ]);
-    assert.deepEqual(simpleCommands("echo $(rm -rf x)"), [["echo"], ["rm", "-rf", "x"]]);
-    assert.deepEqual(simpleCommands("rm -rf ${DIR}/x"), [["rm", "-rf", "${DIR}/x"]]);
+    assert.deepEqual(simpleCommands("rm -rf ${DIR}/x"), [
+      ["rm", "-rf", "${DIR}/x"],
+    ]);
   });
 });
 
@@ -61,16 +86,25 @@ describe("hard rules never ask", () => {
     test(cmd, () => assert.equal(action(cmd), "block"));
   }
   test("the 2026-11-09 pkill that killed every subagent", () => {
-    const d = bash(`pkill -f "kakemono daemon --foreground --detached" -U $(id -u)`);
+    const d = bash(
+      `pkill -f "kakemono daemon --foreground --detached" -U $(id -u)`,
+    );
     assert.equal(d.action, "block");
-    assert.match(d.action === "block" ? d.reasons[0] : "", /option `-U` comes after the pattern/);
+    assert.match(
+      d.action === "block" ? d.reasons[0] : "",
+      /option `-U` comes after the pattern/,
+    );
   });
-  test("pgrep with the same trap", () => assert.equal(action("pgrep -f foo -U 501"), "block"));
+  test("pgrep with the same trap", () =>
+    assert.equal(action("pgrep -f foo -U 501"), "block"));
 });
 
 describe("rm", () => {
   test("temp-only recursive deletes run", () => {
-    assert.equal(action("rm -rf /tmp/h0 /private/tmp/x /var/folders/ab/T/y"), "allow");
+    assert.equal(
+      action("rm -rf /tmp/h0 /private/tmp/x /var/folders/ab/T/y"),
+      "allow",
+    );
     assert.equal(action("rm -rf $TMPDIR/build"), "allow");
     assert.equal(action("cd /tmp/lspcmp && rm -rf out"), "allow");
   });
@@ -89,10 +123,17 @@ describe("rm", () => {
     assert.equal(action("rm -rf /tmp/$X/../.."), "ask");
     assert.equal(action("cd $W && rm -rf out"), "ask");
   });
-  test("the temp root itself is not exempt", () => assert.equal(action("rm -rf /tmp"), "ask"));
+  test("the temp root itself is not exempt", () =>
+    assert.equal(action("rm -rf /tmp"), "ask"));
   test("variables assigned a temp path or mktemp resolve", () => {
-    assert.equal(action("R=/tmp/fffprobe; rm -rf $R; mkdir -p $R/src"), "allow");
-    assert.equal(action("d=$(mktemp -d); cd $d; rm -rf out; rm -rf $d"), "allow");
+    assert.equal(
+      action("R=/tmp/fffprobe; rm -rf $R; mkdir -p $R/src"),
+      "allow",
+    );
+    assert.equal(
+      action("d=$(mktemp -d); cd $d; rm -rf out; rm -rf $d"),
+      "allow",
+    );
     assert.equal(action('D=$(mktemp -d /tmp/ka.XXXX); rm -rf "$D"'), "allow");
     assert.equal(action("S=/tmp/a; W=$S/b; rm -rf ${W}"), "allow");
   });
@@ -109,14 +150,19 @@ describe("rm", () => {
 });
 
 describe("pkill", () => {
-  test("pkill -f asks", () => assert.equal(action("pkill -f 'vite --port 5173'"), "ask"));
+  test("pkill -f asks", () =>
+    assert.equal(action("pkill -f 'vite --port 5173'"), "ask"));
   test("options before the pattern are fine for pgrep", () => {
     assert.equal(action("pgrep -fl -U 501 'vite'"), "allow");
   });
-  test("plain pkill by process name runs", () => assert.equal(action("pkill vite"), "allow"));
+  test("plain pkill by process name runs", () =>
+    assert.equal(action("pkill vite"), "allow"));
   // Cases carried over from the removed process-kill-guard extension.
   const cases: [string, "allow" | "ask" | "block"][] = [
-    ["set -u; B=x\npkill -f 'kakemono daemon' -U $(id -u) 2>/dev/null; sleep 1", "block"],
+    [
+      "set -u; B=x\npkill -f 'kakemono daemon' -U $(id -u) 2>/dev/null; sleep 1",
+      "block",
+    ],
     ["pgrep -l node -U 501", "block"],
     ["pkill node -9", "block"],
     ["sudo pkill daemon -U root", "block"],
@@ -133,21 +179,34 @@ describe("pkill", () => {
     ["rg -n 'pkill -f' notes.md", "allow"],
     ["git commit -m 'avoid pkill -f x -U 1'", "allow"],
   ];
-  for (const [cmd, want] of cases) test(`${want}: ${cmd.replace(/\n/g, " ⏎ ")}`, () => assert.equal(action(cmd), want));
+  for (const [cmd, want] of cases)
+    test(`${want}: ${cmd.replace(/\n/g, " ⏎ ")}`, () =>
+      assert.equal(action(cmd), want));
 });
 
 describe("path rules", () => {
   test("secret paths ask for read, write and bash", () => {
     assert.equal(ev.evaluate("read", { path: ".env" }).action, "ask");
-    assert.equal(ev.evaluate("read", { path: "~/.ssh/id_ed25519" }).action, "ask");
-    assert.equal(ev.evaluate("write", { path: "certs/server.pem" }).action, "ask");
+    assert.equal(
+      ev.evaluate("read", { path: "~/.ssh/id_ed25519" }).action,
+      "ask",
+    );
+    assert.equal(
+      ev.evaluate("write", { path: "certs/server.pem" }).action,
+      "ask",
+    );
     assert.equal(action("cat backend/.env"), "ask");
     assert.equal(action("rm -f .env"), "ask");
   });
   test("secret names in patterns, messages and code are not reads", () => {
     assert.equal(action("rg -n '.env' src"), "allow");
     assert.equal(action("git commit -m 'read PORT from .env'"), "allow");
-    assert.equal(action("python3 - <<'EOF'\nimport json; json.dump(x, f)\nprint(event.key)\nEOF"), "allow");
+    assert.equal(
+      action(
+        "python3 - <<'EOF'\nimport json; json.dump(x, f)\nprint(event.key)\nEOF",
+      ),
+      "allow",
+    );
     assert.equal(action("echo .env >> .gitignore"), "allow");
   });
   test("reading or copying a secret through bash asks", () => {
@@ -159,12 +218,21 @@ describe("path rules", () => {
   });
   test("near-misses of secret patterns are allowed", () => {
     assert.equal(ev.evaluate("read", { path: ".env.example" }).action, "allow");
-    assert.equal(ev.evaluate("read", { path: "src/keyboard.ts" }).action, "allow");
+    assert.equal(
+      ev.evaluate("read", { path: "src/keyboard.ts" }).action,
+      "allow",
+    );
     assert.equal(ev.evaluate("read", { path: "docs/env.md" }).action, "allow");
   });
   test("read-only paths: reading is fine, writing asks", () => {
-    assert.equal(ev.evaluate("read", { path: "package-lock.json" }).action, "allow");
-    assert.equal(ev.evaluate("edit", { path: "package-lock.json" }).action, "ask");
+    assert.equal(
+      ev.evaluate("read", { path: "package-lock.json" }).action,
+      "allow",
+    );
+    assert.equal(
+      ev.evaluate("edit", { path: "package-lock.json" }).action,
+      "ask",
+    );
     assert.equal(ev.evaluate("write", { path: "dist/index.js" }).action, "ask");
     assert.equal(action("echo x > yarn.lock"), "ask");
     assert.equal(action("sed -i '' 's/a/b/' ~/.zshrc"), "ask");
@@ -176,13 +244,25 @@ describe("path rules", () => {
     assert.equal(action("rm -rf .git"), "ask");
   });
   test("protected names inside temp folders are free", () => {
-    assert.equal(action("rm -rf /tmp/clone/.git /tmp/clone/README.md"), "allow");
-    assert.equal(ev.evaluate("write", { path: "/tmp/x/dist/a.js" }).action, "allow");
+    assert.equal(
+      action("rm -rf /tmp/clone/.git /tmp/clone/README.md"),
+      "allow",
+    );
+    assert.equal(
+      ev.evaluate("write", { path: "/tmp/x/dist/a.js" }).action,
+      "allow",
+    );
   });
 });
 
 describe("unrelated commands", () => {
-  for (const cmd of ["git status", "ls -la", "bun test", "git push origin main", "rg -n env src"]) {
+  for (const cmd of [
+    "git status",
+    "ls -la",
+    "bun test",
+    "git push origin main",
+    "rg -n env src",
+  ]) {
     test(cmd, () => assert.equal(action(cmd), "allow"));
   }
 });

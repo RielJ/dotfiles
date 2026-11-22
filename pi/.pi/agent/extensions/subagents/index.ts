@@ -1,20 +1,7 @@
 // @ts-nocheck -- vendored upstream extension; runtime compatibility is covered by fork tests.
-// biome-ignore-all lint/suspicious/noExplicitAny: upstream extension uses dynamic Pi event payloads.
-// biome-ignore-all lint/correctness/noUnusedVariables: upstream keeps renderer constants for compatibility.
-import type {
-  ExtensionAPI,
-  ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
-import { keyHint } from "@earendil-works/pi-coding-agent";
-import { Type, type Static } from "@sinclair/typebox";
-import {
-  Box,
-  Text,
-  truncateToWidth,
-  visibleWidth,
-} from "@earendil-works/pi-tui";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+/* oxlint-disable typescript/no-explicit-any -- upstream extension uses dynamic Pi event payloads. */
+/* oxlint-disable no-unused-vars -- upstream keeps renderer constants for compatibility. */
+
 import {
   readdirSync,
   readFileSync,
@@ -25,36 +12,28 @@ import {
   unlinkSync,
 } from "node:fs";
 import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import type {
+  ExtensionAPI,
+  ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
+import { keyHint } from "@earendil-works/pi-coding-agent";
 import {
-  isMuxAvailable,
-  muxSetupHint,
-  createSurface,
-  sendCommand,
-  sendLongCommand,
-  pollForExit,
-  closeSurface,
-  attachSurface,
-  surfaceAlive,
-  shellEscape,
-  readScreen,
-  wrapSubagentCommand,
-  exitStatusFile,
-} from "./tmux.ts";
-import { discoverSkillCandidates } from "./skill-discovery.ts";
-import { buildSubagentTaskMessage } from "./task-prompt.ts";
+  Box,
+  Text,
+  truncateToWidth,
+  visibleWidth,
+} from "@earendil-works/pi-tui";
+import { Type, type Static } from "@sinclair/typebox";
+
 import {
-  renderSkillBlocks,
-  resolveRequestedSkills,
-  type SkillCandidate,
-} from "./skill-injection.ts";
-import {
-  allocateSubagentWorktree,
-  describeWorktreeRelease,
-  reattachSubagentWorktree,
-  releaseSubagentWorktree,
-  type SubagentWorktree,
-  type WorktreeRelease,
-} from "./worktree-isolation.ts";
+  getSubagentActivityFile,
+  readSubagentActivityFile,
+  type ActivityReadResult,
+  type SubagentActivityState,
+} from "./activity.ts";
 import {
   createSandbox,
   describeSandbox,
@@ -82,7 +61,6 @@ import {
   shouldIdleClose,
   type KeepAliveConfig,
 } from "./keep-alive.ts";
-
 import {
   countSessionEntryLines,
   findLastAssistantMessage,
@@ -98,6 +76,12 @@ import {
   type SessionStats,
   type SubagentLoadout,
 } from "./session.ts";
+import { discoverSkillCandidates } from "./skill-discovery.ts";
+import {
+  renderSkillBlocks,
+  resolveRequestedSkills,
+  type SkillCandidate,
+} from "./skill-injection.ts";
 import {
   type StatusSnapshot,
   type SubagentStatusState,
@@ -111,12 +95,30 @@ import {
   observeStatus,
   loadStatusConfig,
 } from "./status.ts";
+import { buildSubagentTaskMessage } from "./task-prompt.ts";
 import {
-  getSubagentActivityFile,
-  readSubagentActivityFile,
-  type ActivityReadResult,
-  type SubagentActivityState,
-} from "./activity.ts";
+  isMuxAvailable,
+  muxSetupHint,
+  createSurface,
+  sendCommand,
+  sendLongCommand,
+  pollForExit,
+  closeSurface,
+  attachSurface,
+  surfaceAlive,
+  shellEscape,
+  readScreen,
+  wrapSubagentCommand,
+  exitStatusFile,
+} from "./tmux.ts";
+import {
+  allocateSubagentWorktree,
+  describeWorktreeRelease,
+  reattachSubagentWorktree,
+  releaseSubagentWorktree,
+  type SubagentWorktree,
+  type WorktreeRelease,
+} from "./worktree-isolation.ts";
 
 /** Absolute path to `pi-extension/subagents`. https://github.com/nodejs/node/issues/37845 */
 const SUBAGENTS_DIR = dirname(fileURLToPath(import.meta.url));
@@ -228,7 +230,7 @@ const SubagentParams = Type.Object({
   network: Type.Optional(
     Type.Union([Type.Literal("offline"), Type.Literal("web")], {
       description:
-        'Container isolation only. offline (default): no network at all. web: HTTP(S) to public hosts through a filtering proxy that blocks private, local, and cloud-metadata addresses; the child gets web-fetch, web-search, and web-shot (screenshots). Use web only when the task needs the internet, since a hijacked child could send what it read to a public host.',
+        "Container isolation only. offline (default): no network at all. web: HTTP(S) to public hosts through a filtering proxy that blocks private, local, and cloud-metadata addresses; the child gets web-fetch, web-search, and web-shot (screenshots). Use web only when the task needs the internet, since a hijacked child could send what it read to a public host.",
     }),
   ),
   branch: Type.Optional(
@@ -938,7 +940,9 @@ function shouldAutoResume(
 }
 
 /** The message a crashed subagent is resumed with. */
-function crashResumeMessage(result: Pick<SubagentResult, "exitCode" | "errorMessage">): string {
+function crashResumeMessage(
+  result: Pick<SubagentResult, "exitCode" | "errorMessage">,
+): string {
   return (
     `Your previous run crashed (exit ${result.exitCode}): ${result.errorMessage ?? "no error captured"}. ` +
     "The harness resumed this session automatically. Your last tool call or edit may not have finished. " +
@@ -1108,14 +1112,20 @@ function formatMMSS(ms: number): string {
   return `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
-function externalRowLine(row: ExternalWidgetRow, width: number, now: number): string {
+function externalRowLine(
+  row: ExternalWidgetRow,
+  width: number,
+  now: number,
+): string {
   const icon =
     row.status === "running"
       ? widgetIcon("running")
       : row.status === "done"
         ? `${ICON_GREEN}✓${RST}`
         : `${ICON_RED}✗${RST}`;
-  const elapsed = formatMMSS(row.status === "running" ? now - row.startedAt : (row.elapsedMs ?? 0));
+  const elapsed = formatMMSS(
+    row.status === "running" ? now - row.startedAt : (row.elapsedMs ?? 0),
+  );
   const tag = row.tag ? ` (${row.tag})` : "";
   const right = row.detail ? ` ${row.detail} ` : " ";
   return borderLine(` ${icon} ${elapsed}  ${row.name}${tag} `, right, width);
@@ -1127,7 +1137,8 @@ function renderSubagentWidgetLines(
   external: ExternalWidgetRow[] = [],
   now: number = Date.now(),
 ): string[] {
-  const count = agents.length + external.filter((row) => row.status === "running").length;
+  const count =
+    agents.length + external.filter((row) => row.status === "running").length;
   const title = "Subagents";
   const info = `${count} running`;
 
@@ -1610,9 +1621,7 @@ function closeSubagentByName(params: { name?: string; force?: boolean }) {
       name: running.name,
       status: "closed",
       forced: busy,
-      ...(running.worktreeRelease
-        ? { worktree: running.worktreeRelease }
-        : {}),
+      ...(running.worktreeRelease ? { worktree: running.worktreeRelease } : {}),
     },
   };
 }
@@ -1727,7 +1736,6 @@ export const __test__ = {
   shouldAutoResume,
   crashResumeMessage,
   MAX_CRASH_RESUMES,
-  runningSubagents,
   formatElapsed,
   formatTokens,
   formatContextUsage,
@@ -1822,11 +1830,15 @@ async function launchSubagent(
   // Container isolation: the child pi process runs on the host only to talk to
   // the model; its tools exec into the sandbox. Give it an empty cwd so no
   // host-side extension finds project files or a project .pi/agent there.
-  const sandbox = params.isolation === "container" ? options?.sandbox : undefined;
+  const sandbox =
+    params.isolation === "container" ? options?.sandbox : undefined;
   if (params.isolation === "container") {
     if (!sandbox) throw new Error('isolation: "container" needs a sandbox');
     effectiveCwd = join(
-      getArtifactDir(ctx.sessionManager.getSessionDir(), ctx.sessionManager.getSessionId()),
+      getArtifactDir(
+        ctx.sessionManager.getSessionDir(),
+        ctx.sessionManager.getSessionId(),
+      ),
       "sandbox-cwd",
       id,
     );
@@ -1906,7 +1918,9 @@ async function launchSubagent(
     modeHint,
     skillBlock: options?.skillBlock,
     context: sandbox
-      ? [sandboxBriefing(sandbox), params.context ?? ""].filter(Boolean).join("\n\n")
+      ? [sandboxBriefing(sandbox), params.context ?? ""]
+          .filter(Boolean)
+          .join("\n\n")
       : params.context,
     summaryInstruction,
     inheritsConversationContext,
@@ -2906,13 +2920,20 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           });
         } catch (error) {
           if (reservedName) reservedNames.delete(reservedName);
-          const message = error instanceof Error ? error.message : String(error);
+          const message =
+            error instanceof Error ? error.message : String(error);
           return {
-            content: [{ type: "text", text: `Could not create sandbox: ${message}` }],
+            content: [
+              { type: "text", text: `Could not create sandbox: ${message}` },
+            ],
             details: { error: "sandbox failed" },
           };
         }
-      } else if (profileNeedsContainer(loadAgentDefaults(params.agent ?? "general")?.tools)) {
+      } else if (
+        profileNeedsContainer(
+          loadAgentDefaults(params.agent ?? "general")?.tools,
+        )
+      ) {
         if (reservedName) reservedNames.delete(reservedName);
         return {
           content: [
@@ -3226,7 +3247,6 @@ export default function subagentsExtension(pi: ExtensionAPI) {
     },
   });
 
-
   /**
    * Resume a finished subagent session by its registered name. Used by
    * subagent_message and by the automatic resume after a crash.
@@ -3416,7 +3436,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
       // the same nested-spawn restriction it originally ran with.
       const resumeEnvParts: string[] = [];
       if (resumeSandbox) {
-        for (const [key, value] of Object.entries(containerChildEnv(resumeSandbox))) {
+        for (const [key, value] of Object.entries(
+          containerChildEnv(resumeSandbox),
+        )) {
           resumeEnvParts.push(`${key}=${shellEscape(value)}`);
         }
       }
@@ -3601,7 +3623,8 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         },
       };
     } catch (error) {
-      if (resumeSandbox && !runningSubagents.has(id)) destroySandboxDetached(resumeSandbox);
+      if (resumeSandbox && !runningSubagents.has(id))
+        destroySandboxDetached(resumeSandbox);
       throw error;
     }
   }
@@ -3615,7 +3638,8 @@ export default function subagentsExtension(pi: ExtensionAPI) {
     running: RunningSubagent,
     result: SubagentResult,
   ): boolean {
-    if (!shouldAutoResume(running, result) || !running.artifactDir) return false;
+    if (!shouldAutoResume(running, result) || !running.artifactDir)
+      return false;
     const attempt = (running.crashResumes ?? 0) + 1;
     const notice =
       `Sub-agent "${running.name}" crashed (exit ${result.exitCode}): ` +
@@ -3642,7 +3666,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
             exitCode: result.exitCode,
             elapsed: result.elapsed,
             sessionFile: result.sessionFile,
-            ...(result.errorMessage ? { errorMessage: result.errorMessage } : {}),
+            ...(result.errorMessage
+              ? { errorMessage: result.errorMessage }
+              : {}),
           },
         },
         { triggerTurn: true, deliverAs: "steer" },
@@ -3657,7 +3683,9 @@ export default function subagentsExtension(pi: ExtensionAPI) {
         const error = (res.details as { error?: string } | undefined)?.error;
         if (error) deliverCrash(error);
       })
-      .catch((err) => deliverCrash(err instanceof Error ? err.message : String(err)));
+      .catch((err) =>
+        deliverCrash(err instanceof Error ? err.message : String(err)),
+      );
     return true;
   }
 
@@ -3841,7 +3869,10 @@ export default function subagentsExtension(pi: ExtensionAPI) {
           theme.fg("success", "✓") +
             " " +
             theme.fg("toolTitle", theme.bold(details.name ?? "subagent")) +
-            theme.fg("dim", details.forced ? " — closed mid-turn" : " — closed"),
+            theme.fg(
+              "dim",
+              details.forced ? " — closed mid-turn" : " — closed",
+            ),
           0,
           0,
         );

@@ -11,9 +11,21 @@
  * The owner polls its events directory and removes both on completion.
  */
 
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
-import { type AnswerEvent, isOwnCallbackData, parseCallbackData } from "./questionnaire.ts";
+
+import {
+  type AnswerEvent,
+  isOwnCallbackData,
+  parseCallbackData,
+} from "./questionnaire.ts";
 
 export interface PendingQuestion {
   qid: string;
@@ -41,7 +53,10 @@ export function isProcessAlive(pid: number): boolean {
 
 let eventSequence = 0;
 
-export function createMailbox(root: string, isAlive: (pid: number) => boolean = isProcessAlive) {
+export function createMailbox(
+  root: string,
+  isAlive: (pid: number) => boolean = isProcessAlive,
+) {
   const pendingDir = join(root, "pending");
   const eventsRoot = join(root, "events");
   const eventsDir = (qid: string) => join(eventsRoot, qid);
@@ -141,12 +156,23 @@ interface RawMessage {
 
 interface RawUpdate {
   message?: RawMessage;
-  callback_query?: { id?: string; from?: { id?: number }; data?: string; message?: RawMessage };
+  callback_query?: {
+    id?: string;
+    from?: { id?: number };
+    data?: string;
+    message?: RawMessage;
+  };
 }
 
-function matchesTarget(question: PendingQuestion, message: RawMessage | undefined): boolean {
+function matchesTarget(
+  question: PendingQuestion,
+  message: RawMessage | undefined,
+): boolean {
   if (!message || message.chat?.id !== question.chatId) return false;
-  return question.threadId === undefined || message.message_thread_id === question.threadId;
+  return (
+    question.threadId === undefined ||
+    message.message_thread_id === question.threadId
+  );
 }
 
 /**
@@ -156,13 +182,21 @@ function matchesTarget(question: PendingQuestion, message: RawMessage | undefine
  * updates from an allowed user are ever claimed. Commands ("/stop") always pass
  * through so the user can still control the run while a question is open.
  */
-export function routeUpdate(update: unknown, pending: readonly PendingQuestion[], allowedUserIds: ReadonlySet<number>): UpdateRoute {
+export function routeUpdate(
+  update: unknown,
+  pending: readonly PendingQuestion[],
+  allowedUserIds: ReadonlySet<number>,
+): UpdateRoute {
   if (!update || typeof update !== "object") return { kind: "pass" };
   const { message, callback_query: query } = update as RawUpdate;
 
   if (query) {
     if (!isOwnCallbackData(query.data)) return { kind: "pass" };
-    if (typeof query.from?.id !== "number" || !allowedUserIds.has(query.from.id)) return { kind: "pass" };
+    if (
+      typeof query.from?.id !== "number" ||
+      !allowedUserIds.has(query.from.id)
+    )
+      return { kind: "pass" };
     const parsed = parseCallbackData(query.data);
     const question = parsed && pending.find((p) => p.qid === parsed.qid);
     if (
@@ -173,14 +207,25 @@ export function routeUpdate(update: unknown, pending: readonly PendingQuestion[]
     ) {
       return { kind: "stale-callback", callbackQueryId: query.id };
     }
-    return { kind: "event", qid: parsed.qid, event: parsed.event, callbackQueryId: query.id };
+    return {
+      kind: "event",
+      qid: parsed.qid,
+      event: parsed.event,
+      callbackQueryId: query.id,
+    };
   }
 
   if (message) {
-    if (typeof message.from?.id !== "number" || !allowedUserIds.has(message.from.id)) return { kind: "pass" };
+    if (
+      typeof message.from?.id !== "number" ||
+      !allowedUserIds.has(message.from.id)
+    )
+      return { kind: "pass" };
     const text = typeof message.text === "string" ? message.text.trim() : "";
     if (!text || text.startsWith("/")) return { kind: "pass" };
-    const candidates = pending.filter((p) => matchesTarget(p, message)).sort((a, b) => b.createdAt - a.createdAt);
+    const candidates = pending
+      .filter((p) => matchesTarget(p, message))
+      .sort((a, b) => b.createdAt - a.createdAt);
     const question = candidates[0];
     if (!question) return { kind: "pass" };
     return { kind: "event", qid: question.qid, event: { type: "text", text } };

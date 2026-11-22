@@ -3,16 +3,17 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"check": "biome check --write && tsc --noEmit"
+		"check": "oxlint --fix && oxfmt && tsc --noEmit"
 	},
 	"dependencies": {
 		"@earendil-works/pi-coding-agent": "*"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.4",
 		"@earendil-works/pi-ai": "*",
 		"@earendil-works/pi-tui": "*",
 		"@sinclair/typebox": "*",
+		"oxfmt": "0.79.0",
+		"oxlint": "1.94.0",
 		"typescript": "^5.0.0"
 	}
 }

@@ -1,10 +1,12 @@
 import { writeFileSync } from "node:fs";
+
 import type {
   AssistantMessage,
   ToolResultMessage,
   UserMessage,
 } from "@earendil-works/pi-ai";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
+
 import type { Commitment } from "./score.ts";
 
 /**

@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, it } from "node:test";
+
 import {
   DEFAULT_KEEP_ALIVE_CONFIG,
   consumeTurnSignal,
@@ -38,11 +39,15 @@ describe("keep-alive config", () => {
 
   it("reads explicit values and ignores invalid ones", () => {
     assert.deepEqual(
-      parseKeepAliveConfig({ keepAlive: { enabled: false, idleCloseMinutes: 0 } }),
+      parseKeepAliveConfig({
+        keepAlive: { enabled: false, idleCloseMinutes: 0 },
+      }),
       { enabled: false, idleCloseMinutes: 0 },
     );
     assert.deepEqual(
-      parseKeepAliveConfig({ keepAlive: { enabled: "no", idleCloseMinutes: -5 } }),
+      parseKeepAliveConfig({
+        keepAlive: { enabled: "no", idleCloseMinutes: -5 },
+      }),
       DEFAULT_KEEP_ALIVE_CONFIG,
     );
   });

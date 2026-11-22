@@ -1,4 +1,4 @@
-// biome-ignore-all lint/suspicious/noEmptyBlockStatements: tmux cleanup operations are best-effort.
+/* oxlint-disable no-empty -- tmux cleanup operations are best-effort. */
 /**
  * tmux-pool — dedicated `_pi-agents` transport for subagents.
  *

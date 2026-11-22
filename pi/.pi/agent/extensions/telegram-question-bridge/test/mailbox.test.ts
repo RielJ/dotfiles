@@ -3,7 +3,12 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
-import { createMailbox, type PendingQuestion, routeUpdate } from "../mailbox.ts";
+
+import {
+  createMailbox,
+  type PendingQuestion,
+  routeUpdate,
+} from "../mailbox.ts";
 
 const ALLOWED = new Set([42]);
 const roots: string[] = [];
@@ -30,22 +35,43 @@ function pending(over: Partial<PendingQuestion> = {}): PendingQuestion {
   };
 }
 
-function tap(data: string, over: { from?: number; chat?: number; thread?: number; messageId?: number } = {}) {
+function tap(
+  data: string,
+  over: {
+    from?: number;
+    chat?: number;
+    thread?: number;
+    messageId?: number;
+  } = {},
+) {
   return {
     update_id: 1,
     callback_query: {
       id: "cbq",
       from: { id: over.from ?? 42 },
       data,
-      message: { message_id: over.messageId ?? 555, chat: { id: over.chat ?? 100 }, message_thread_id: over.thread ?? 7 },
+      message: {
+        message_id: over.messageId ?? 555,
+        chat: { id: over.chat ?? 100 },
+        message_thread_id: over.thread ?? 7,
+      },
     },
   };
 }
 
-function text(body: string, over: { from?: number; chat?: number; thread?: number } = {}) {
+function text(
+  body: string,
+  over: { from?: number; chat?: number; thread?: number } = {},
+) {
   return {
     update_id: 2,
-    message: { message_id: 9, text: body, from: { id: over.from ?? 42 }, chat: { id: over.chat ?? 100 }, message_thread_id: over.thread ?? 7 },
+    message: {
+      message_id: 9,
+      text: body,
+      from: { id: over.from ?? 42 },
+      chat: { id: over.chat ?? 100 },
+      message_thread_id: over.thread ?? 7,
+    },
   };
 }
 
@@ -59,7 +85,10 @@ describe("mailbox", () => {
     );
     box.postEvent("q1", { type: "pick", option: 1 });
     box.postEvent("q1", { type: "done" });
-    assert.deepEqual(box.drainEvents("q1"), [{ type: "pick", option: 1 }, { type: "done" }]);
+    assert.deepEqual(box.drainEvents("q1"), [
+      { type: "pick", option: 1 },
+      { type: "done" },
+    ]);
     assert.deepEqual(box.drainEvents("q1"), []);
     box.retract("q1");
     assert.deepEqual(box.listPending(), []);
@@ -99,8 +128,13 @@ describe("routeUpdate", () => {
   });
 
   it("passes foreign callbacks and taps from strangers", () => {
-    assert.deepEqual(routeUpdate(tap("tgbtn:x"), open, ALLOWED), { kind: "pass" });
-    assert.deepEqual(routeUpdate(tap("aq1:q1:o0", { from: 7 }), open, ALLOWED), { kind: "pass" });
+    assert.deepEqual(routeUpdate(tap("tgbtn:x"), open, ALLOWED), {
+      kind: "pass",
+    });
+    assert.deepEqual(
+      routeUpdate(tap("aq1:q1:o0", { from: 7 }), open, ALLOWED),
+      { kind: "pass" },
+    );
   });
 
   it("marks taps on unknown, moved, or other-thread questions stale", () => {
@@ -116,7 +150,10 @@ describe("routeUpdate", () => {
   });
 
   it("claims a plain reply in the question's thread as a typed answer, newest question first", () => {
-    const two = [pending(), pending({ qid: "q2", createdAt: 5, messageIds: [600] })];
+    const two = [
+      pending(),
+      pending({ qid: "q2", createdAt: 5, messageIds: [600] }),
+    ];
     assert.deepEqual(routeUpdate(text(" use redis "), two, ALLOWED), {
       kind: "event",
       qid: "q2",
@@ -125,15 +162,28 @@ describe("routeUpdate", () => {
   });
 
   it("passes commands, strangers, other threads, and chats with nothing pending", () => {
-    assert.deepEqual(routeUpdate(text("/stop"), open, ALLOWED), { kind: "pass" });
-    assert.deepEqual(routeUpdate(text("hi", { from: 7 }), open, ALLOWED), { kind: "pass" });
-    assert.deepEqual(routeUpdate(text("hi", { thread: 8 }), open, ALLOWED), { kind: "pass" });
+    assert.deepEqual(routeUpdate(text("/stop"), open, ALLOWED), {
+      kind: "pass",
+    });
+    assert.deepEqual(routeUpdate(text("hi", { from: 7 }), open, ALLOWED), {
+      kind: "pass",
+    });
+    assert.deepEqual(routeUpdate(text("hi", { thread: 8 }), open, ALLOWED), {
+      kind: "pass",
+    });
     assert.deepEqual(routeUpdate(text("hi"), [], ALLOWED), { kind: "pass" });
-    assert.deepEqual(routeUpdate({ edited_message: { text: "x" } }, open, ALLOWED), { kind: "pass" });
+    assert.deepEqual(
+      routeUpdate({ edited_message: { text: "x" } }, open, ALLOWED),
+      { kind: "pass" },
+    );
   });
 
   it("matches any thread in the chat when the question has no thread", () => {
-    const route = routeUpdate(text("ok", { thread: 3 }), [pending({ threadId: undefined })], ALLOWED);
+    const route = routeUpdate(
+      text("ok", { thread: 3 }),
+      [pending({ threadId: undefined })],
+      ALLOWED,
+    );
     assert.equal(route.kind, "event");
   });
 });

@@ -1,5 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type {
   SessionBeforeCompactEvent,
@@ -7,6 +8,7 @@ import type {
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
 import { createJiti } from "jiti";
+
 import {
   standingRules,
   withStandingRules,

@@ -1,3 +1,4 @@
+import { randomBytes, randomUUID } from "node:crypto";
 import {
   appendFileSync,
   closeSync,
@@ -12,7 +13,6 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { randomBytes, randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 
 export interface SessionEntry {
@@ -124,7 +124,10 @@ export interface SubagentLoadout {
    */
   container?: {
     network: "offline" | "web";
-    source: { kind: "git"; url: string } | { kind: "path"; path: string } | null;
+    source:
+      | { kind: "git"; url: string }
+      | { kind: "path"; path: string }
+      | null;
   } | null;
   /** Worktree metadata when isolation is worktree. */
   worktree?: {

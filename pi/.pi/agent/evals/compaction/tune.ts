@@ -22,10 +22,12 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+
 import {
   parseSessionEntries,
   type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
+
 import {
   extractRules,
   rulesSection,

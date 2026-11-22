@@ -29,34 +29,56 @@ export interface TelegramView {
   replyMarkup?: unknown;
 }
 
-export type TelegramResult<T> = { ok: true; value: T } | { ok: false; reason: string; message: string };
+export type TelegramResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; reason: string; message: string };
 
 export interface TelegramApi {
   sendView(view: TelegramView): Promise<TelegramResult<TelegramHandle>>;
-  editView(handle: TelegramHandle, view: TelegramView): Promise<TelegramResult<TelegramHandle>>;
-  registerUpdateHandler(handler: (update: unknown) => Promise<"consume" | "pass"> | "consume" | "pass"): () => void;
+  editView(
+    handle: TelegramHandle,
+    view: TelegramView,
+  ): Promise<TelegramResult<TelegramHandle>>;
+  registerUpdateHandler(
+    handler: (
+      update: unknown,
+    ) => Promise<"consume" | "pass"> | "consume" | "pass",
+  ): () => void;
 }
 
 interface DeliveryModule {
-  sendTelegramView(view: TelegramView, options: { scope: { kind: "active-turn" } }): Promise<TelegramResult<TelegramHandle>>;
-  editTelegramView(handle: TelegramHandle, view: TelegramView): Promise<TelegramResult<TelegramHandle>>;
+  sendTelegramView(
+    view: TelegramView,
+    options: { scope: { kind: "active-turn" } },
+  ): Promise<TelegramResult<TelegramHandle>>;
+  editTelegramView(
+    handle: TelegramHandle,
+    view: TelegramView,
+  ): Promise<TelegramResult<TelegramHandle>>;
 }
 
 interface UpdatesModule {
-  registerTelegramUpdateHandler(handler: (update: unknown) => unknown): () => void;
+  registerTelegramUpdateHandler(
+    handler: (update: unknown) => unknown,
+  ): () => void;
 }
 
 export async function loadTelegramApi(agentDir: string): Promise<TelegramApi> {
   const require = createRequire(join(agentDir, "npm", "noop.js"));
-  const importExport = (subpath: string) => import(pathToFileURL(require.resolve(`@llblab/pi-telegram/${subpath}`)).href);
-  const [delivery, updates] = (await Promise.all([importExport("delivery"), importExport("updates")])) as [
-    DeliveryModule,
-    UpdatesModule,
-  ];
+  const importExport = (subpath: string) =>
+    import(
+      pathToFileURL(require.resolve(`@llblab/pi-telegram/${subpath}`)).href
+    );
+  const [delivery, updates] = (await Promise.all([
+    importExport("delivery"),
+    importExport("updates"),
+  ])) as [DeliveryModule, UpdatesModule];
   return {
-    sendView: (view) => delivery.sendTelegramView(view, { scope: { kind: "active-turn" } }),
+    sendView: (view) =>
+      delivery.sendTelegramView(view, { scope: { kind: "active-turn" } }),
     editView: (handle, view) => delivery.editTelegramView(handle, view),
-    registerUpdateHandler: (handler) => updates.registerTelegramUpdateHandler(handler),
+    registerUpdateHandler: (handler) =>
+      updates.registerTelegramUpdateHandler(handler),
   };
 }
 
@@ -69,29 +91,39 @@ export interface TelegramProfiles {
   botTokens: string[];
 }
 
-const EMPTY_PROFILES: TelegramProfiles = { allowedUserIds: new Set(), botTokens: [] };
+const EMPTY_PROFILES: TelegramProfiles = {
+  allowedUserIds: new Set(),
+  botTokens: [],
+};
 
 export function parseTelegramProfiles(raw: unknown): TelegramProfiles {
-  const profiles = (raw as { profiles?: Record<string, unknown> } | null)?.profiles;
+  const profiles = (raw as { profiles?: Record<string, unknown> } | null)
+    ?.profiles;
   if (!profiles || typeof profiles !== "object") return EMPTY_PROFILES;
   const result: TelegramProfiles = { allowedUserIds: new Set(), botTokens: [] };
   for (const profile of Object.values(profiles)) {
     const p = profile as { allowedUserId?: unknown; botToken?: unknown } | null;
-    if (typeof p?.allowedUserId === "number") result.allowedUserIds.add(p.allowedUserId);
-    if (typeof p?.botToken === "string" && p.botToken) result.botTokens.push(p.botToken);
+    if (typeof p?.allowedUserId === "number")
+      result.allowedUserIds.add(p.allowedUserId);
+    if (typeof p?.botToken === "string" && p.botToken)
+      result.botTokens.push(p.botToken);
   }
   return result;
 }
 
 /** Reads <agentDir>/telegram.json, re-parsing only when its mtime changes. Fails closed. */
-export function createProfileReader(configPath: string): () => TelegramProfiles {
+export function createProfileReader(
+  configPath: string,
+): () => TelegramProfiles {
   let cachedMtime = -1;
   let cached = EMPTY_PROFILES;
   return () => {
     try {
       const mtime = statSync(configPath).mtimeMs;
       if (mtime !== cachedMtime) {
-        cached = parseTelegramProfiles(JSON.parse(readFileSync(configPath, "utf8")));
+        cached = parseTelegramProfiles(
+          JSON.parse(readFileSync(configPath, "utf8")),
+        );
         cachedMtime = mtime;
       }
       return cached;
@@ -107,15 +139,22 @@ export function createProfileReader(configPath: string): () => TelegramProfiles 
  * this call does not interfere with polling. Best effort: errors are ignored,
  * and the token never leaves this function.
  */
-export async function answerCallbackQuery(botTokens: readonly string[], callbackQueryId: string, text: string): Promise<void> {
+export async function answerCallbackQuery(
+  botTokens: readonly string[],
+  callbackQueryId: string,
+  text: string,
+): Promise<void> {
   for (const token of botTokens) {
     try {
-      const response = await fetch(`https://api.telegram.org/bot${token}/answerCallbackQuery`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
-        signal: AbortSignal.timeout(5000),
-      });
+      const response = await fetch(
+        `https://api.telegram.org/bot${token}/answerCallbackQuery`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ callback_query_id: callbackQueryId, text }),
+          signal: AbortSignal.timeout(5000),
+        },
+      );
       if (response.ok) return;
     } catch {
       // try the next profile's bot

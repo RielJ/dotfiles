@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
+
 import { CUSTOM_TYPE, standingRules, withStandingRules } from "../inject.ts";
 
 let n = 0;

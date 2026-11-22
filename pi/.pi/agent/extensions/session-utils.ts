@@ -14,19 +14,20 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
-	pi.registerCommand("clear", {
-		description: "Start a fresh session. Current session is saved and can be resumed with /resume.",
-		handler: async (_args, ctx) => {
-			const ok = await ctx.ui.confirm(
-				"Clear session?",
-				"This starts a fresh session. Current session is saved and can be resumed with /resume.",
-			);
-			if (!ok) {
-				ctx.ui.notify("Cancelled.", "info");
-				return;
-			}
-			await ctx.newSession();
-			ctx.ui.notify("Session cleared. Fresh start.", "info");
-		},
-	});
+  pi.registerCommand("clear", {
+    description:
+      "Start a fresh session. Current session is saved and can be resumed with /resume.",
+    handler: async (_args, ctx) => {
+      const ok = await ctx.ui.confirm(
+        "Clear session?",
+        "This starts a fresh session. Current session is saved and can be resumed with /resume.",
+      );
+      if (!ok) {
+        ctx.ui.notify("Cancelled.", "info");
+        return;
+      }
+      await ctx.newSession();
+      ctx.ui.notify("Session cleared. Fresh start.", "info");
+    },
+  });
 }

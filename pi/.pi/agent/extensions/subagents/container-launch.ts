@@ -5,18 +5,32 @@
  */
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { type Sandbox, SANDBOX_WORKDIR, type SandboxNetwork, type SandboxSource } from "./container-isolation.ts";
+
+import {
+  type Sandbox,
+  SANDBOX_WORKDIR,
+  type SandboxNetwork,
+  type SandboxSource,
+} from "./container-isolation.ts";
 
 const SUBAGENTS_DIR = fileURLToPath(new URL(".", import.meta.url));
 
 /** The extension that registers the sandbox_* tools in the child. */
-export const CONTAINER_TOOLS_EXTENSION = join(SUBAGENTS_DIR, "child-extensions", "container-tools.ts");
+export const CONTAINER_TOOLS_EXTENSION = join(
+  SUBAGENTS_DIR,
+  "child-extensions",
+  "container-tools.ts",
+);
 
 /**
  * The only tools a container child gets. No host tools at all: not bash, read,
  * edit, write, ask_question, MCP, or spawning.
  */
-export const CONTAINER_TOOLS = ["sandbox_bash", "sandbox_read", "sandbox_ls"] as const;
+export const CONTAINER_TOOLS = [
+  "sandbox_bash",
+  "sandbox_read",
+  "sandbox_ls",
+] as const;
 
 export function containerToolAllowlist(): string {
   return CONTAINER_TOOLS.join(",");
@@ -38,7 +52,9 @@ export const CONTAINER_CHILD_FLAGS = [
 ] as const;
 
 /** Environment for the child pi process (the tools read it; the container never sees it). */
-export function containerChildEnv(sandbox: Pick<Sandbox, "container">): Record<string, string> {
+export function containerChildEnv(
+  sandbox: Pick<Sandbox, "container">,
+): Record<string, string> {
   return { PI_SANDBOX_CONTAINER: sandbox.container };
 }
 
@@ -48,9 +64,7 @@ export interface ContainerLoadout {
   source: SandboxSource | null;
 }
 
-export type ContainerSpawnCheck =
-  | { ok: true }
-  | { ok: false; error: string };
+export type ContainerSpawnCheck = { ok: true } | { ok: false; error: string };
 
 /**
  * Reject spawn options that would break the isolation. Fork mode copies the
@@ -64,7 +78,11 @@ export function checkContainerSpawn(opts: {
   cwd?: string;
 }): ContainerSpawnCheck {
   if (opts.cli === "claude") {
-    return { ok: false, error: 'isolation: "container" does not work with Claude Code CLI profiles. Use a pi profile such as audit.' };
+    return {
+      ok: false,
+      error:
+        'isolation: "container" does not work with Claude Code CLI profiles. Use a pi profile such as audit.',
+    };
   }
   if (opts.sessionMode !== "standalone") {
     return {
@@ -73,10 +91,18 @@ export function checkContainerSpawn(opts: {
     };
   }
   if (opts.branch) {
-    return { ok: false, error: '"branch" is for worktree isolation. For a container, pass the repository as "source".' };
+    return {
+      ok: false,
+      error:
+        '"branch" is for worktree isolation. For a container, pass the repository as "source".',
+    };
   }
   if (opts.cwd) {
-    return { ok: false, error: '"cwd" is not used by container isolation. Pass a local folder as "source" to copy it into the sandbox.' };
+    return {
+      ok: false,
+      error:
+        '"cwd" is not used by container isolation. Pass a local folder as "source" to copy it into the sandbox.',
+    };
   }
   return { ok: true };
 }
@@ -85,7 +111,9 @@ export function checkContainerSpawn(opts: {
  * A profile that lists sandbox tools only works inside a container; without
  * one its tools refuse every call. Say so at spawn time instead.
  */
-export function profileNeedsContainer(profileTools: string | undefined): boolean {
+export function profileNeedsContainer(
+  profileTools: string | undefined,
+): boolean {
   if (!profileTools) return false;
   return profileTools
     .split(",")
@@ -94,7 +122,10 @@ export function profileNeedsContainer(profileTools: string | undefined): boolean
 }
 
 /** Text added to the child's task so it knows where it is and how to behave. */
-export function sandboxBriefing(sandbox: Pick<Sandbox, "network" | "source">, opts: { recreated?: boolean } = {}): string {
+export function sandboxBriefing(
+  sandbox: Pick<Sandbox, "network" | "source">,
+  opts: { recreated?: boolean } = {},
+): string {
   const source = !sandbox.source
     ? `${SANDBOX_WORKDIR} is empty.`
     : sandbox.source.kind === "git"

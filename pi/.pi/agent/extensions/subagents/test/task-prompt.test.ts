@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import {
   SUBAGENT_REPORT_RULES,
   buildSubagentTaskMessage,
@@ -26,8 +27,14 @@ describe("subagent task prompt", () => {
       "Summarize the turn.",
       SUBAGENT_REPORT_RULES,
     ].map((part) => message.indexOf(part));
-    assert.ok(order.every((index) => index >= 0), message);
-    assert.deepEqual(order, [...order].sort((a, b) => a - b));
+    assert.ok(
+      order.every((index) => index >= 0),
+      message,
+    );
+    assert.deepEqual(
+      order,
+      [...order].sort((a, b) => a - b),
+    );
   });
 
   it("adds report rules to forked tasks without wrapper text", () => {

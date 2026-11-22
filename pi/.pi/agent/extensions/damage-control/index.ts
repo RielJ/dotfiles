@@ -2,14 +2,26 @@ import { realpathSync, readFileSync, statSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
 import { gate } from "./approval.ts";
-import { DIALOG_PAUSE_MS, formatDuration, PauseSwitch, parseDuration } from "./pause.ts";
+import {
+  DIALOG_PAUSE_MS,
+  formatDuration,
+  PauseSwitch,
+  parseDuration,
+} from "./pause.ts";
 import { Evaluator } from "./policy.ts";
 import { parseRules, type Rules } from "./rules.ts";
 
 /** ~/.pi/agent/damage-control-rules.yaml, two levels above this file. */
-const RULES_PATH = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "damage-control-rules.yaml");
+const RULES_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "damage-control-rules.yaml",
+);
 
 const EMPTY: Rules = { bash: [], zeroAccess: [], readOnly: [], noDelete: [] };
 
@@ -29,8 +41,14 @@ function tempRoots(): string[] {
 }
 
 function summarize(toolName: string, input: unknown): string {
-  const record = typeof input === "object" && input !== null ? (input as Record<string, unknown>) : {};
-  const text = typeof record.command === "string" ? record.command : JSON.stringify(record.path ?? record);
+  const record =
+    typeof input === "object" && input !== null
+      ? (input as Record<string, unknown>)
+      : {};
+  const text =
+    typeof record.command === "string"
+      ? record.command
+      : JSON.stringify(record.path ?? record);
   const short = text.length > 600 ? `${text.slice(0, 600)}…` : text;
   return `${toolName}: ${short}`;
 }
@@ -47,7 +65,10 @@ export default function damageControl(pi: ExtensionAPI) {
   const pause = new PauseSwitch();
   let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 
-  type UI = { notify(msg: string, level?: "info" | "warning" | "error"): void; setStatus(key: string, text: string | undefined): void };
+  type UI = {
+    notify(msg: string, level?: "info" | "warning" | "error"): void;
+    setStatus(key: string, text: string | undefined): void;
+  };
 
   const startPause = (ms: number | null, ui: UI | undefined) => {
     pause.pause(ms);
@@ -59,7 +80,10 @@ export default function damageControl(pi: ExtensionAPI) {
       expiryTimer = undefined;
       if (pause.isPaused()) return; // paused again with a new deadline; that pause owns the timer
       ui?.setStatus("damage-control", undefined);
-      ui?.notify("Damage control is back on: risky commands ask for approval again.", "info");
+      ui?.notify(
+        "Damage control is back on: risky commands ask for approval again.",
+        "info",
+      );
     }, ms + 50);
     expiryTimer.unref?.();
   };
@@ -79,7 +103,10 @@ export default function damageControl(pi: ExtensionAPI) {
         .filter((v) => v.startsWith(prefix.trim()))
         .map((v) => ({ value: v, label: v })),
     handler: async (args, ctx) => {
-      const [verb = "status", ...rest] = (args ?? "").trim().split(/\s+/).filter(Boolean);
+      const [verb = "status", ...rest] = (args ?? "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
       switch (verb.toLowerCase()) {
         case "status":
           ctx.ui.notify(pause.describe(), "info");
@@ -103,7 +130,10 @@ export default function damageControl(pi: ExtensionAPI) {
           return;
         }
         default:
-          ctx.ui.notify("Usage: /damage-control off [30s|10m|1h] · on · status", "error");
+          ctx.ui.notify(
+            "Usage: /damage-control off [30s|10m|1h] · on · status",
+            "error",
+          );
       }
     },
   });
@@ -125,8 +155,14 @@ export default function damageControl(pi: ExtensionAPI) {
   };
 
   pi.on("tool_call", async (event, ctx) => {
-    const rules = loadRules((msg) => (ctx.hasUI ? ctx.ui.notify(msg, "error") : console.error(msg)));
-    const evaluator = new Evaluator(rules, { cwd: ctx.cwd, home: homedir(), tempRoots: roots });
+    const rules = loadRules((msg) =>
+      ctx.hasUI ? ctx.ui.notify(msg, "error") : console.error(msg),
+    );
+    const evaluator = new Evaluator(rules, {
+      cwd: ctx.cwd,
+      home: homedir(),
+      tempRoots: roots,
+    });
     const decision = evaluator.evaluate(event.toolName, event.input);
     const summary = summarize(event.toolName, event.input);
     const result = await gate(decision, {
@@ -137,12 +173,18 @@ export default function damageControl(pi: ExtensionAPI) {
       isPaused: () => pause.isPaused(),
       onPause: () => {
         startPause(DIALOG_PAUSE_MS, ctx.ui);
-        ctx.ui.notify(`Damage control prompts paused for ${formatDuration(DIALOG_PAUSE_MS)}. /damage-control on resumes them.`, "warning");
+        ctx.ui.notify(
+          `Damage control prompts paused for ${formatDuration(DIALOG_PAUSE_MS)}. /damage-control on resumes them.`,
+          "warning",
+        );
       },
     });
     // Leave a trail of what ran unasked, so a pause is never silent.
     if (!result && decision.action === "ask" && pause.isPaused() && ctx.hasUI) {
-      ctx.ui.notify(`damage-control (paused) allowed ${summary.slice(0, 160)}`, "info");
+      ctx.ui.notify(
+        `damage-control (paused) allowed ${summary.slice(0, 160)}`,
+        "info",
+      );
     }
     return result;
   });

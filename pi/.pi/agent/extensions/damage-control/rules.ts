@@ -12,7 +12,12 @@
  * Anything else is an error, so a typo can't silently disable a rule.
  */
 
-export type BashRule = { pattern: RegExp; source: string; reason: string; hard: boolean };
+export type BashRule = {
+  pattern: RegExp;
+  source: string;
+  reason: string;
+  hard: boolean;
+};
 
 export type Rules = {
   bash: BashRule[];
@@ -21,17 +26,28 @@ export type Rules = {
   noDelete: string[];
 };
 
-type Section = "bashToolPatterns" | "zeroAccessPaths" | "readOnlyPaths" | "noDeletePaths";
-const SECTIONS = new Set<string>(["bashToolPatterns", "zeroAccessPaths", "readOnlyPaths", "noDeletePaths"]);
+type Section =
+  | "bashToolPatterns"
+  | "zeroAccessPaths"
+  | "readOnlyPaths"
+  | "noDeletePaths";
+const SECTIONS = new Set<string>([
+  "bashToolPatterns",
+  "zeroAccessPaths",
+  "readOnlyPaths",
+  "noDeletePaths",
+]);
 
 function scalar(raw: string, line: number): string {
   const v = raw.trim();
   if (v.startsWith("'")) {
-    if (!v.endsWith("'") || v.length < 2) throw new Error(`line ${line}: unterminated '-quoted value`);
+    if (!v.endsWith("'") || v.length < 2)
+      throw new Error(`line ${line}: unterminated '-quoted value`);
     return v.slice(1, -1).replaceAll("''", "'");
   }
   if (v.startsWith('"')) {
-    if (!v.endsWith('"') || v.length < 2) throw new Error(`line ${line}: unterminated "-quoted value`);
+    if (!v.endsWith('"') || v.length < 2)
+      throw new Error(`line ${line}: unterminated "-quoted value`);
     return v.slice(1, -1).replace(/\\(["\\])/g, "$1");
   }
   return v;
@@ -47,20 +63,31 @@ function bool(raw: string, line: number): boolean {
 export function parseRules(text: string): Rules {
   const rules: Rules = { bash: [], zeroAccess: [], readOnly: [], noDelete: [] };
   let section: Section | undefined;
-  let rule: { source?: string; reason?: string; hard: boolean; line: number } | undefined;
+  let rule:
+    | { source?: string; reason?: string; hard: boolean; line: number }
+    | undefined;
 
   const finishRule = () => {
     if (!rule) return;
     if (rule.source === undefined || rule.reason === undefined) {
-      throw new Error(`line ${rule.line}: bash rule needs both pattern and reason`);
+      throw new Error(
+        `line ${rule.line}: bash rule needs both pattern and reason`,
+      );
     }
     let pattern: RegExp;
     try {
       pattern = new RegExp(rule.source);
     } catch (error) {
-      throw new Error(`line ${rule.line}: invalid regex ${rule.source}: ${(error as Error).message}`);
+      throw new Error(
+        `line ${rule.line}: invalid regex ${rule.source}: ${(error as Error).message}`,
+      );
     }
-    rules.bash.push({ pattern, source: rule.source, reason: rule.reason, hard: rule.hard });
+    rules.bash.push({
+      pattern,
+      source: rule.source,
+      reason: rule.reason,
+      hard: rule.hard,
+    });
     rule = undefined;
   };
 
@@ -73,7 +100,8 @@ export function parseRules(text: string): Rules {
     const top = line.match(/^([A-Za-z]+):$/);
     if (top) {
       finishRule();
-      if (!SECTIONS.has(top[1])) throw new Error(`line ${n}: unknown section ${top[1]}`);
+      if (!SECTIONS.has(top[1]))
+        throw new Error(`line ${n}: unknown section ${top[1]}`);
       section = top[1] as Section;
       continue;
     }
@@ -87,7 +115,8 @@ export function parseRules(text: string): Rules {
         finishRule();
         rule = { hard: false, line: n };
       }
-      if (!rule) throw new Error(`line ${n}: field outside a "- pattern:" item`);
+      if (!rule)
+        throw new Error(`line ${n}: field outside a "- pattern:" item`);
       const [, key, value] = field;
       if (key === "pattern") rule.source = scalar(value, n);
       else if (key === "reason") rule.reason = scalar(value, n);

@@ -12,7 +12,13 @@
  * Shared by the parent (index.ts) and the child (subagent-done.ts), so this
  * module must stay free of pi runtime imports.
  */
-import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 
 export interface KeepAliveConfig {
   /** Keep autonomous subagents open after each turn unless a spawn opts out. */

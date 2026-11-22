@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+
 import { normalize } from "./score.ts";
 import { entryText, loadReplayEntries } from "./session.ts";
 

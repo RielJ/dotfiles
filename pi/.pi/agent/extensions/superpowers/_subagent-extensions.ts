@@ -31,11 +31,20 @@ interface ExtensionSpec {
 
 export const SUBAGENT_EXTENSIONS = {
   /** pi-fff: fast grep/find with frecency ranking. */
-  piFff: { source: { kind: "package", name: "@ff-labs/pi-fff" }, tools: ["ffgrep", "fffind"] },
+  piFff: {
+    source: { kind: "package", name: "@ff-labs/pi-fff" },
+    tools: ["ffgrep", "fffind"],
+  },
   /** condensed-milk: compresses old tool output; cm_recall restores it. */
-  condensedMilk: { source: { kind: "package", name: "@tomooshi/condensed-milk-pi" }, tools: ["cm_recall"] },
+  condensedMilk: {
+    source: { kind: "package", name: "@tomooshi/condensed-milk-pi" },
+    tools: ["cm_recall"],
+  },
   /** web_search + web_read from superpowers/web-search.ts. */
-  webSearch: { source: { kind: "local", file: "_web-standalone.ts" }, tools: ["web_search", "web_read"] },
+  webSearch: {
+    source: { kind: "local", file: "_web-standalone.ts" },
+    tools: ["web_search", "web_read"],
+  },
 } as const satisfies Record<string, ExtensionSpec>;
 
 export type SubagentExtension = keyof typeof SUBAGENT_EXTENSIONS;
@@ -65,10 +74,15 @@ function defaultLocalDir(): string {
 }
 
 /** Entry file of an installed pi package, from package.json `pi.extensions[0]`. */
-export function resolvePackageEntry(name: string, packagesRoot = defaultPackagesRoot()): string | undefined {
+export function resolvePackageEntry(
+  name: string,
+  packagesRoot = defaultPackagesRoot(),
+): string | undefined {
   const dir = path.join(packagesRoot, name);
   try {
-    const pkg: unknown = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf-8"));
+    const pkg: unknown = JSON.parse(
+      fs.readFileSync(path.join(dir, "package.json"), "utf-8"),
+    );
     const entries = (pkg as { pi?: { extensions?: unknown } }).pi?.extensions;
     const first = Array.isArray(entries) ? entries[0] : undefined;
     if (typeof first !== "string") return undefined;
@@ -79,7 +93,10 @@ export function resolvePackageEntry(name: string, packagesRoot = defaultPackages
   }
 }
 
-function resolveSource(source: ExtensionSource, opts: ResolveOptions): string | undefined {
+function resolveSource(
+  source: ExtensionSource,
+  opts: ResolveOptions,
+): string | undefined {
   switch (source.kind) {
     case "package":
       return resolvePackageEntry(source.name, opts.packagesRoot);
@@ -90,7 +107,10 @@ function resolveSource(source: ExtensionSource, opts: ResolveOptions): string | 
   }
 }
 
-export function resolveExtensions(keys: readonly SubagentExtension[], opts: ResolveOptions = {}): ResolvedExtensions {
+export function resolveExtensions(
+  keys: readonly SubagentExtension[],
+  opts: ResolveOptions = {},
+): ResolvedExtensions {
   const result: ResolvedExtensions = { args: [], tools: [], missing: [] };
   for (const key of keys) {
     const spec: ExtensionSpec = SUBAGENT_EXTENSIONS[key];
@@ -106,8 +126,14 @@ export function resolveExtensions(keys: readonly SubagentExtension[], opts: Reso
 }
 
 /** Add tool names to a comma-separated --tools allowlist, without duplicates. */
-export function mergeToolAllowlist(base: string, extra: readonly string[]): string {
-  const names = base.split(",").map((t) => t.trim()).filter(Boolean);
+export function mergeToolAllowlist(
+  base: string,
+  extra: readonly string[],
+): string {
+  const names = base
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
   for (const tool of extra) if (!names.includes(tool)) names.push(tool);
   return names.join(",");
 }

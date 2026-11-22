@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, it } from "node:test";
+
 import {
   normalizeSkillRequests,
   renderSkillBlocks,
@@ -41,10 +42,10 @@ describe("orchestrator-selected skills", () => {
   });
 
   it("uses Pi's winning skill when no scope is requested", () => {
-    const result = resolveRequestedSkills(["principles"], [
-      candidate("principles", "local"),
-      candidate("principles", "global"),
-    ]);
+    const result = resolveRequestedSkills(
+      ["principles"],
+      [candidate("principles", "local"), candidate("principles", "global")],
+    );
 
     assert.equal(result.ok, true);
     if (result.ok) assert.equal(result.skills[0]?.scope, "local");
@@ -86,9 +87,10 @@ describe("orchestrator-selected skills", () => {
   });
 
   it("rejects unknown skills with the available names", () => {
-    const result = resolveRequestedSkills(["architecture"], [
-      candidate("principles", "global"),
-    ]);
+    const result = resolveRequestedSkills(
+      ["architecture"],
+      [candidate("principles", "global")],
+    );
 
     assert.equal(result.ok, false);
     if (!result.ok) {

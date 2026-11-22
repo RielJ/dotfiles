@@ -1,9 +1,18 @@
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
-import { type ExtensionAPI, getAgentDir } from "@earendil-works/pi-coding-agent";
+
+import {
+  type ExtensionAPI,
+  getAgentDir,
+} from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
+
 import { createMailbox, routeUpdate } from "./mailbox.ts";
-import { buildToolResult, type QuestionParams, validateQuestionnaire } from "./questionnaire.ts";
+import {
+  buildToolResult,
+  type QuestionParams,
+  validateQuestionnaire,
+} from "./questionnaire.ts";
 import { abortableSleep, runTelegramQuestionnaire } from "./runner.ts";
 import {
   answerCallbackQuery,
@@ -35,8 +44,13 @@ const DEFAULT_POLL_MS = 400;
 
 type SystemPrompt = string | string[];
 
-export function isTelegramOriginPrompt(prompt: string | null | undefined): boolean {
-  return typeof prompt === "string" && /^\[telegram(?:\]|\|)/.test(prompt.trimStart());
+export function isTelegramOriginPrompt(
+  prompt: string | null | undefined,
+): boolean {
+  return (
+    typeof prompt === "string" &&
+    /^\[telegram(?:\]|\|)/.test(prompt.trimStart())
+  );
 }
 
 export function withoutTerminalQuestionTool(toolNames: string[]): string[] {
@@ -55,23 +69,52 @@ export function appendTelegramQuestionGuidance(
 const QuestionParamsSchema = Type.Object({
   questions: Type.Array(
     Type.Object({
-      question: Type.String({ description: "The complete question to ask the user. Should be clear, specific, and end with a question mark." }),
-      header: Type.String({ maxLength: 16, description: "MAX 16 CHARACTERS. Very short chip/tag shown above the question." }),
+      question: Type.String({
+        description:
+          "The complete question to ask the user. Should be clear, specific, and end with a question mark.",
+      }),
+      header: Type.String({
+        maxLength: 16,
+        description:
+          "MAX 16 CHARACTERS. Very short chip/tag shown above the question.",
+      }),
       options: Type.Array(
         Type.Object({
-          label: Type.String({ maxLength: 60, description: "MAX 60 CHARACTERS. Concise display text for this option (1-5 words)." }),
-          description: Type.String({ description: "Explanation of what this option means or its trade-offs." }),
-          preview: Type.Optional(Type.String({ description: "Optional mockup, code snippet, or config shown in a code block." })),
+          label: Type.String({
+            maxLength: 60,
+            description:
+              "MAX 60 CHARACTERS. Concise display text for this option (1-5 words).",
+          }),
+          description: Type.String({
+            description:
+              "Explanation of what this option means or its trade-offs.",
+          }),
+          preview: Type.Optional(
+            Type.String({
+              description:
+                "Optional mockup, code snippet, or config shown in a code block.",
+            }),
+          ),
         }),
         {
           minItems: 2,
           maxItems: 4,
-          description: "2-4 distinct choices. The user can always reply with free text, so do NOT author an 'Other' option.",
+          description:
+            "2-4 distinct choices. The user can always reply with free text, so do NOT author an 'Other' option.",
         },
       ),
-      multiSelect: Type.Optional(Type.Boolean({ default: false, description: "Allow selecting multiple options." })),
+      multiSelect: Type.Optional(
+        Type.Boolean({
+          default: false,
+          description: "Allow selecting multiple options.",
+        }),
+      ),
     }),
-    { minItems: 1, maxItems: 4, description: "Questions to ask the user (1-4), asked one after another." },
+    {
+      minItems: 1,
+      maxItems: 4,
+      description: "Questions to ask the user (1-4), asked one after another.",
+    },
   ),
 });
 
@@ -79,23 +122,41 @@ export interface BridgeDeps {
   agentDir: string;
   loadApi(agentDir: string): Promise<TelegramApi>;
   readProfiles?: () => TelegramProfiles;
-  answerCallback(botTokens: readonly string[], callbackQueryId: string, text: string): Promise<void>;
+  answerCallback(
+    botTokens: readonly string[],
+    callbackQueryId: string,
+    text: string,
+  ): Promise<void>;
   newQid(): string;
   now(): number;
   pollMs: number;
   timeoutMs: number;
 }
 
-const CALLBACK_TOAST = { pick: "Got it", done: "Done", skip: "Skipped", text: "" } as const;
+const CALLBACK_TOAST = {
+  pick: "Got it",
+  done: "Done",
+  skip: "Skipped",
+  text: "",
+} as const;
 
 function looksRelevant(update: unknown): boolean {
   if (!update || typeof update !== "object") return false;
-  const u = update as { callback_query?: { data?: unknown }; message?: { text?: unknown } };
-  if (u.callback_query) return typeof u.callback_query.data === "string" && u.callback_query.data.startsWith("aq1:");
+  const u = update as {
+    callback_query?: { data?: unknown };
+    message?: { text?: unknown };
+  };
+  if (u.callback_query)
+    return (
+      typeof u.callback_query.data === "string" &&
+      u.callback_query.data.startsWith("aq1:")
+    );
   return typeof u.message?.text === "string";
 }
 
-export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}) {
+export function createTelegramQuestionBridge(
+  overrides: Partial<BridgeDeps> = {},
+) {
   return function telegramQuestionBridge(pi: ExtensionAPI): void {
     const deps: BridgeDeps = {
       agentDir: overrides.agentDir ?? getAgentDir(),
@@ -107,8 +168,12 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
       timeoutMs: DEFAULT_TIMEOUT_MS,
       ...overrides,
     };
-    const mailbox = createMailbox(join(deps.agentDir, "tmp", "telegram-question-bridge"));
-    const readProfiles = deps.readProfiles ?? createProfileReader(join(deps.agentDir, "telegram.json"));
+    const mailbox = createMailbox(
+      join(deps.agentDir, "tmp", "telegram-question-bridge"),
+    );
+    const readProfiles =
+      deps.readProfiles ??
+      createProfileReader(join(deps.agentDir, "telegram.json"));
 
     let api: TelegramApi | undefined;
     let apiLoad: Promise<TelegramApi | undefined> | undefined;
@@ -132,12 +197,21 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
       if (!looksRelevant(update)) return "pass";
       const profiles = readProfiles();
       if (profiles.allowedUserIds.size === 0) return "pass";
-      const route = routeUpdate(update, mailbox.listPending(deps.now()), profiles.allowedUserIds);
+      const route = routeUpdate(
+        update,
+        mailbox.listPending(deps.now()),
+        profiles.allowedUserIds,
+      );
       if (route.kind === "pass") return "pass";
       if (route.kind === "event") mailbox.postEvent(route.qid, route.event);
       if (route.callbackQueryId) {
-        const toast = route.kind === "event" ? CALLBACK_TOAST[route.event.type] : "This question is no longer active.";
-        void deps.answerCallback(profiles.botTokens, route.callbackQueryId, toast).catch(() => undefined);
+        const toast =
+          route.kind === "event"
+            ? CALLBACK_TOAST[route.event.type]
+            : "This question is no longer active.";
+        void deps
+          .answerCallback(profiles.botTokens, route.callbackQueryId, toast)
+          .catch(() => undefined);
       }
       return "consume";
     }
@@ -145,8 +219,10 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
     function restoreTools(): void {
       const active = pi.getActiveTools();
       let next = active;
-      if (terminalToolSuspended && !next.includes(TERMINAL_QUESTION_TOOL)) next = [...next, TERMINAL_QUESTION_TOOL];
-      if (telegramToolActivated) next = next.filter((name) => name !== TELEGRAM_QUESTION_TOOL);
+      if (terminalToolSuspended && !next.includes(TERMINAL_QUESTION_TOOL))
+        next = [...next, TERMINAL_QUESTION_TOOL];
+      if (telegramToolActivated)
+        next = next.filter((name) => name !== TELEGRAM_QUESTION_TOOL);
       if (next !== active) pi.setActiveTools(next);
       terminalToolSuspended = false;
       telegramToolActivated = false;
@@ -157,10 +233,11 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
       label: "Ask User Question (Telegram)",
       description:
         "Ask the user 1-4 structured questions in the current Telegram chat and wait for the answers. Same arguments and answer format as ask_user_question. Each question is sent as a message with one button per option; the user taps an option (toggles for multiSelect, then Done) or replies with text to answer in their own words. Only available in Telegram-originated runs.",
-      promptSnippet: "Ask the user structured questions with Telegram buttons and wait for the answers",
+      promptSnippet:
+        "Ask the user structured questions with Telegram buttons and wait for the answers",
       promptGuidelines: [
         `Use ${TELEGRAM_QUESTION_TOOL} instead of ask_user_question during Telegram-originated runs.`,
-        "If you recommend an option, make it the first option and add \"(Recommended)\" to its label.",
+        'If you recommend an option, make it the first option and add "(Recommended)" to its label.',
       ],
       parameters: QuestionParamsSchema,
       // Pi >= 1.0: off until a Telegram run activates it, and never callable from codemode/tool
@@ -175,7 +252,12 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
           );
         }
         const invalid = validateQuestionnaire(typed);
-        if (invalid) return buildToolResult(invalid, { answers: [], cancelled: true, error: "invalid_questionnaire" });
+        if (invalid)
+          return buildToolResult(invalid, {
+            answers: [],
+            cancelled: true,
+            error: "invalid_questionnaire",
+          });
         const loaded = await ensureApi();
         if (!loaded) {
           return buildToolResult(
@@ -200,7 +282,8 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
       disposeUpdateHandler?.();
       disposeUpdateHandler = undefined;
       const loaded = await ensureApi();
-      if (loaded) disposeUpdateHandler = loaded.registerUpdateHandler(handleUpdate);
+      if (loaded)
+        disposeUpdateHandler = loaded.registerUpdateHandler(handleUpdate);
     });
 
     pi.on("session_shutdown", () => {
@@ -223,19 +306,30 @@ export function createTelegramQuestionBridge(overrides: Partial<BridgeDeps> = {}
         next = [...next, TELEGRAM_QUESTION_TOOL];
         telegramToolActivated = true;
       }
-      if (next.length !== active.length || next.some((name, i) => name !== active[i])) pi.setActiveTools(next);
+      if (
+        next.length !== active.length ||
+        next.some((name, i) => name !== active[i])
+      )
+        pi.setActiveTools(next);
 
       return {
         systemPrompt: appendTelegramQuestionGuidance(
           event.systemPrompt as SystemPrompt | null | undefined,
-          available ? TELEGRAM_QUESTION_GUIDANCE : TELEGRAM_QUESTION_FALLBACK_GUIDANCE,
+          available
+            ? TELEGRAM_QUESTION_GUIDANCE
+            : TELEGRAM_QUESTION_FALLBACK_GUIDANCE,
         ) as typeof event.systemPrompt,
       };
     });
 
     pi.on("tool_call", (event) => {
       if (telegramRunActive && event.toolName === TERMINAL_QUESTION_TOOL) {
-        return { block: true, reason: api ? TELEGRAM_QUESTION_BLOCK_REASON : TELEGRAM_QUESTION_FALLBACK_BLOCK_REASON };
+        return {
+          block: true,
+          reason: api
+            ? TELEGRAM_QUESTION_BLOCK_REASON
+            : TELEGRAM_QUESTION_FALLBACK_BLOCK_REASON,
+        };
       }
     });
 

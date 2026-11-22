@@ -1,5 +1,8 @@
 // @ts-nocheck -- vendored upstream extension; runtime compatibility is covered by fork tests.
-// biome-ignore-all lint/suspicious/noExplicitAny: Pi lifecycle events are dynamically shaped.
+/* oxlint-disable typescript/no-explicit-any -- Pi lifecycle events are dynamically shaped. */
+
+import { writeFileSync } from "node:fs";
+
 /**
  * Extension loaded into sub-agents.
  * - Shows agent identity + available tools as a styled widget above the editor (toggle with Ctrl+Alt+O)
@@ -21,7 +24,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Box, Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { writeFileSync } from "node:fs";
+
 import { createSubagentActivityRecorder } from "./activity.ts";
 import { resolveAgentEndAction, writeTurnSignal } from "./keep-alive.ts";
 

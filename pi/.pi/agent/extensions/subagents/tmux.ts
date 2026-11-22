@@ -1,6 +1,7 @@
 // Adapted from amosblomqvist/pi-interactive-subagents (MIT).
 // This fork uses one hidden `_pi-agents` tmux session with one window per agent.
 import { existsSync, readFileSync, rmSync } from "node:fs";
+
 import {
   capturePane,
   createWindow,
@@ -122,7 +123,10 @@ function processAlive(pid: number): boolean {
  * SIGTERM normally. SIGKILL can't be trapped; pollForExit's idle-shell check
  * covers that case.
  */
-export function wrapSubagentCommand(command: string, statusFile: string): string {
+export function wrapSubagentCommand(
+  command: string,
+  statusFile: string,
+): string {
   const file = shellEscape(statusFile);
   return [
     `rm -f ${file}`,
@@ -165,7 +169,8 @@ export function lastErrorLine(screen: string): string | null {
 }
 
 function crashResult(exitCode: number | null, screen: string): PollResult {
-  const signal = exitCode !== null && exitCode > 128 ? ` (signal ${exitCode - 128})` : "";
+  const signal =
+    exitCode !== null && exitCode > 128 ? ` (signal ${exitCode - 128})` : "";
   const status =
     exitCode === null
       ? "ended without reporting an exit status (killed, e.g. SIGKILL)"
@@ -174,10 +179,11 @@ function crashResult(exitCode: number | null, screen: string): PollResult {
   return {
     reason: "crashed",
     exitCode: exitCode ?? 1,
-    errorMessage: line ? `Sub-agent process ${status}: ${line}` : `Sub-agent process ${status}.`,
+    errorMessage: line
+      ? `Sub-agent process ${status}: ${line}`
+      : `Sub-agent process ${status}.`,
   };
 }
-
 
 function interpretExitSidecar(data: unknown): PollResult {
   const record =
@@ -254,14 +260,18 @@ export async function pollForExit(
       if (/^\d+$/.test(text)) {
         rmSync(statusFile, { force: true });
         const code = Number.parseInt(text, 10);
-        return code === 0 ? { reason: "sentinel", exitCode: 0 } : crashed(code, screen);
+        return code === 0
+          ? { reason: "sentinel", exitCode: 0 }
+          : crashed(code, screen);
       }
     }
 
     const match = screen.match(/__SUBAGENT_DONE_(\d+)__/);
     if (match) {
       const code = Number.parseInt(match[1], 10);
-      return code === 0 ? { reason: "sentinel", exitCode: 0 } : crashed(code, screen);
+      return code === 0
+        ? { reason: "sentinel", exitCode: 0 }
+        : crashed(code, screen);
     }
     return null;
   };

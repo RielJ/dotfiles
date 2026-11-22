@@ -10,6 +10,7 @@
  * - session_before_compact: queue candidate memories in inbox/ (fire-and-forget)
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
 import { registerCommands } from "./commands.ts";
 import { registerExtraction } from "./extract.ts";
 import { buildCoreBlock, withCoreBlock } from "./inject.ts";
@@ -19,51 +20,61 @@ import { ensureLayout, ensureRepoCore, memoryRoot, repoKey } from "./store.ts";
 import { registerTools } from "./tools.ts";
 
 export default function memoryExtension(pi: ExtensionAPI) {
-	let state: MemoryState | null = null;
-	const getState = () => state;
+  let state: MemoryState | null = null;
+  const getState = () => state;
 
-	pi.on("session_start", async (_event, ctx) => {
-		state?.close();
-		state = null;
-		try {
-			const root = memoryRoot();
-			ensureLayout(root);
-			const next = createState(root);
-			next.repoKey = repoKey(ctx.cwd);
-			if (next.repoKey) {
-				next.scopes = ["global", `repo:${next.repoKey}`];
-				if (ensureRepoCore(root, next.repoKey)) {
-					ctx.ui.notify(`Memory: created ~/.pi/memory/repos/${next.repoKey}/core.md for this repo`, "info");
-				}
-			}
-			next.coreBlock = buildCoreBlock(root, next.repoKey);
-			if (next.coreBlock) recordInjection(root, next.coreBlock.tokens);
-			state = next;
-		} catch (error) {
-			ctx.ui.notify(`Memory disabled for this session: ${error instanceof Error ? error.message : String(error)}`, "warning");
-		}
-	});
+  pi.on("session_start", async (_event, ctx) => {
+    state?.close();
+    state = null;
+    try {
+      const root = memoryRoot();
+      ensureLayout(root);
+      const next = createState(root);
+      next.repoKey = repoKey(ctx.cwd);
+      if (next.repoKey) {
+        next.scopes = ["global", `repo:${next.repoKey}`];
+        if (ensureRepoCore(root, next.repoKey)) {
+          ctx.ui.notify(
+            `Memory: created ~/.pi/memory/repos/${next.repoKey}/core.md for this repo`,
+            "info",
+          );
+        }
+      }
+      next.coreBlock = buildCoreBlock(root, next.repoKey);
+      if (next.coreBlock) recordInjection(root, next.coreBlock.tokens);
+      state = next;
+    } catch (error) {
+      ctx.ui.notify(
+        `Memory disabled for this session: ${error instanceof Error ? error.message : String(error)}`,
+        "warning",
+      );
+    }
+  });
 
-	pi.on("session_shutdown", async () => {
-		state?.close();
-		state = null;
-	});
+  pi.on("session_shutdown", async () => {
+    state?.close();
+    state = null;
+  });
 
-	pi.on("before_agent_start", async (event) => {
-		if (state) state.lastUserText = event.prompt ?? "";
-	});
+  pi.on("before_agent_start", async (event) => {
+    if (state) state.lastUserText = event.prompt ?? "";
+  });
 
-	pi.on("tool_call", async (event) => {
-		state?.taint.observe(event.toolName, event.input);
-	});
+  pi.on("tool_call", async (event) => {
+    state?.taint.observe(event.toolName, event.input);
+  });
 
-	pi.on("context", async (event) => {
-		if (!state?.coreBlock) return;
-		const messages = withCoreBlock(event.messages, state.coreBlock, state.sessionStartedAt);
-		if (messages !== event.messages) return { messages };
-	});
+  pi.on("context", async (event) => {
+    if (!state?.coreBlock) return;
+    const messages = withCoreBlock(
+      event.messages,
+      state.coreBlock,
+      state.sessionStartedAt,
+    );
+    if (messages !== event.messages) return { messages };
+  });
 
-	registerTools(pi, getState);
-	registerCommands(pi, getState);
-	registerExtraction(pi, getState);
+  registerTools(pi, getState);
+  registerCommands(pi, getState);
+  registerExtraction(pi, getState);
 }

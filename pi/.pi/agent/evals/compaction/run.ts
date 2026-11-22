@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+
 import { type Case, type CaseRun, loadCases, runCase } from "./evaluate.ts";
 import { PROFILES, type Profile } from "./replay.ts";
 import { generateSyntheticSession } from "./synthetic.ts";

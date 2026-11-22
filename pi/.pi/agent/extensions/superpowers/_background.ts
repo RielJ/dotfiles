@@ -7,6 +7,7 @@
  */
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+
 import { matchRunIds } from "./_async.js";
 
 const LINGER_MS = 8000;
@@ -31,7 +32,11 @@ function boxTop(title: string, info: string, width: number): string {
   const left = `─ ${title} `;
   const right = ` ${info} ─`;
   const fill = Math.max(0, inner - visibleWidth(left) - visibleWidth(right));
-  const content = truncateToWidth(`${left}${"─".repeat(fill)}${right}`, inner, "");
+  const content = truncateToWidth(
+    `${left}${"─".repeat(fill)}${right}`,
+    inner,
+    "",
+  );
   return `${ACCENT}╭${content}${"─".repeat(Math.max(0, inner - visibleWidth(content)))}╮${RST}`;
 }
 
@@ -39,8 +44,15 @@ function boxRow(left: string, right: string, width: number): string {
   if (width < 2) return "";
   const inner = width - 2;
   const rightPart = truncateToWidth(right, inner, "…");
-  const leftPart = truncateToWidth(left, Math.max(0, inner - visibleWidth(rightPart)), "…");
-  const pad = Math.max(0, inner - visibleWidth(leftPart) - visibleWidth(rightPart));
+  const leftPart = truncateToWidth(
+    left,
+    Math.max(0, inner - visibleWidth(rightPart)),
+    "…",
+  );
+  const pad = Math.max(
+    0,
+    inner - visibleWidth(leftPart) - visibleWidth(rightPart),
+  );
   return `${ACCENT}│${RST}${leftPart}${" ".repeat(pad)}${rightPart}${ACCENT}│${RST}`;
 }
 
@@ -62,14 +74,24 @@ const ICON: Record<AgentRow["status"], string> = {
  *   │ ⟳ 00:30  Opus 5.5                  read plan.ts  │
  *   ╰──────────────────────────────────────────────────╯
  */
-export function renderRunBoxes(runs: readonly LiveRun[], title: string, width: number, now: number): string[] {
+export function renderRunBoxes(
+  runs: readonly LiveRun[],
+  title: string,
+  width: number,
+  now: number,
+): string[] {
   const lines: string[] = [];
   for (const run of runs) {
     const elapsed = mmss((run.finishedAt ?? now) - run.startedAt);
-    lines.push(boxTop(`${title} ${run.id}`, `${run.phase} · ${elapsed}`, width));
+    lines.push(
+      boxTop(`${title} ${run.id}`, `${run.phase} · ${elapsed}`, width),
+    );
     for (const [label, row] of run.agents) {
       const running = row.status === "running" && !run.finishedAt;
-      const icon = running || row.status !== "running" ? ICON[row.status] : `${DIM}○${RST}`;
+      const icon =
+        running || row.status !== "running"
+          ? ICON[row.status]
+          : `${DIM}○${RST}`;
       const ms = running ? now - row.startedAt : row.elapsed;
       const activity = row.activity ? ` ${DIM}${row.activity}${RST} ` : " ";
       lines.push(boxRow(` ${icon} ${mmss(ms)}  ${label} `, activity, width));
@@ -127,7 +149,10 @@ export function externalRowsHost(): ExternalRowsHost {
 }
 
 /** Rows for the Subagents box: one per model, tagged with its run. */
-export function runRows(runs: readonly LiveRun[], noun: string): ExternalWidgetRow[] {
+export function runRows(
+  runs: readonly LiveRun[],
+  noun: string,
+): ExternalWidgetRow[] {
   const rows: ExternalWidgetRow[] = [];
   for (const run of runs) {
     for (const [label, row] of run.agents) {
@@ -136,7 +161,9 @@ export function runRows(runs: readonly LiveRun[], noun: string): ExternalWidgetR
       rows.push({
         status: cut ? "error" : row.status,
         startedAt: row.startedAt,
-        elapsedMs: cut ? (run.finishedAt as number) - row.startedAt : row.elapsed,
+        elapsedMs: cut
+          ? (run.finishedAt as number) - row.startedAt
+          : row.elapsed,
         name: label,
         tag: run.tag ?? `${noun} ${run.id}`,
         detail: cut ? run.phase : row.activity,
@@ -147,7 +174,8 @@ export function runRows(runs: readonly LiveRun[], noun: string): ExternalWidgetR
 }
 
 function unref(handle: unknown): void {
-  if (handle && typeof handle === "object" && "unref" in handle) (handle as { unref?: () => void }).unref?.();
+  if (handle && typeof handle === "object" && "unref" in handle)
+    (handle as { unref?: () => void }).unref?.();
 }
 
 export class RunTracker {
@@ -155,9 +183,19 @@ export class RunTracker {
   private ctx: ExtensionContext | undefined;
   private timer: ReturnType<typeof setInterval> | undefined;
 
-  private readonly opts: { widgetKey: string; title: string; noun: string; isEnabled: () => boolean };
+  private readonly opts: {
+    widgetKey: string;
+    title: string;
+    noun: string;
+    isEnabled: () => boolean;
+  };
 
-  constructor(opts: { widgetKey: string; title: string; noun: string; isEnabled: () => boolean }) {
+  constructor(opts: {
+    widgetKey: string;
+    title: string;
+    noun: string;
+    isEnabled: () => boolean;
+  }) {
     this.opts = opts;
   }
 
@@ -170,7 +208,10 @@ export class RunTracker {
     const controller = new AbortController();
     if (external) {
       if (external.aborted) controller.abort();
-      else external.addEventListener("abort", () => controller.abort(), { once: true });
+      else
+        external.addEventListener("abort", () => controller.abort(), {
+          once: true,
+        });
     }
     const live: LiveRun = {
       id,
@@ -195,11 +236,23 @@ export class RunTracker {
     this.render();
   }
 
-  setAgent(live: LiveRun, label: string, patch: Partial<Omit<AgentRow, "startedAt">>): void {
+  setAgent(
+    live: LiveRun,
+    label: string,
+    patch: Partial<Omit<AgentRow, "startedAt">>,
+  ): void {
     const prev = live.agents.get(label);
     const now = Date.now();
-    const next: AgentRow = { status: "running", activity: "", elapsed: 0, ...prev, ...patch, startedAt: prev?.startedAt ?? now };
-    if (next.status !== "running" && patch.elapsed === undefined) next.elapsed = now - next.startedAt;
+    const next: AgentRow = {
+      status: "running",
+      activity: "",
+      elapsed: 0,
+      ...prev,
+      ...patch,
+      startedAt: prev?.startedAt ?? now,
+    };
+    if (next.status !== "running" && patch.elapsed === undefined)
+      next.elapsed = now - next.startedAt;
     live.agents.set(label, next);
     this.render();
   }
@@ -218,7 +271,9 @@ export class RunTracker {
 
   /** Ids of runs still in flight, oldest first. */
   activeIds(): string[] {
-    return [...this.runs.values()].filter((r) => !r.finishedAt).map((r) => r.id);
+    return [...this.runs.values()]
+      .filter((r) => !r.finishedAt)
+      .map((r) => r.id);
   }
 
   /** Cancel runs by id, unique substring, "all", or (empty) the newest. */
@@ -264,8 +319,12 @@ export class RunTracker {
     if (host.refresh) {
       // Hosted inside the Subagents box; the provider reads live state so its
       // own 1s refresh keeps elapsed times ticking.
-      if (this.runs.size === 0 || !this.opts.isEnabled()) host.sources.delete(this.opts.widgetKey);
-      else host.sources.set(this.opts.widgetKey, () => runRows([...this.runs.values()], this.opts.noun));
+      if (this.runs.size === 0 || !this.opts.isEnabled())
+        host.sources.delete(this.opts.widgetKey);
+      else
+        host.sources.set(this.opts.widgetKey, () =>
+          runRows([...this.runs.values()], this.opts.noun),
+        );
       host.refresh();
       this.ctx?.ui.setWidget(this.opts.widgetKey, undefined);
       return;
@@ -281,7 +340,8 @@ export class RunTracker {
     this.ctx.ui.setWidget(
       this.opts.widgetKey,
       () => ({
-        render: (width: number) => renderRunBoxes(runs, title, width, Date.now()),
+        render: (width: number) =>
+          renderRunBoxes(runs, title, width, Date.now()),
         invalidate() {},
         dispose() {},
       }),

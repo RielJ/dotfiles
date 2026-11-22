@@ -46,7 +46,8 @@ export function parsePlanArgs(args: string): ParsedPlanArgs {
     else if (token === "--web") parsed.web = true;
     else if (token === "--context") {
       const next = tokens[i + 1];
-      if (!next || next.startsWith("--")) throw new Error("--context needs a file path");
+      if (!next || next.startsWith("--"))
+        throw new Error("--context needs a file path");
       parsed.contextFile = next;
       i++;
     } else if (token.startsWith("--context=")) {
@@ -60,8 +61,17 @@ export function parsePlanArgs(args: string): ParsedPlanArgs {
 }
 
 /** Read a research file relative to `cwd`. Throws when it is missing or empty. */
-export function loadContextFile(cwd: string, file: string, maxChars = MAX_PROVIDED_CONTEXT_CHARS): ProvidedContext {
-  const resolved = path.resolve(cwd, file.startsWith("~/") ? path.join(process.env.HOME ?? "~", file.slice(2)) : file);
+export function loadContextFile(
+  cwd: string,
+  file: string,
+  maxChars = MAX_PROVIDED_CONTEXT_CHARS,
+): ProvidedContext {
+  const resolved = path.resolve(
+    cwd,
+    file.startsWith("~/")
+      ? path.join(process.env.HOME ?? "~", file.slice(2))
+      : file,
+  );
   let text: string;
   try {
     text = fs.readFileSync(resolved, "utf-8").trim();
@@ -70,16 +80,24 @@ export function loadContextFile(cwd: string, file: string, maxChars = MAX_PROVID
   }
   if (!text) throw new Error(`Context file is empty: ${resolved}`);
   const truncated = text.length > maxChars;
-  return { label: file, text: truncated ? text.slice(0, maxChars) : text, truncated };
+  return {
+    label: file,
+    text: truncated ? text.slice(0, maxChars) : text,
+    truncated,
+  };
 }
 
 function providedBlock(provided: ProvidedContext): string {
-  const note = provided.truncated ? `\n\n[...truncated to ${MAX_PROVIDED_CONTEXT_CHARS / 1000}K chars; read ${provided.label} for the rest]` : "";
+  const note = provided.truncated
+    ? `\n\n[...truncated to ${MAX_PROVIDED_CONTEXT_CHARS / 1000}K chars; read ${provided.label} for the rest]`
+    : "";
   return `${provided.text}${note}`;
 }
 
 /** Pre-context for the Phase 0 explorer: research it should build on, not redo. */
-export function explorerPreContext(provided: ProvidedContext | undefined): string | undefined {
+export function explorerPreContext(
+  provided: ProvidedContext | undefined,
+): string | undefined {
   if (!provided) return undefined;
   return `Research provided by the user (from ${provided.label}). Do not repeat it; explore the codebase and fill only the gaps it leaves.\n\n${providedBlock(provided)}`;
 }
@@ -96,13 +114,19 @@ export function composePlannerTask(parts: {
 }): string {
   const sections: string[] = [];
   if (parts.conversation) {
-    sections.push(`## Conversation Context\nThe user has been discussing the following. Use this to inform your plan:\n\n${parts.conversation}`);
+    sections.push(
+      `## Conversation Context\nThe user has been discussing the following. Use this to inform your plan:\n\n${parts.conversation}`,
+    );
   }
   if (parts.provided) {
-    sections.push(`## Provided Research (${parts.provided.label})\nTreat this as the current evidence for library and platform choices. Where you disagree, say why.\n\n${providedBlock(parts.provided)}`);
+    sections.push(
+      `## Provided Research (${parts.provided.label})\nTreat this as the current evidence for library and platform choices. Where you disagree, say why.\n\n${providedBlock(parts.provided)}`,
+    );
   }
   if (parts.findings) {
-    sections.push(`## Codebase Exploration Findings (Phase 0)\n\n${parts.findings}`);
+    sections.push(
+      `## Codebase Exploration Findings (Phase 0)\n\n${parts.findings}`,
+    );
   }
   if (sections.length === 0) return parts.task;
   sections.push(`## Task to Plan\n\n${parts.task}`);

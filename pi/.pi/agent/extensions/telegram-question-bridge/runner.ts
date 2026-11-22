@@ -15,12 +15,19 @@ import {
   renderClosedView,
   renderQuestionView,
 } from "./questionnaire.ts";
-import type { TelegramHandle, TelegramResult, TelegramView } from "./telegram.ts";
+import type {
+  TelegramHandle,
+  TelegramResult,
+  TelegramView,
+} from "./telegram.ts";
 
 export interface RunnerDeps {
   mailbox: Mailbox;
   sendView(view: TelegramView): Promise<TelegramResult<TelegramHandle>>;
-  editView(handle: TelegramHandle, view: TelegramView): Promise<TelegramResult<TelegramHandle>>;
+  editView(
+    handle: TelegramHandle,
+    view: TelegramView,
+  ): Promise<TelegramResult<TelegramHandle>>;
   newQid(): string;
   now(): number;
   sleep(ms: number, signal?: AbortSignal): Promise<void>;
@@ -30,7 +37,10 @@ export interface RunnerDeps {
 
 export const SEND_FAILED_PREFIX = "Could not send the question to Telegram";
 
-export function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+export function abortableSleep(
+  ms: number,
+  signal?: AbortSignal,
+): Promise<void> {
   return new Promise((resolve) => {
     if (signal?.aborted) return resolve();
     const timer = setTimeout(done, ms);
@@ -43,7 +53,11 @@ export function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> 
   });
 }
 
-export async function runTelegramQuestionnaire(params: QuestionParams, signal: AbortSignal | undefined, deps: RunnerDeps) {
+export async function runTelegramQuestionnaire(
+  params: QuestionParams,
+  signal: AbortSignal | undefined,
+  deps: RunnerDeps,
+) {
   const total = params.questions.length;
   const answers: QuestionAnswer[] = [];
   const minutes = Math.round(deps.timeoutMs / 60000);
@@ -52,7 +66,11 @@ export async function runTelegramQuestionnaire(params: QuestionParams, signal: A
     const qid = deps.newQid();
     const sent = await deps
       .sendView(renderQuestionView(qid, question, index, total))
-      .catch((error: unknown) => ({ ok: false as const, reason: "send-threw", message: String(error) }));
+      .catch((error: unknown) => ({
+        ok: false as const,
+        reason: "send-threw",
+        message: String(error),
+      }));
     if (!sent.ok) {
       return buildToolResult(
         `${SEND_FAILED_PREFIX} (${sent.reason}: ${sent.message}). Ask in a plain reply instead and end the turn.`,
@@ -67,7 +85,9 @@ export async function runTelegramQuestionnaire(params: QuestionParams, signal: A
         qid,
         pid: process.pid,
         chatId: handle.target.chatId,
-        ...(handle.target.threadId === undefined ? {} : { threadId: handle.target.threadId }),
+        ...(handle.target.threadId === undefined
+          ? {}
+          : { threadId: handle.target.threadId }),
         messageIds: [...handle.messageIds],
         createdAt: startedAt,
         expiresAt: startedAt + deps.timeoutMs + 60_000,
@@ -84,11 +104,15 @@ export async function runTelegramQuestionnaire(params: QuestionParams, signal: A
         }
         for (const event of deps.mailbox.drainEvents(qid)) {
           const step = applyEvent(question, index, selected, event);
-          if (step.status === "answered") closed = { kind: "answered", answer: step.answer };
+          if (step.status === "answered")
+            closed = { kind: "answered", answer: step.answer };
           else if (step.status === "skipped") closed = { kind: "skipped" };
           else if (step.selected.join() !== selected.join()) {
             selected = step.selected;
-            const edited = await deps.editView(handle, renderQuestionView(qid, question, index, total, selected));
+            const edited = await deps.editView(
+              handle,
+              renderQuestionView(qid, question, index, total, selected),
+            );
             if (edited.ok) {
               handle = edited.value;
               publish();
@@ -107,7 +131,9 @@ export async function runTelegramQuestionnaire(params: QuestionParams, signal: A
       deps.mailbox.retract(qid);
     }
 
-    await deps.editView(handle, renderClosedView(question, index, total, closed)).catch(() => undefined);
+    await deps
+      .editView(handle, renderClosedView(question, index, total, closed))
+      .catch(() => undefined);
 
     if (closed.kind === "answered") {
       answers.push(closed.answer);
@@ -117,7 +143,11 @@ export async function runTelegramQuestionnaire(params: QuestionParams, signal: A
       closed.kind === "timeout"
         ? `User did not answer the Telegram question within ${minutes} minutes. Do not assume an answer; ask again in a plain reply if it is still needed.`
         : undefined;
-    return buildQuestionnaireResponse({ answers, cancelled: true }, params, declineText);
+    return buildQuestionnaireResponse(
+      { answers, cancelled: true },
+      params,
+      declineText,
+    );
   }
 
   return buildQuestionnaireResponse({ answers, cancelled: false }, params);

@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
+
 import { type Case, runCase } from "../evaluate.ts";
 import { PROFILES } from "../replay.ts";
 import { countOccurrences, normalize, scoreCommitment } from "../score.ts";

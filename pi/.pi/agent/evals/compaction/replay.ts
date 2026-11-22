@@ -3,6 +3,7 @@ import {
   estimateTokens,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
+
 import { prepareCompaction } from "./pi-internals.ts";
 import { messageText, type ReplayEntry } from "./session.ts";
 import type { Variant } from "./variants.ts";

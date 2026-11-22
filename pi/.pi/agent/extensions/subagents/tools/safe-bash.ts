@@ -52,7 +52,7 @@ export default function (pi: ExtensionAPI) {
         Type.Number({ description: "Timeout in seconds (optional)" }),
       ),
     }),
-    async execute(toolCallId, params, signal, onUpdate, ctx) {
+    async execute(toolCallId, params, signal, onUpdate, _ctx) {
       const danger = isDangerous(params.command);
       if (danger) {
         throw new Error(danger);

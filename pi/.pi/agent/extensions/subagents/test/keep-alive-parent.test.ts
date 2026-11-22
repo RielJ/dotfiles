@@ -4,6 +4,7 @@ import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, it } from "node:test";
+
 import subagentsExtension, { __test__ } from "../index.ts";
 import { writeTurnSignal } from "../keep-alive.ts";
 import { createStatusState } from "../status.ts";

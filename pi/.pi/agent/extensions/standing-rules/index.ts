@@ -21,6 +21,7 @@
  *   /standing-rules — show the rules currently injected
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
 import { standingRules, withStandingRules } from "./inject.ts";
 
 export default function standingRulesExtension(pi: ExtensionAPI) {

@@ -18,7 +18,11 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { extname } from "node:path";
-import type { ExtensionAPI, ToolDefinition } from "@earendil-works/pi-coding-agent";
+
+import type {
+  ExtensionAPI,
+  ToolDefinition,
+} from "@earendil-works/pi-coding-agent";
 import {
   type BashOperations,
   createBashToolDefinition,
@@ -81,11 +85,19 @@ interface ExecResult {
   stderr: string;
 }
 
-function dockerExec(container: string, argv: string[], opts: { maxBytes?: number } = {}): Promise<ExecResult> {
+function dockerExec(
+  container: string,
+  argv: string[],
+  opts: { maxBytes?: number } = {},
+): Promise<ExecResult> {
   return new Promise((resolve) => {
-    const child = spawn("docker", ["exec", "-u", SANDBOX_USER, container, ...argv], {
-      stdio: ["ignore", "pipe", "pipe"],
-    });
+    const child = spawn(
+      "docker",
+      ["exec", "-u", SANDBOX_USER, container, ...argv],
+      {
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
     const chunks: Buffer[] = [];
     let size = 0;
     let stderr = "";
@@ -95,8 +107,12 @@ function dockerExec(container: string, argv: string[], opts: { maxBytes?: number
       else chunks.push(chunk);
     });
     child.stderr.on("data", (d) => (stderr += d));
-    child.on("error", (error) => resolve({ code: 127, stdout: Buffer.alloc(0), stderr: error.message }));
-    child.on("close", (code) => resolve({ code: code ?? 128, stdout: Buffer.concat(chunks), stderr }));
+    child.on("error", (error) =>
+      resolve({ code: 127, stdout: Buffer.alloc(0), stderr: error.message }),
+    );
+    child.on("close", (code) =>
+      resolve({ code: code ?? 128, stdout: Buffer.concat(chunks), stderr }),
+    );
   });
 }
 
@@ -114,7 +130,20 @@ export function createContainerBashOps(container: string): BashOperations {
         'set -m; bash -c "$1" </dev/null & p=$!; echo "$p" > "$2"; wait "$p"; rc=$?; rm -f "$2"; exit "$rc"';
       const child = spawn(
         "docker",
-        ["exec", "-u", SANDBOX_USER, "-w", WORKDIR, container, "bash", "-c", wrapper, "pi-exec", command, pidFile],
+        [
+          "exec",
+          "-u",
+          SANDBOX_USER,
+          "-w",
+          WORKDIR,
+          container,
+          "bash",
+          "-c",
+          wrapper,
+          "pi-exec",
+          command,
+          pidFile,
+        ],
         { stdio: ["ignore", "pipe", "pipe"] },
       );
       child.stdout.on("data", onData);
@@ -122,11 +151,22 @@ export function createContainerBashOps(container: string): BashOperations {
 
       let stopped: "aborted" | "timeout" | null = null;
       const killInside = () => {
-        spawn("docker", [
-          // bash, not sh: dash's kill rejects `--` and negative process groups.
-          "exec", "-u", SANDBOX_USER, container, "bash", "-c",
-          'p=$(cat "$1" 2>/dev/null) && kill -KILL -- "-$p" 2>/dev/null; rm -f "$1"', "pi-kill", pidFile,
-        ], { stdio: "ignore" });
+        spawn(
+          "docker",
+          [
+            // bash, not sh: dash's kill rejects `--` and negative process groups.
+            "exec",
+            "-u",
+            SANDBOX_USER,
+            container,
+            "bash",
+            "-c",
+            'p=$(cat "$1" 2>/dev/null) && kill -KILL -- "-$p" 2>/dev/null; rm -f "$1"',
+            "pi-kill",
+            pidFile,
+          ],
+          { stdio: "ignore" },
+        );
         child.kill("SIGKILL");
       };
       const onAbort = () => {
@@ -134,7 +174,8 @@ export function createContainerBashOps(container: string): BashOperations {
         killInside();
       };
       signal?.addEventListener("abort", onAbort, { once: true });
-      const seconds = timeout && timeout > 0 ? timeout : DEFAULT_TIMEOUT_SECONDS;
+      const seconds =
+        timeout && timeout > 0 ? timeout : DEFAULT_TIMEOUT_SECONDS;
       const timer = setTimeout(() => {
         stopped = "timeout";
         killInside();
@@ -167,30 +208,52 @@ const IMAGE_TYPES: Record<string, string> = {
 export function createContainerReadOps(container: string): ReadOperations {
   return {
     readFile: async (path) => {
-      const r = await dockerExec(container, ["cat", "--", path], { maxBytes: MAX_READ_BYTES });
-      if (r.code !== 0) throw new Error(r.stderr.trim() || `cannot read ${path}`);
+      const r = await dockerExec(container, ["cat", "--", path], {
+        maxBytes: MAX_READ_BYTES,
+      });
+      if (r.code !== 0)
+        throw new Error(r.stderr.trim() || `cannot read ${path}`);
       return r.stdout;
     },
     access: async (path) => {
       const r = await dockerExec(container, ["test", "-r", path]);
-      if (r.code !== 0) throw new Error(`ENOENT: no such readable file: ${path}`);
+      if (r.code !== 0)
+        throw new Error(`ENOENT: no such readable file: ${path}`);
     },
-    detectImageMimeType: async (path) => IMAGE_TYPES[extname(path).toLowerCase()] ?? null,
+    detectImageMimeType: async (path) =>
+      IMAGE_TYPES[extname(path).toLowerCase()] ?? null,
   };
 }
 
 export function createContainerLsOps(container: string): LsOperations {
   return {
-    exists: async (path) => (await dockerExec(container, ["test", "-e", path])).code === 0,
+    exists: async (path) =>
+      (await dockerExec(container, ["test", "-e", path])).code === 0,
     stat: async (path) => {
-      const r = await dockerExec(container, ["sh", "-c", 'if [ -d "$1" ]; then echo d; elif [ -e "$1" ]; then echo f; else exit 1; fi', "pi-stat", path]);
+      const r = await dockerExec(container, [
+        "sh",
+        "-c",
+        'if [ -d "$1" ]; then echo d; elif [ -e "$1" ]; then echo f; else exit 1; fi',
+        "pi-stat",
+        path,
+      ]);
       if (r.code !== 0) throw new Error(`ENOENT: ${path}`);
       const isDir = r.stdout.toString().trim() === "d";
       return { isDirectory: () => isDir };
     },
     readdir: async (path) => {
-      const r = await dockerExec(container, ["find", path, "-mindepth", "1", "-maxdepth", "1", "-printf", "%f\\0"]);
-      if (r.code !== 0) throw new Error(r.stderr.trim() || `cannot list ${path}`);
+      const r = await dockerExec(container, [
+        "find",
+        path,
+        "-mindepth",
+        "1",
+        "-maxdepth",
+        "1",
+        "-printf",
+        "%f\\0",
+      ]);
+      if (r.code !== 0)
+        throw new Error(r.stderr.trim() || `cannot list ${path}`);
       return r.stdout.toString().split("\0").filter(Boolean);
     },
   };
@@ -204,7 +267,7 @@ const SANDBOX_NOTE =
  * Rename a built-in tool definition, refuse to run without a valid container,
  * and sanitize every partial and final result.
  */
-// biome-ignore lint/suspicious/noExplicitAny: accepts any built-in tool definition; its own types flow through D
+// oxlint-disable-next-line typescript/no-explicit-any -- accepts any built-in tool definition; its own types flow through D
 type AnyToolDefinition = ToolDefinition<any, any, any>;
 
 /**
@@ -237,7 +300,9 @@ export function sandboxTool<D extends AnyToolDefinition>(
     const wrappedUpdate: typeof onUpdate = onUpdate
       ? (partial) => onUpdate(sanitizeResult(partial))
       : undefined;
-    return sanitizeResult(await def.execute(id, params, signal, wrappedUpdate, withSandboxCwd(ctx)));
+    return sanitizeResult(
+      await def.execute(id, params, signal, wrappedUpdate, withSandboxCwd(ctx)),
+    );
   };
   return {
     ...def,
@@ -267,17 +332,28 @@ export default function (pi: ExtensionAPI) {
     ),
   );
   pi.registerTool(
-    sandboxTool(createReadToolDefinition(WORKDIR, { operations: createContainerReadOps(container) }), {
-      name: "sandbox_read",
-      extra: " Images (.png/.jpg/.gif/.webp) are returned as images, e.g. screenshots from web-shot.",
-      containerValid,
-    }),
+    sandboxTool(
+      createReadToolDefinition(WORKDIR, {
+        operations: createContainerReadOps(container),
+      }),
+      {
+        name: "sandbox_read",
+        extra:
+          " Images (.png/.jpg/.gif/.webp) are returned as images, e.g. screenshots from web-shot.",
+        containerValid,
+      },
+    ),
   );
   pi.registerTool(
-    sandboxTool(createLsToolDefinition(WORKDIR, { operations: createContainerLsOps(container) }), {
-      name: "sandbox_ls",
-      extra: "",
-      containerValid,
-    }),
+    sandboxTool(
+      createLsToolDefinition(WORKDIR, {
+        operations: createContainerLsOps(container),
+      }),
+      {
+        name: "sandbox_ls",
+        extra: "",
+        containerValid,
+      },
+    ),
   );
 }

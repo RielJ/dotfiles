@@ -12,6 +12,7 @@ import * as path from "node:path";
 import { after, describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { stripVTControlCharacters as strip } from "node:util";
+
 import {
   NdjsonTail,
   newRenderState,

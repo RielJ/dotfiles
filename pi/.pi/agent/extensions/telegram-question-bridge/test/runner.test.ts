@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
+
 import { createMailbox, type Mailbox } from "../mailbox.ts";
 import type { AnswerEvent, QuestionParams } from "../questionnaire.ts";
 import { type RunnerDeps, runTelegramQuestionnaire } from "../runner.ts";
@@ -15,12 +16,23 @@ after(() => {
 
 const params: QuestionParams = {
   questions: [
-    { question: "Which DB?", header: "DB", options: [{ label: "Postgres", description: "" }, { label: "SQLite", description: "" }] },
+    {
+      question: "Which DB?",
+      header: "DB",
+      options: [
+        { label: "Postgres", description: "" },
+        { label: "SQLite", description: "" },
+      ],
+    },
     {
       question: "Which extras?",
       header: "Extras",
       multiSelect: true,
-      options: [{ label: "Cache", description: "" }, { label: "Queue", description: "" }, { label: "Search", description: "" }],
+      options: [
+        { label: "Cache", description: "" },
+        { label: "Queue", description: "" },
+        { label: "Search", description: "" },
+      ],
     },
   ],
 };
@@ -41,7 +53,11 @@ function harness(script: AnswerEvent[][], over: Partial<RunnerDeps> = {}) {
     mailbox,
     async sendView(view) {
       sent.push(view);
-      const handle: TelegramHandle = { target: { chatId: 1, threadId: 2 }, messageIds: [sent.length], generation: "g" };
+      const handle: TelegramHandle = {
+        target: { chatId: 1, threadId: 2 },
+        messageIds: [sent.length],
+        generation: "g",
+      };
       return { ok: true, value: handle };
     },
     async editView(handle, view) {
@@ -54,7 +70,8 @@ function harness(script: AnswerEvent[][], over: Partial<RunnerDeps> = {}) {
       clock += ms;
       const batch = script.shift();
       const open = mailbox.listPending(clock);
-      if (batch && open[0]) for (const event of batch) mailbox.postEvent(open[0].qid, event);
+      if (batch && open[0])
+        for (const event of batch) mailbox.postEvent(open[0].qid, event);
     },
     pollMs: 100,
     timeoutMs: 10_000,
@@ -65,7 +82,12 @@ function harness(script: AnswerEvent[][], over: Partial<RunnerDeps> = {}) {
 
 describe("runTelegramQuestionnaire", () => {
   it("asks questions in sequence and returns the rpiv envelope", async () => {
-    const h = harness([[{ type: "pick", option: 1 }], [{ type: "pick", option: 0 }], [{ type: "pick", option: 2 }], [{ type: "done" }]]);
+    const h = harness([
+      [{ type: "pick", option: 1 }],
+      [{ type: "pick", option: 0 }],
+      [{ type: "pick", option: 2 }],
+      [{ type: "done" }],
+    ]);
     const result = await runTelegramQuestionnaire(params, undefined, h.deps);
     assert.equal(
       result.content[0]?.text,
@@ -80,7 +102,10 @@ describe("runTelegramQuestionnaire", () => {
   });
 
   it("uses a typed reply as a custom answer", async () => {
-    const h = harness([[{ type: "text", text: "MySQL" }], [{ type: "text", text: "none" }]]);
+    const h = harness([
+      [{ type: "text", text: "MySQL" }],
+      [{ type: "text", text: "none" }],
+    ]);
     const result = await runTelegramQuestionnaire(params, undefined, h.deps);
     assert.match(result.content[0]?.text ?? "", /"Which DB\?"="MySQL"/);
     assert.match(result.content[0]?.text ?? "", /"Which extras\?"="none"/);
@@ -98,7 +123,10 @@ describe("runTelegramQuestionnaire", () => {
   it("times out without hanging and says so", async () => {
     const h = harness([], { timeoutMs: 300 });
     const result = await runTelegramQuestionnaire(params, undefined, h.deps);
-    assert.match(result.content[0]?.text ?? "", /did not answer the Telegram question/);
+    assert.match(
+      result.content[0]?.text ?? "",
+      /did not answer the Telegram question/,
+    );
     assert.match(h.edits.at(-1)?.text ?? "", /No answer in time/);
     assert.deepEqual(h.mailbox.listPending(), []);
   });
@@ -110,7 +138,11 @@ describe("runTelegramQuestionnaire", () => {
         controller.abort();
       },
     });
-    const result = await runTelegramQuestionnaire(params, controller.signal, h.deps);
+    const result = await runTelegramQuestionnaire(
+      params,
+      controller.signal,
+      h.deps,
+    );
     assert.equal(result.details.cancelled, true);
     assert.match(h.edits.at(-1)?.text ?? "", /Cancelled/);
     assert.deepEqual(h.mailbox.listPending(), []);
@@ -119,11 +151,18 @@ describe("runTelegramQuestionnaire", () => {
   it("reports a send failure so the model can fall back to a plain reply", async () => {
     const h = harness([], {
       async sendView() {
-        return { ok: false, reason: "target-unavailable", message: "no active turn" };
+        return {
+          ok: false,
+          reason: "target-unavailable",
+          message: "no active turn",
+        };
       },
     });
     const result = await runTelegramQuestionnaire(params, undefined, h.deps);
-    assert.match(result.content[0]?.text ?? "", /^Could not send the question to Telegram \(target-unavailable/);
+    assert.match(
+      result.content[0]?.text ?? "",
+      /^Could not send the question to Telegram \(target-unavailable/,
+    );
     assert.equal(result.details.error, "telegram_unavailable");
   });
 
@@ -134,6 +173,9 @@ describe("runTelegramQuestionnaire", () => {
       },
     });
     const result = await runTelegramQuestionnaire(params, undefined, h.deps);
-    assert.match(result.content[0]?.text ?? "", /send-threw: Error: socket hang up/);
+    assert.match(
+      result.content[0]?.text ?? "",
+      /send-threw: Error: socket hang up/,
+    );
   });
 });

@@ -22,7 +22,10 @@ export type ResolveSkillsResult =
   | { ok: false; error: string };
 
 function normalizeSkillName(raw: string): string {
-  return raw.trim().replace(/^\/?skill:/, "").trim();
+  return raw
+    .trim()
+    .replace(/^\/?skill:/, "")
+    .trim();
 }
 
 export function normalizeSkillRequests(
@@ -123,7 +126,9 @@ function stripFrontmatter(content: string): string {
 export function renderSkillBlocks(skills: readonly SkillCandidate[]): string {
   return skills
     .map((skill) => {
-      const body = stripFrontmatter(readFileSync(skill.filePath, "utf8")).trim();
+      const body = stripFrontmatter(
+        readFileSync(skill.filePath, "utf8"),
+      ).trim();
       return `<skill name="${skill.name}" scope="${skill.scope}" location="${skill.filePath}">\nReferences are relative to ${skill.baseDir}.\n\n${body}\n</skill>`;
     })
     .join("\n\n");

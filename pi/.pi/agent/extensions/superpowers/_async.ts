@@ -16,7 +16,10 @@ export function subagentDepth(env: NodeJS.ProcessEnv = process.env): number {
  * Background mode is the default at top level. Inside a subagent, runs always
  * block so the subagent receives one tool result instead of a later message.
  */
-export function shouldRunAsync(requested: boolean | undefined, env: NodeJS.ProcessEnv = process.env): boolean {
+export function shouldRunAsync(
+  requested: boolean | undefined,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
   if (subagentDepth(env) > 0) return false;
   return requested ?? true;
 }
@@ -34,12 +37,20 @@ export function parseWaitFlag(args: string): { wait: boolean; rest: string } {
  * saved before delivery tracking existed) count only when nothing in the pool
  * was delivered; then the newest by id wins. `runs` must be newest-first.
  */
-export function pickLatestRun(runs: MultiRun[], kind: RunKind, cwd?: string): MultiRun | undefined {
+export function pickLatestRun(
+  runs: MultiRun[],
+  kind: RunKind,
+  cwd?: string,
+): MultiRun | undefined {
   const ofKind = runs.filter((r) => r.kind === kind);
   const pick = (pool: MultiRun[]): MultiRun | undefined => {
     let best: MultiRun | undefined;
     for (const r of pool) {
-      if (r.deliveredAt && (!best?.deliveredAt || r.deliveredAt > best.deliveredAt)) best = r;
+      if (
+        r.deliveredAt &&
+        (!best?.deliveredAt || r.deliveredAt > best.deliveredAt)
+      )
+        best = r;
     }
     return best ?? pool[0];
   };
@@ -53,14 +64,25 @@ export function pickLatestRun(runs: MultiRun[], kind: RunKind, cwd?: string): Mu
  * - "all" → every run
  * - otherwise an exact id, or a substring that matches exactly one id
  */
-export function matchRunIds(active: string[], arg: string): { ids: string[]; error?: string } {
+export function matchRunIds(
+  active: string[],
+  arg: string,
+): { ids: string[]; error?: string } {
   const query = arg.trim();
-  if (active.length === 0) return { ids: [], error: "No background runs are active." };
+  if (active.length === 0)
+    return { ids: [], error: "No background runs are active." };
   if (!query) return { ids: [active[active.length - 1]] };
   if (query === "all") return { ids: [...active] };
   if (active.includes(query)) return { ids: [query] };
   const hits = active.filter((id) => id.includes(query));
   if (hits.length === 1) return { ids: hits };
-  if (hits.length === 0) return { ids: [], error: `No active run matches "${query}". Active: ${active.join(", ")}` };
-  return { ids: [], error: `"${query}" matches several runs: ${hits.join(", ")}. Use the full id.` };
+  if (hits.length === 0)
+    return {
+      ids: [],
+      error: `No active run matches "${query}". Active: ${active.join(", ")}`,
+    };
+  return {
+    ids: [],
+    error: `"${query}" matches several runs: ${hits.join(", ")}. Use the full id.`,
+  };
 }

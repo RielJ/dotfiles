@@ -1,17 +1,36 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { ALLOW_OPTION, BLOCK_OPTION, type ConfirmUI, gate, PAUSE_OPTION } from "../approval.ts";
+
+import {
+  ALLOW_OPTION,
+  BLOCK_OPTION,
+  type ConfirmUI,
+  gate,
+  PAUSE_OPTION,
+} from "../approval.ts";
 import type { Decision } from "../policy.ts";
 
-type Call = { message: string; options: string[]; timeout?: number; signal?: AbortSignal };
+type Call = {
+  message: string;
+  options: string[];
+  timeout?: number;
+  signal?: AbortSignal;
+};
 
 /** answer: true picks "Allow once", false picks "Block", undefined is Escape or timeout. */
-function fakeUI(answer: (call: Call) => Promise<boolean | undefined>): ConfirmUI & { calls: Call[] } {
+function fakeUI(
+  answer: (call: Call) => Promise<boolean | undefined>,
+): ConfirmUI & { calls: Call[] } {
   const calls: Call[] = [];
   return {
     calls,
     async select(message, options, opts) {
-      const call = { message, options, timeout: opts?.timeout, signal: opts?.signal };
+      const call = {
+        message,
+        options,
+        timeout: opts?.timeout,
+        signal: opts?.signal,
+      };
       calls.push(call);
       const a = await answer(call);
       return a === undefined ? undefined : a ? ALLOW_OPTION : BLOCK_OPTION;
@@ -19,7 +38,10 @@ function fakeUI(answer: (call: Call) => Promise<boolean | undefined>): ConfirmUI
   };
 }
 
-const ask: Decision = { action: "ask", reasons: ["Recursive delete (rm -r) outside temp folders: src"] };
+const ask: Decision = {
+  action: "ask",
+  reasons: ["Recursive delete (rm -r) outside temp folders: src"],
+};
 const base = { hasUI: true, summary: "bash: rm -rf src" };
 
 describe("gate", () => {
@@ -31,9 +53,15 @@ describe("gate", () => {
 
   test("hard block never prompts and says never allowed", async () => {
     const ui = fakeUI(async () => true);
-    const r = await gate({ action: "block", reasons: ["git push --force is forbidden"] }, { ...base, ui });
+    const r = await gate(
+      { action: "block", reasons: ["git push --force is forbidden"] },
+      { ...base, ui },
+    );
     assert.equal(ui.calls.length, 0);
-    assert.match(r?.reason ?? "", /never allowed[\s\S]*push --force[\s\S]*Do not retry/);
+    assert.match(
+      r?.reason ?? "",
+      /never allowed[\s\S]*push --force[\s\S]*Do not retry/,
+    );
   });
 
   test("approved ask runs the call", async () => {
@@ -41,8 +69,15 @@ describe("gate", () => {
     assert.equal(await gate(ask, { ...base, ui }), undefined);
     assert.equal(ui.calls.length, 1);
     assert.equal(ui.calls[0].timeout, 120_000, "default timeout is 2 minutes");
-    assert.match(ui.calls[0].message, /rm -rf src[\s\S]*outside temp folders[\s\S]*120s/);
-    assert.deepEqual(ui.calls[0].options, [BLOCK_OPTION, ALLOW_OPTION], "Block is first, so it has focus");
+    assert.match(
+      ui.calls[0].message,
+      /rm -rf src[\s\S]*outside temp folders[\s\S]*120s/,
+    );
+    assert.deepEqual(
+      ui.calls[0].options,
+      [BLOCK_OPTION, ALLOW_OPTION],
+      "Block is first, so it has focus",
+    );
   });
 
   test("Escape or timeout (undefined) blocks", async () => {
@@ -54,12 +89,17 @@ describe("gate", () => {
     const ui = fakeUI(async () => false);
     const r = await gate(ask, { ...base, ui, timeoutMs: 5 });
     assert.equal(r?.block, true);
-    assert.match(r?.reason ?? "", /did not answer within 0 seconds|did not answer within 5/);
+    assert.match(
+      r?.reason ?? "",
+      /did not answer within 0 seconds|did not answer within 5/,
+    );
     assert.match(r?.reason ?? "", /outside temp folders/);
   });
 
   test("a real timeout: dialog that waits for its own timer", async () => {
-    const ui = fakeUI((c) => new Promise((res) => setTimeout(() => res(undefined), c.timeout)));
+    const ui = fakeUI(
+      (c) => new Promise((res) => setTimeout(() => res(undefined), c.timeout)),
+    );
     const started = Date.now();
     const r = await gate(ask, { ...base, ui, timeoutMs: 30 });
     assert.equal(r?.block, true);
@@ -97,7 +137,11 @@ describe("gate", () => {
       open--;
       return true;
     });
-    await Promise.all([gate(ask, { ...base, ui }), gate(ask, { ...base, ui }), gate(ask, { ...base, ui })]);
+    await Promise.all([
+      gate(ask, { ...base, ui }),
+      gate(ask, { ...base, ui }),
+      gate(ask, { ...base, ui }),
+    ]);
     assert.equal(ui.calls.length, 3);
     assert.equal(maxOpen, 1);
   });
@@ -106,14 +150,20 @@ describe("gate", () => {
     const ui = fakeUI(async () => false);
     const opts = { ...base, ui, isPaused: () => true, onPause: () => {} };
     assert.equal(await gate(ask, opts), undefined);
-    const r = await gate({ action: "block", reasons: ["git push --force is forbidden"] }, opts);
+    const r = await gate(
+      { action: "block", reasons: ["git push --force is forbidden"] },
+      opts,
+    );
     assert.match(r?.reason ?? "", /never allowed/);
     assert.equal(ui.calls.length, 0);
   });
 
   test("paused without UI still allows ask (print mode)", async () => {
     const ui = fakeUI(async () => false);
-    assert.equal(await gate(ask, { ...base, hasUI: false, ui, isPaused: () => true }), undefined);
+    assert.equal(
+      await gate(ask, { ...base, hasUI: false, ui, isPaused: () => true }),
+      undefined,
+    );
   });
 
   test("dialog offers pause only when onPause is given; picking it pauses and allows", async () => {
@@ -160,7 +210,11 @@ describe("gate", () => {
         paused = true;
       },
     };
-    const results = await Promise.all([gate(ask, opts), gate(ask, opts), gate(ask, opts)]);
+    const results = await Promise.all([
+      gate(ask, opts),
+      gate(ask, opts),
+      gate(ask, opts),
+    ]);
     assert.deepEqual(results, [undefined, undefined, undefined]);
     assert.equal(prompts, 1);
   });

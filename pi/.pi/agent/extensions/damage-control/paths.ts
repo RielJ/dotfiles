@@ -16,16 +16,25 @@ export function expandPath(raw: string, env: PathEnv): string | undefined {
   let p = raw;
   if (p === "~" || p.startsWith("~/")) p = env.home + p.slice(1);
   p = p.replace(/^\$\{?HOME\}?(?=\/|$)/, env.home);
-  p = p.replace(/^\$\{?TMPDIR\}?(?=\/|$)/, env.tempRoots[env.tempRoots.length - 1] ?? "/tmp");
+  p = p.replace(
+    /^\$\{?TMPDIR\}?(?=\/|$)/,
+    env.tempRoots[env.tempRoots.length - 1] ?? "/tmp",
+  );
   if (/[$`]/.test(p)) return undefined;
   return p;
 }
 
 /** Absolute, normalized form of a path word relative to `cwd`. */
-export function absolutePath(raw: string, env: PathEnv, cwd = env.cwd): string | undefined {
+export function absolutePath(
+  raw: string,
+  env: PathEnv,
+  cwd = env.cwd,
+): string | undefined {
   const p = expandPath(raw, env);
   if (p === undefined) return undefined;
-  return normalize(isAbsolute(p) ? p : resolve(cwd, p)).replace(/\/+$/, "") || "/";
+  return (
+    normalize(isAbsolute(p) ? p : resolve(cwd, p)).replace(/\/+$/, "") || "/"
+  );
 }
 
 /** True for paths strictly inside a temp root (the root itself is not exempt). */
@@ -45,7 +54,11 @@ function globToRegExp(glob: string): RegExp {
 }
 
 /** Does `abs` (absolute path) match one yaml path pattern? */
-export function matchesPattern(pattern: string, abs: string, env: PathEnv): boolean {
+export function matchesPattern(
+  pattern: string,
+  abs: string,
+  env: PathEnv,
+): boolean {
   const base = abs.split("/").pop() ?? "";
   if (pattern.endsWith("/")) {
     if (pattern.startsWith("~/") || pattern.startsWith("/")) {
@@ -66,7 +79,11 @@ export function matchesPattern(pattern: string, abs: string, env: PathEnv): bool
 }
 
 /** The first pattern that matches, ignoring temp paths. */
-export function firstMatch(patterns: string[], abs: string, env: PathEnv): string | undefined {
+export function firstMatch(
+  patterns: string[],
+  abs: string,
+  env: PathEnv,
+): string | undefined {
   if (isTempPath(abs, env)) return undefined;
   return patterns.find((p) => matchesPattern(p, abs, env));
 }

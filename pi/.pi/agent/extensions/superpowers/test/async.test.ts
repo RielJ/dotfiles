@@ -1,10 +1,25 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { matchRunIds, parseWaitFlag, pickLatestRun, shouldRunAsync, subagentDepth } from "../_async.ts";
+
+import {
+  matchRunIds,
+  parseWaitFlag,
+  pickLatestRun,
+  shouldRunAsync,
+  subagentDepth,
+} from "../_async.ts";
 import type { MultiRun } from "../multirun.ts";
 
 function run(id: string, over: Partial<MultiRun> = {}): MultiRun {
-  return { id, kind: "plan", task: "t", cwd: "/repo", createdAt: "2026-10-18T00:00:00.000Z", members: [], ...over };
+  return {
+    id,
+    kind: "plan",
+    task: "t",
+    cwd: "/repo",
+    createdAt: "2026-10-18T00:00:00.000Z",
+    members: [],
+    ...over,
+  };
 }
 
 describe("shouldRunAsync", () => {
@@ -26,9 +41,18 @@ describe("shouldRunAsync", () => {
 
 describe("parseWaitFlag", () => {
   it("removes --wait anywhere and keeps the rest", () => {
-    assert.deepEqual(parseWaitFlag("--wait add auth"), { wait: true, rest: "add auth" });
-    assert.deepEqual(parseWaitFlag("--pr --wait the api"), { wait: true, rest: "--pr the api" });
-    assert.deepEqual(parseWaitFlag("  add  auth "), { wait: false, rest: "add auth" });
+    assert.deepEqual(parseWaitFlag("--wait add auth"), {
+      wait: true,
+      rest: "add auth",
+    });
+    assert.deepEqual(parseWaitFlag("--pr --wait the api"), {
+      wait: true,
+      rest: "--pr the api",
+    });
+    assert.deepEqual(parseWaitFlag("  add  auth "), {
+      wait: false,
+      rest: "add auth",
+    });
   });
 });
 
@@ -47,25 +71,38 @@ describe("pickLatestRun", () => {
     assert.equal(pickLatestRun([run("y"), run("x")], "plan", "/repo")?.id, "y");
   });
   it("prefers runs from the same cwd", () => {
-    const mixed = [run("other", { cwd: "/elsewhere", deliveredAt: "2026-10-18T12:00:00.000Z" }), ...runs];
+    const mixed = [
+      run("other", {
+        cwd: "/elsewhere",
+        deliveredAt: "2026-10-18T12:00:00.000Z",
+      }),
+      ...runs,
+    ];
     assert.equal(pickLatestRun(mixed, "plan", "/repo")?.id, "a");
     assert.equal(pickLatestRun(mixed, "plan", "/nowhere")?.id, "other");
   });
   it("ignores other kinds", () => {
-    assert.equal(pickLatestRun([run("r", { kind: "review" })], "plan"), undefined);
+    assert.equal(
+      pickLatestRun([run("r", { kind: "review" })], "plan"),
+      undefined,
+    );
   });
 });
 
 describe("matchRunIds", () => {
   const active = ["20261018-100000-plan", "20261018-101500-plan"];
   it("stops the newest with no argument", () => {
-    assert.deepEqual(matchRunIds(active, ""), { ids: ["20261018-101500-plan"] });
+    assert.deepEqual(matchRunIds(active, ""), {
+      ids: ["20261018-101500-plan"],
+    });
   });
   it("stops every run with all", () => {
     assert.deepEqual(matchRunIds(active, "all").ids, active);
   });
   it("accepts an exact id or a unique substring", () => {
-    assert.deepEqual(matchRunIds(active, "20261018-100000-plan").ids, ["20261018-100000-plan"]);
+    assert.deepEqual(matchRunIds(active, "20261018-100000-plan").ids, [
+      "20261018-100000-plan",
+    ]);
     assert.deepEqual(matchRunIds(active, "1015").ids, ["20261018-101500-plan"]);
   });
   it("reports ambiguity, misses, and no active runs", () => {

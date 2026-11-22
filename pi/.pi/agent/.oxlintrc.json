@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "no-unused-vars": "error",
+    "no-unused-labels": "error",
+    "no-unreachable": "error",
+    "no-console": "warn",
+    "unicorn/no-new-array": "off"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/sessions/**",
+    "**/*.off/**",
+    "git/**",
+    "npm/**"
+  ]
+}

@@ -6,8 +6,9 @@
  * via `--no-extensions -e <this>`.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { init as initWebSearch } from "../../superpowers/web-search.ts";
+
 import { init as initQmd } from "../../superpowers/qmd.ts";
+import { init as initWebSearch } from "../../superpowers/web-search.ts";
 
 export default function (pi: ExtensionAPI) {
   const enabled = () => true;

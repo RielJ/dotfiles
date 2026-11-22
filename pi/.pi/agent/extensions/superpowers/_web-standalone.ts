@@ -6,6 +6,7 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
 import { init } from "./web-search.js";
 
 export default function webSearchStandalone(pi: ExtensionAPI): void {

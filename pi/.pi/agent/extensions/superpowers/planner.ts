@@ -13,6 +13,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
+
 import { shouldRunAsync } from "./_async.js";
 import { type LiveRun, RunTracker } from "./_background.js";
 import {
@@ -222,7 +223,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     cwd: string,
     live: LiveRun,
     inputs: PlanInputs,
-    // biome-ignore lint/suspicious/noExplicitAny: upstream AgentToolUpdateCallback type is not resolvable (pi-agent-core not installed locally)
+    // oxlint-disable-next-line typescript/no-explicit-any -- upstream AgentToolUpdateCallback type is not resolvable (pi-agent-core not installed locally)
     onUpdate?: (partial: any) => void,
   ): Promise<PlanResult[]> {
     const signal = live.controller.signal;
@@ -379,7 +380,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     cwd: string,
     inputs: PlanInputs,
     external?: AbortSignal,
-    // biome-ignore lint/suspicious/noExplicitAny: see runDualPlan
+    // oxlint-disable-next-line typescript/no-explicit-any -- see runDualPlan
     onUpdate?: (partial: any) => void,
   ): { run: MultiRun; done: Promise<string | undefined> } {
     const run = createRun("plan", task, cwd);

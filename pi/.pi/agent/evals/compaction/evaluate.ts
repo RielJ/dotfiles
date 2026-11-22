@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, resolve } from "node:path";
+
 import { type Profile, type ReplayResult, replay } from "./replay.ts";
 import {
   type Commitment,

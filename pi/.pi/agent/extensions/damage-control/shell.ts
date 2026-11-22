@@ -42,7 +42,11 @@ export function tokenize(command: string): Token[] {
       flush();
       tokens.push({ text: "$(", boundary: true });
       i++;
-    } else if (SEPARATORS.has(c) && !(c === "{" && command[i - 1] === "$") && !(c === "}" && word.includes("${"))) {
+    } else if (
+      SEPARATORS.has(c) &&
+      !(c === "{" && command[i - 1] === "$") &&
+      !(c === "}" && word.includes("${"))
+    ) {
       flush();
       tokens.push({ text: c, boundary: true });
     } else if (c === " " || c === "\t" || c === "\r") {
@@ -71,12 +75,28 @@ export function simpleCommands(command: string): string[][] {
 }
 
 /** Words that may precede the real command name. */
-const PREFIXES = new Set(["sudo", "command", "exec", "nohup", "time", "env", "xargs", "then", "do", "else", "!"]);
+const PREFIXES = new Set([
+  "sudo",
+  "command",
+  "exec",
+  "nohup",
+  "time",
+  "env",
+  "xargs",
+  "then",
+  "do",
+  "else",
+  "!",
+]);
 
 /** Drop leading prefixes and VAR=value assignments; returns [name, ...args]. */
 export function commandWords(words: string[]): string[] {
   let i = 0;
-  while (i < words.length && (PREFIXES.has(words[i]) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[i]))) i++;
+  while (
+    i < words.length &&
+    (PREFIXES.has(words[i]) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[i]))
+  )
+    i++;
   return words.slice(i);
 }
 

@@ -4,7 +4,11 @@ import type { Decision } from "./policy.ts";
 export const APPROVAL_TIMEOUT_MS = 120_000;
 
 export type ConfirmUI = {
-  select(title: string, options: string[], opts?: { signal?: AbortSignal; timeout?: number }): Promise<string | undefined>;
+  select(
+    title: string,
+    options: string[],
+    opts?: { signal?: AbortSignal; timeout?: number },
+  ): Promise<string | undefined>;
 };
 
 /** Block is listed first, so the focused default and a stray Enter never run the call. */
@@ -41,10 +45,16 @@ let queue: Promise<unknown> = Promise.resolve();
  * anything but "Allow once" (Block, Escape, timeout, abort, no UI in print mode) → refuse.
  * While paused, "ask" runs without a dialog; "block" (hard rules) never does.
  */
-export async function gate(decision: Decision, opts: GateOptions): Promise<GateResult> {
+export async function gate(
+  decision: Decision,
+  opts: GateOptions,
+): Promise<GateResult> {
   if (decision.action === "allow") return undefined;
   if (decision.action === "block") {
-    return { block: true, reason: `Blocked by damage-control (never allowed):\n${bullets(decision.reasons)}\n${NO_RETRY}` };
+    return {
+      block: true,
+      reason: `Blocked by damage-control (never allowed):\n${bullets(decision.reasons)}\n${NO_RETRY}`,
+    };
   }
   if (opts.isPaused?.()) return undefined;
   if (!opts.hasUI) {
@@ -62,7 +72,9 @@ export async function gate(decision: Decision, opts: GateOptions): Promise<GateR
     try {
       const choice = await opts.ui.select(
         `Damage control: allow this?\n${opts.summary}\n\n${bullets(decision.reasons)}\n\nNo answer in ${Math.round(timeoutMs / 1000)}s blocks it.`,
-        opts.onPause ? [BLOCK_OPTION, ALLOW_OPTION, PAUSE_OPTION] : [BLOCK_OPTION, ALLOW_OPTION],
+        opts.onPause
+          ? [BLOCK_OPTION, ALLOW_OPTION, PAUSE_OPTION]
+          : [BLOCK_OPTION, ALLOW_OPTION],
         { signal: opts.signal, timeout: timeoutMs },
       );
       if (choice === PAUSE_OPTION && opts.onPause) {

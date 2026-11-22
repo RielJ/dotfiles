@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, it } from "node:test";
 import { stripVTControlCharacters } from "node:util";
+
 import subagentsExtension, {
   __test__,
   DEFAULT_SUBAGENT_MODEL,
@@ -23,14 +24,6 @@ import {
   writeSubagentLoadout,
 } from "../session.ts";
 import {
-  exitStatusFile,
-  lastErrorLine,
-  pollForExit,
-  sendLongCommand,
-  shellEscape,
-  wrapSubagentCommand,
-} from "../tmux.ts";
-import {
   capturePane,
   createWindow,
   killWindow,
@@ -41,6 +34,14 @@ import {
   windowAlive,
   windowTarget,
 } from "../tmux-pool.ts";
+import {
+  exitStatusFile,
+  lastErrorLine,
+  pollForExit,
+  sendLongCommand,
+  shellEscape,
+  wrapSubagentCommand,
+} from "../tmux.ts";
 
 const tempDirs: string[] = [];
 afterEach(() => {

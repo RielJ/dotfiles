@@ -20,13 +20,10 @@
  */
 
 import * as os from "node:os";
-import type {
-  ExtensionAPI,
-  ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "@sinclair/typebox";
-import { StringEnum } from "@earendil-works/pi-ai";
 
 // ── Module Metadata ─────────────────────────────────────────────────
 
@@ -56,13 +53,7 @@ function shortenPath(p: string): string {
 
 // ── Extension ───────────────────────────────────────────────────────
 
-export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
-  let currentCtx: ExtensionContext | undefined;
-
-  pi.on("session_start", async (_ev, ctx) => {
-    currentCtx = ctx;
-  });
-
+export function init(pi: ExtensionAPI, _isEnabled: () => boolean) {
   // ── qmd_search tool (BM25 keyword search) ──────────────────────
 
   pi.registerTool({
@@ -70,8 +61,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     label: "QMD Search",
     description:
       "Fast keyword search across indexed collections using BM25. Good for exact terms, file names, known phrases.",
-    promptSnippet:
-      "Fast keyword search (BM25) across local docs and notes",
+    promptSnippet: "Fast keyword search (BM25) across local docs and notes",
     parameters: Type.Object({
       query: Type.String({ description: "Search query" }),
       collection: Type.Optional(
@@ -87,8 +77,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       ),
       min_score: Type.Optional(
         Type.Number({
-          description:
-            "Minimum relevance score 0-1 (default 0.1)",
+          description: "Minimum relevance score 0-1 (default 0.1)",
           default: 0.1,
         }),
       ),
@@ -97,15 +86,12 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       const args = ["search", params.query, "--json"];
       if (params.collection) args.push("-c", params.collection);
       if (params.limit) args.push("-n", String(params.limit));
-      if (params.min_score)
-        args.push("--min-score", String(params.min_score));
+      if (params.min_score) args.push("--min-score", String(params.min_score));
 
       const result = await pi.exec("qmd", args, { signal, timeout: 30000 });
 
       if (result.code !== 0) {
-        throw new Error(
-          `qmd search failed: ${result.stderr || result.stdout}`,
-        );
+        throw new Error(`qmd search failed: ${result.stderr || result.stdout}`);
       }
 
       return {
@@ -154,8 +140,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       ),
       min_score: Type.Optional(
         Type.Number({
-          description:
-            "Minimum relevance score 0-1 (default 0.3)",
+          description: "Minimum relevance score 0-1 (default 0.3)",
           default: 0.3,
         }),
       ),
@@ -164,15 +149,12 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       const args = ["query", params.query, "--json"];
       if (params.collection) args.push("-c", params.collection);
       if (params.limit) args.push("-n", String(params.limit));
-      if (params.min_score)
-        args.push("--min-score", String(params.min_score));
+      if (params.min_score) args.push("--min-score", String(params.min_score));
 
       const result = await pi.exec("qmd", args, { signal, timeout: 60000 });
 
       if (result.code !== 0) {
-        throw new Error(
-          `qmd query failed: ${result.stderr || result.stdout}`,
-        );
+        throw new Error(`qmd query failed: ${result.stderr || result.stdout}`);
       }
 
       return {
@@ -223,9 +205,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
       const result = await pi.exec("qmd", args, { signal, timeout: 15000 });
 
       if (result.code !== 0) {
-        throw new Error(
-          `qmd get failed: ${result.stderr || result.stdout}`,
-        );
+        throw new Error(`qmd get failed: ${result.stderr || result.stdout}`);
       }
 
       return {
@@ -238,8 +218,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
     renderCall(args, theme) {
       const p = shortenPath(args.path || "...");
       return new Text(
-        theme.fg("toolTitle", theme.bold("qmd get ")) +
-          theme.fg("accent", p),
+        theme.fg("toolTitle", theme.bold("qmd get ")) + theme.fg("accent", p),
         0,
         0,
       );
@@ -256,12 +235,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
         return;
       }
 
-      const result = await pi.exec("qmd", [
-        "search",
-        args.trim(),
-        "-n",
-        "10",
-      ]);
+      const result = await pi.exec("qmd", ["search", args.trim(), "-n", "10"]);
 
       if (result.code !== 0) {
         ctx.ui.notify(
@@ -297,12 +271,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
 
       ctx.ui.notify("Searching (hybrid + reranking)...", "info");
 
-      const result = await pi.exec("qmd", [
-        "query",
-        args.trim(),
-        "-n",
-        "10",
-      ]);
+      const result = await pi.exec("qmd", ["query", args.trim(), "-n", "10"]);
 
       if (result.code !== 0) {
         ctx.ui.notify(
@@ -354,10 +323,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
             ctx.ui.notify(`Failed: ${result.stderr}`, "error");
             return;
           }
-          ctx.ui.notify(
-            result.stdout || "No collections configured",
-            "info",
-          );
+          ctx.ui.notify(result.stdout || "No collections configured", "info");
           break;
         }
 
@@ -406,10 +372,7 @@ export function init(pi: ExtensionAPI, isEnabled: () => boolean) {
             ctx.ui.notify(`Embed failed: ${result.stderr}`, "error");
             return;
           }
-          ctx.ui.notify(
-            result.stdout || "Embeddings generated",
-            "info",
-          );
+          ctx.ui.notify(result.stdout || "Embeddings generated", "info");
           break;
         }
 

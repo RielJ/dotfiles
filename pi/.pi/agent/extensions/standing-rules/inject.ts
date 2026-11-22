@@ -1,5 +1,6 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
+
 import { rulesSection } from "./rules.ts";
 
 export const CUSTOM_TYPE = "standing-rules";

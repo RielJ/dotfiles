@@ -48,7 +48,8 @@ function runGit(cwd: string, args: string[]): GitResult {
   });
   if (result.error) return { ok: false, error: result.error.message };
   if (result.status !== 0) {
-    const message = `${result.stderr ?? ""}`.trim() || `${result.stdout ?? ""}`.trim();
+    const message =
+      `${result.stderr ?? ""}`.trim() || `${result.stdout ?? ""}`.trim();
     return {
       ok: false,
       error: message || `git ${args[0]} exited with code ${result.status}`,
@@ -75,7 +76,10 @@ export function resolveMainCheckout(cwd: string): string | null {
   const first = lines.find((line) => line.startsWith("worktree "));
   if (!first) return null;
   // A bare main repository has no working tree to branch from.
-  const firstBlock = lines.slice(0, lines.indexOf("") === -1 ? undefined : lines.indexOf(""));
+  const firstBlock = lines.slice(
+    0,
+    lines.indexOf("") === -1 ? undefined : lines.indexOf(""),
+  );
   if (firstBlock.includes("bare")) return null;
   return first.slice("worktree ".length);
 }
@@ -93,7 +97,12 @@ export function worktreeSlug(name: string): string {
 }
 
 function branchExists(repoRoot: string, branch: string): boolean {
-  return runGit(repoRoot, ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`]).ok;
+  return runGit(repoRoot, [
+    "show-ref",
+    "--verify",
+    "--quiet",
+    `refs/heads/${branch}`,
+  ]).ok;
 }
 
 /** Resolve a commit-ish (local branch, remote branch, tag, sha) to a sha, or null. */
@@ -111,7 +120,9 @@ function resolveCommit(repoRoot: string, rev: string): string | null {
 function assertValidBranchName(repoRoot: string, branch: string): void {
   const check = runGit(repoRoot, ["check-ref-format", "--branch", branch]);
   if (!check.ok) {
-    throw new Error(`Cannot create worktree branch "${branch}": not a valid branch name.`);
+    throw new Error(
+      `Cannot create worktree branch "${branch}": not a valid branch name.`,
+    );
   }
 }
 
@@ -249,7 +260,9 @@ export function releaseSubagentWorktree(
     if (!status.ok) {
       return { kind: "kept-error", path, branch, error: status.error };
     }
-    const files = status.stdout.split("\n").filter((line) => line.trim()).length;
+    const files = status.stdout
+      .split("\n")
+      .filter((line) => line.trim()).length;
     if (files > 0) return { kind: "kept-dirty", path, branch, files };
 
     const removed = runGit(repoRoot, ["worktree", "remove", path]);

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+
 import type { SessionEntry } from "@earendil-works/pi-coding-agent";
+
 import { extractRules, rulesSection } from "../rules.ts";
 
 function user(id: string, text: string): SessionEntry {

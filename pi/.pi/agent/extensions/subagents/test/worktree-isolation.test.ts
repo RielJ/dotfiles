@@ -11,6 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, afterEach, before, describe, it } from "node:test";
+
 import {
   allocateSubagentWorktree,
   describeWorktreeRelease,
@@ -124,7 +125,10 @@ describe("allocateSubagentWorktree", () => {
   it("works from a subdirectory and from inside another worktree", () => {
     const repo = makeRepo();
     mkdirSync(join(repo, "sub"));
-    const first = allocateSubagentWorktree({ cwd: join(repo, "sub"), name: "a" });
+    const first = allocateSubagentWorktree({
+      cwd: join(repo, "sub"),
+      name: "a",
+    });
     assert.equal(first.repoRoot, repo);
     const second = allocateSubagentWorktree({ cwd: first.path, name: "b" });
     assert.equal(second.repoRoot, repo);
@@ -164,7 +168,9 @@ describe("allocateSubagentWorktree", () => {
 
   it("dedupes the directory but never reuses an existing branch", () => {
     const repo = makeRepo();
-    mkdirSync(join(repo, ".pi", "git-worktrees", "worker"), { recursive: true });
+    mkdirSync(join(repo, ".pi", "git-worktrees", "worker"), {
+      recursive: true,
+    });
 
     const wt = allocateSubagentWorktree({ cwd: repo, name: "worker" });
 
@@ -178,7 +184,8 @@ describe("allocateSubagentWorktree", () => {
     const before = git(repo, "rev-parse", "worker");
 
     assert.throws(
-      () => allocateSubagentWorktree({ cwd: repo, name: "worker", branch: "main" }),
+      () =>
+        allocateSubagentWorktree({ cwd: repo, name: "worker", branch: "main" }),
       /branch "worker" already exists/,
     );
     assert.throws(
@@ -187,7 +194,12 @@ describe("allocateSubagentWorktree", () => {
     );
 
     assert.equal(git(repo, "rev-parse", "worker"), before);
-    assert.equal(git(repo, "worktree", "list", "--porcelain").split("\n").filter((l) => l.startsWith("worktree ")).length, 1);
+    assert.equal(
+      git(repo, "worktree", "list", "--porcelain")
+        .split("\n")
+        .filter((l) => l.startsWith("worktree ")).length,
+      1,
+    );
     assert.ok(!existsSync(join(repo, ".pi", "git-worktrees", "worker")));
   });
 
@@ -204,7 +216,11 @@ describe("allocateSubagentWorktree", () => {
 describe("releaseSubagentWorktree", () => {
   it("removes a clean worktree and keeps its branch", () => {
     const repo = makeRepo();
-    const wt = allocateSubagentWorktree({ cwd: repo, name: "clean", branch: "phase/5" });
+    const wt = allocateSubagentWorktree({
+      cwd: repo,
+      name: "clean",
+      branch: "phase/5",
+    });
     // Committed work is safe on the branch, so the worktree is still clean.
     writeFileSync(join(wt.path, "done.txt"), "done\n");
     git(wt.path, "add", "done.txt");
@@ -217,7 +233,10 @@ describe("releaseSubagentWorktree", () => {
     assert.ok(!existsSync(wt.path));
     assert.ok(branches(repo).includes("clean"));
     assert.equal(git(repo, "rev-parse", "clean"), tip);
-    assert.match(describeWorktreeRelease(release), /^Removed worktree .*branch "clean" is kept/);
+    assert.match(
+      describeWorktreeRelease(release),
+      /^Removed worktree .*branch "clean" is kept/,
+    );
   });
 
   it("keeps a worktree with modified tracked files", () => {
@@ -231,7 +250,10 @@ describe("releaseSubagentWorktree", () => {
     assert.equal(release.kind === "kept-dirty" && release.files, 1);
     assert.ok(existsSync(join(wt.path, "README.md")));
     const text = describeWorktreeRelease(release);
-    assert.match(text, /^Kept worktree .*dirty: 1 uncommitted or untracked file; commit or move it,/);
+    assert.match(
+      text,
+      /^Kept worktree .*dirty: 1 uncommitted or untracked file; commit or move it,/,
+    );
     assert.match(text, /git worktree remove /);
     assert.ok(branches(repo).includes("dirty"));
   });
@@ -248,7 +270,10 @@ describe("releaseSubagentWorktree", () => {
     assert.equal(release.kind, "kept-dirty");
     assert.equal(release.kind === "kept-dirty" && release.files, 2);
     assert.ok(existsSync(join(wt.path, "new", "a.txt")));
-    assert.match(describeWorktreeRelease(release), /2 uncommitted or untracked files/);
+    assert.match(
+      describeWorktreeRelease(release),
+      /2 uncommitted or untracked files/,
+    );
   });
 
   it("keeps the worktree and reports git's message when git refuses", () => {
@@ -264,7 +289,10 @@ describe("releaseSubagentWorktree", () => {
 
     assert.equal(release.kind, "kept-error");
     assert.ok(existsSync(wt.path));
-    assert.match(describeWorktreeRelease(release), /^Kept worktree .*cannot remove a locked working tree/);
+    assert.match(
+      describeWorktreeRelease(release),
+      /^Kept worktree .*cannot remove a locked working tree/,
+    );
     assert.ok(branches(repo).includes("locked"));
   });
 
@@ -309,7 +337,8 @@ describe("reattachSubagentWorktree", () => {
 describe("closing a worktree subagent", () => {
   // Imported lazily so the module-level git env above is already in place.
   async function harness() {
-    const { default: subagentsExtension, __test__ } = await import("../index.ts");
+    const { default: subagentsExtension, __test__ } =
+      await import("../index.ts");
     const { createStatusState } = await import("../status.ts");
     const sent: Array<{ content: string }> = [];
     subagentsExtension({
@@ -326,10 +355,15 @@ describe("closing a worktree subagent", () => {
       worktree: SubagentWorktree | undefined,
       extra: { keepAlive?: boolean; turnsDelivered?: number } = {},
     ) => {
-      const dir = realpathSync(mkdtempSync(join(tmpdir(), "subagent-wt-session-")));
+      const dir = realpathSync(
+        mkdtempSync(join(tmpdir(), "subagent-wt-session-")),
+      );
       tempDirs.push(dir);
       const sessionFile = join(dir, "child.jsonl");
-      writeFileSync(sessionFile, `${JSON.stringify({ type: "session", id: "s" })}\n`);
+      writeFileSync(
+        sessionFile,
+        `${JSON.stringify({ type: "session", id: "s" })}\n`,
+      );
       const running = {
         id: `id-${Math.random().toString(16).slice(2, 8)}`,
         name: `wt-test-${process.pid}-${Math.random().toString(16).slice(2, 6)}`,
@@ -344,7 +378,10 @@ describe("closing a worktree subagent", () => {
         turnsDelivered: 1,
         deliveredEntryCount: 1,
         worktree,
-        statusState: createStatusState({ source: "pi", startTimeMs: Date.now() }),
+        statusState: createStatusState({
+          source: "pi",
+          startTimeMs: Date.now(),
+        }),
         ...extra,
       };
       __test__.runningSubagents.set(running.id, running);
@@ -362,7 +399,10 @@ describe("closing a worktree subagent", () => {
     const result = __test__.closeSubagentByName({ name: running.name });
 
     assert.equal(result.details.status, "closed");
-    assert.match(result.content[0].text, /Removed worktree .*close-clean; branch "close-clean" is kept/);
+    assert.match(
+      result.content[0].text,
+      /Removed worktree .*close-clean; branch "close-clean" is kept/,
+    );
     assert.ok("worktree" in result.details);
     assert.equal(result.details.worktree?.kind, "removed");
     assert.ok(!existsSync(wt.path));
@@ -379,7 +419,10 @@ describe("closing a worktree subagent", () => {
     const result = __test__.closeSubagentByName({ name: running.name });
 
     assert.equal(result.details.status, "closed");
-    assert.match(result.content[0].text, /Kept worktree .*close-dirty .*1 uncommitted or untracked file/);
+    assert.match(
+      result.content[0].text,
+      /Kept worktree .*close-dirty .*1 uncommitted or untracked file/,
+    );
     assert.ok(existsSync(join(wt.path, "work.txt")));
   });
 
@@ -413,7 +456,10 @@ describe("closing a worktree subagent", () => {
     assert.match(first, /Removed worktree .*one-shot/);
     assert.equal(second, first);
     assert.equal(__test__.resolveFinalDelivery(running, 1).kind, "deliver");
-    assert.match(__test__.withReleaseNote("result", running), /^result\n\nRemoved worktree /);
+    assert.match(
+      __test__.withReleaseNote("result", running),
+      /^result\n\nRemoved worktree /,
+    );
     assert.ok(branches(repo).includes("one-shot"));
   });
 
@@ -433,7 +479,9 @@ describe("closing a worktree subagent", () => {
     git(wt.path, "add", "a.txt");
     git(wt.path, "commit", "-q", "-m", "a");
     const first = fakeRunning(wt);
-    const firstClose = __test__.closeSubagentByName({ name: first.name }).details;
+    const firstClose = __test__.closeSubagentByName({
+      name: first.name,
+    }).details;
     assert.ok("worktree" in firstClose);
     assert.equal(firstClose.worktree?.kind, "removed");
     assert.ok(!existsSync(wt.path));
@@ -477,7 +525,8 @@ describe("closing a worktree subagent", () => {
 // drive the real watcher without a live window.
 describe("watcher releases the worktree when the subagent exits", () => {
   async function setup(name: string, extra: Record<string, unknown> = {}) {
-    const { default: subagentsExtension, __test__ } = await import("../index.ts");
+    const { default: subagentsExtension, __test__ } =
+      await import("../index.ts");
     const { createStatusState } = await import("../status.ts");
     subagentsExtension({
       on() {},
@@ -492,7 +541,10 @@ describe("watcher releases the worktree when the subagent exits", () => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), "subagent-wt-watch-")));
     tempDirs.push(dir);
     const sessionFile = join(dir, "child.jsonl");
-    writeFileSync(sessionFile, `${JSON.stringify({ type: "session", id: "s" })}\n`);
+    writeFileSync(
+      sessionFile,
+      `${JSON.stringify({ type: "session", id: "s" })}\n`,
+    );
     const running = {
       id: `id-${Math.random().toString(16).slice(2, 8)}`,
       name: `wt-watch-${process.pid}-${Math.random().toString(16).slice(2, 6)}`,
@@ -516,7 +568,8 @@ describe("watcher releases the worktree when the subagent exits", () => {
   }
 
   it("removes a clean worktree when a Pi child exits on its own", async () => {
-    const { __test__, repo, wt, sessionFile, running, watch } = await setup("exit-clean");
+    const { __test__, repo, wt, sessionFile, running, watch } =
+      await setup("exit-clean");
     writeFileSync(`${sessionFile}.exit`, JSON.stringify({ type: "done" }));
 
     const result = await watch();
@@ -554,11 +607,16 @@ describe("watcher releases the worktree when the subagent exits", () => {
   });
 
   it("removes a clean worktree when a Claude child writes its sentinel", async () => {
-    const dir = realpathSync(mkdtempSync(join(tmpdir(), "subagent-wt-claude-")));
+    const dir = realpathSync(
+      mkdtempSync(join(tmpdir(), "subagent-wt-claude-")),
+    );
     tempDirs.push(dir);
     const sentinelFile = join(dir, "sentinel");
     writeFileSync(sentinelFile, "claude summary\n");
-    const { wt, running, watch } = await setup("exit-claude", { cli: "claude", sentinelFile });
+    const { wt, running, watch } = await setup("exit-claude", {
+      cli: "claude",
+      sentinelFile,
+    });
 
     const result = await watch();
 
@@ -584,7 +642,10 @@ describe("watcher releases the worktree when the subagent exits", () => {
     const { __test__, wt, running, watch } = await setup("close-then-exit");
 
     // The child is mid-turn while its watcher runs, so the orchestrator forces it.
-    const closed = __test__.closeSubagentByName({ name: running.name, force: true });
+    const closed = __test__.closeSubagentByName({
+      name: running.name,
+      force: true,
+    });
     const release = running.worktreeRelease;
     assert.ok("worktree" in closed.details);
     assert.equal(closed.details.worktree?.kind, "removed");
@@ -592,7 +653,10 @@ describe("watcher releases the worktree when the subagent exits", () => {
     // notices the exit. The watcher must not remove it on the strength of
     // the earlier close.
     reattachSubagentWorktree(wt);
-    writeFileSync(`${running.sessionFile}.exit`, JSON.stringify({ type: "done" }));
+    writeFileSync(
+      `${running.sessionFile}.exit`,
+      JSON.stringify({ type: "done" }),
+    );
 
     await watch();
 

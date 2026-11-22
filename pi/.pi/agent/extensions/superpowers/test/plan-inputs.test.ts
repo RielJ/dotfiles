@@ -1,8 +1,9 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { describe, it } from "node:test";
+
 import {
   composePlannerTask,
   explorerPreContext,
@@ -13,16 +14,23 @@ import {
 
 describe("parsePlanArgs", () => {
   it("keeps a plain task", () => {
-    assert.deepEqual(parsePlanArgs("  add a cache layer "), { wait: false, web: false, task: "add a cache layer" });
+    assert.deepEqual(parsePlanArgs("  add a cache layer "), {
+      wait: false,
+      web: false,
+      task: "add a cache layer",
+    });
   });
 
   it("reads flags anywhere in the arguments", () => {
-    assert.deepEqual(parsePlanArgs("rewrite --web in rust --context docs/r.md --wait"), {
-      wait: true,
-      web: true,
-      contextFile: "docs/r.md",
-      task: "rewrite in rust",
-    });
+    assert.deepEqual(
+      parsePlanArgs("rewrite --web in rust --context docs/r.md --wait"),
+      {
+        wait: true,
+        web: true,
+        contextFile: "docs/r.md",
+        task: "rewrite in rust",
+      },
+    );
   });
 
   it("accepts --context=<path>", () => {
@@ -31,7 +39,10 @@ describe("parsePlanArgs", () => {
 
   it("rejects --context without a path", () => {
     assert.throws(() => parsePlanArgs("task --context"), /needs a file path/);
-    assert.throws(() => parsePlanArgs("task --context --web"), /needs a file path/);
+    assert.throws(
+      () => parsePlanArgs("task --context --web"),
+      /needs a file path/,
+    );
     assert.throws(() => parsePlanArgs("task --context="), /needs a file path/);
   });
 });
@@ -42,7 +53,11 @@ describe("loadContextFile", () => {
   fs.writeFileSync(path.join(dir, "empty.md"), "  \n");
 
   it("reads relative to cwd and trims", () => {
-    assert.deepEqual(loadContextFile(dir, "r.md"), { label: "r.md", text: "# Research\nuse tokio", truncated: false });
+    assert.deepEqual(loadContextFile(dir, "r.md"), {
+      label: "r.md",
+      text: "# Research\nuse tokio",
+      truncated: false,
+    });
   });
 
   it("truncates past the cap", () => {
@@ -65,16 +80,41 @@ describe("composePlannerTask", () => {
   });
 
   it("orders conversation, research, findings, task", () => {
-    const out = composePlannerTask({ task: "T", provided, findings: "FIND", conversation: "CONV" });
-    const order = ["## Conversation Context", "## Provided Research (r.md)", "## Codebase Exploration Findings (Phase 0)", "## Task to Plan"].map((h) => out.indexOf(h));
-    assert.ok(order.every((i) => i >= 0), "every section present");
-    assert.deepEqual([...order].sort((a, b) => a - b), order, "sections in order");
+    const out = composePlannerTask({
+      task: "T",
+      provided,
+      findings: "FIND",
+      conversation: "CONV",
+    });
+    const order = [
+      "## Conversation Context",
+      "## Provided Research (r.md)",
+      "## Codebase Exploration Findings (Phase 0)",
+      "## Task to Plan",
+    ].map((h) => out.indexOf(h));
+    assert.ok(
+      order.every((i) => i >= 0),
+      "every section present",
+    );
+    assert.deepEqual(
+      [...order].sort((a, b) => a - b),
+      order,
+      "sections in order",
+    );
     assert.ok(out.endsWith("## Task to Plan\n\nT"));
   });
 
   it("notes truncation so planners can read the rest", () => {
-    const out = composePlannerTask({ task: "T", provided: { ...provided, truncated: true } });
-    assert.match(out, new RegExp(`truncated to ${MAX_PROVIDED_CONTEXT_CHARS / 1000}K chars; read r\\.md`));
+    const out = composePlannerTask({
+      task: "T",
+      provided: { ...provided, truncated: true },
+    });
+    assert.match(
+      out,
+      new RegExp(
+        `truncated to ${MAX_PROVIDED_CONTEXT_CHARS / 1000}K chars; read r\\.md`,
+      ),
+    );
   });
 });
 
@@ -84,7 +124,12 @@ describe("explorerPreContext", () => {
   });
 
   it("tells the explorer not to redo the research", () => {
-    const out = explorerPreContext({ label: "r.md", text: "RESEARCH", truncated: false }) ?? "";
+    const out =
+      explorerPreContext({
+        label: "r.md",
+        text: "RESEARCH",
+        truncated: false,
+      }) ?? "";
     assert.match(out, /Do not repeat it/);
     assert.ok(out.includes("RESEARCH"));
   });
