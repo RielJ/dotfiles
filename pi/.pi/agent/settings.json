@@ -25,7 +25,6 @@
     "plan": "max20x"
   },
   "packages": [
-    "npm:pi-token-burden",
     "npm:pi-promptsmith",
     "npm:@tintinweb/pi-tasks",
     "npm:pi-skills-sh",
@@ -33,7 +32,6 @@
     "npm:@sting8k/pi-vcc",
     "npm:@tomooshi/condensed-milk-pi",
     "npm:@tomooshi/caveman-milk-pi",
-    "npm:pi-mcp-adapter",
     "npm:@ogulcancelik/pi-minimal-footer",
     "npm:@ff-labs/pi-fff",
     "npm:@tmustier/pi-tab-status",
@@ -48,15 +46,14 @@
   ],
   "extensions": [
     "-builtin:mcp",
-    "-extensions/git-worktrees/src/index.ts"
+    "-extensions/git-worktrees/src/index.ts",
+    "-extensions/adw/src/index.ts"
   ],
   "extensionChangelogVersions": {
     "{\"source\":\"npm:@sting8k/pi-vcc\",\"scope\":\"user\"}": "0.11.2",
     "{\"source\":\"npm:@tomooshi/condensed-milk-pi\",\"scope\":\"user\"}": "1.14.0",
     "{\"source\":\"npm:pi-lens\",\"scope\":\"user\"}": "4.5.1",
-    "{\"source\":\"npm:pi-token-burden\",\"scope\":\"user\"}": "0.6.5",
     "{\"source\":\"npm:@tintinweb/pi-tasks\",\"scope\":\"user\"}": "0.9.1",
-    "{\"source\":\"npm:pi-mcp-adapter\",\"scope\":\"user\"}": "7.0.1",
     "{\"source\":\"npm:@tmustier/pi-tab-status\",\"scope\":\"user\"}": "0.1.6",
     "{\"source\":\"npm:pi-bash-bg\",\"scope\":\"user\"}": "0.1.1",
     "{\"source\":\"npm:pi-tool-display\",\"scope\":\"user\"}": "0.5.0",
