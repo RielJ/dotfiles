@@ -105,16 +105,37 @@ function isUserLookingAtPi(): boolean {
 
 // ── Notification Methods ────────────────────────────────────────────
 
-function notifyMacOS(title: string, body: string): void {
-  const child = spawn(
-    "osascript",
-    [
-      "-e",
-      `display notification "${body.replace(/"/g, '\\"')}" with title "${title.replace(/"/g, '\\"')}"`,
-    ],
-    { detached: true, stdio: "ignore" },
-  );
+/**
+ * Start a fire-and-forget process. A missing binary is reported on the
+ * child's "error" event, not thrown, and an unhandled "error" event would
+ * crash pi. Notifications are best-effort, so the failure only goes to stderr.
+ */
+function spawnDetached(
+  command: string,
+  args: readonly string[],
+  options: { shell?: boolean } = {},
+): void {
+  const child = spawn(command, args, {
+    ...options,
+    detached: true,
+    stdio: "ignore",
+  });
+  child.on("error", (error) => {
+    process.stderr.write(`[pi-notify] ${command}: ${error.message}\n`);
+  });
   child.unref();
+}
+
+/** Escape a value for an AppleScript string literal: backslash first, then quotes. */
+function appleScriptString(value: string): string {
+  return `"${value.replace(/[\\"]/g, "\\$&")}"`;
+}
+
+function notifyMacOS(title: string, body: string): void {
+  spawnDetached("osascript", [
+    "-e",
+    `display notification ${appleScriptString(body)} with title ${appleScriptString(title)}`,
+  ]);
 }
 
 function notifyWindows(title: string, body: string): void {
@@ -125,11 +146,7 @@ function notifyWindows(title: string, body: string): void {
     `$xml.GetElementsByTagName('text')[0].AppendChild($xml.CreateTextNode('${body}')) > $null`,
     `[${type}.ToastNotificationManager]::CreateToastNotifier('${title}').Show([${type}.ToastNotification]::new($xml))`,
   ].join("; ");
-  const child = spawn("powershell.exe", ["-NoProfile", "-Command", script], {
-    detached: true,
-    stdio: "ignore",
-  });
-  child.unref();
+  spawnDetached("powershell.exe", ["-NoProfile", "-Command", script]);
 }
 
 function notifyOSC(title: string, body: string): void {
@@ -158,28 +175,15 @@ function playSound(): void {
   // 1. Custom sound command
   const customCmd = process.env.PI_NOTIFY_SOUND_CMD?.trim();
   if (customCmd) {
-    try {
-      const child = spawn(customCmd, {
-        shell: true,
-        detached: true,
-        stdio: "ignore",
-      });
-      child.unref();
-    } catch {}
+    spawnDetached(customCmd, [], { shell: true });
     return;
   }
 
   // 2. macOS system sound
   if (process.platform === "darwin") {
-    try {
-      const sound =
-        process.env.PI_NOTIFY_SOUND || "/System/Library/Sounds/Glass.aiff";
-      const child = spawn("afplay", [sound], {
-        detached: true,
-        stdio: "ignore",
-      });
-      child.unref();
-    } catch {}
+    const sound =
+      process.env.PI_NOTIFY_SOUND || "/System/Library/Sounds/Glass.aiff";
+    spawnDetached("afplay", [sound]);
   }
 }
 
